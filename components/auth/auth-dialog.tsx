@@ -195,14 +195,30 @@ export function AuthDialog({
   };
 
   const handleSocialAuth = async (provider: "google") => {
-    // This will redirect the user to Google for authentication
-    await supabase.auth.signInWithOAuth({
-      provider: provider,
-      options: {
-        // The URL to redirect back to after authentication is complete
-        redirectTo: window.location.origin,
-      },
-    });
+    try {
+      // This will redirect the user to Google for authentication
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: provider,
+        options: {
+          // The URL to redirect back to after authentication is complete
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
+
+      if (error) {
+        toast({
+          title: "Authentication Error",
+          description: error.message || "Failed to initiate Google sign-in",
+          variant: "destructive",
+        });
+      }
+    } catch (error: any) {
+      toast({
+        title: "Authentication Error",
+        description: "Failed to connect to Google. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const getPasswordStrengthColor = () => {
