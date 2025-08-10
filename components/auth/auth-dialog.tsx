@@ -1,6 +1,7 @@
 "use client";
 
 import type React from "react";
+import { supabase } from "@/lib/supabase"; // Import the supabase client
 
 import { useState } from "react";
 import {
@@ -166,10 +167,14 @@ export function AuthDialog({
     }
   };
 
-  const handleSocialAuth = (provider: string) => {
-    toast({
-      title: `${provider} authentication`,
-      description: `Redirecting to ${provider}...`,
+  const handleSocialAuth = async (provider: "google") => {
+    // This will redirect the user to Google for authentication
+    await supabase.auth.signInWithOAuth({
+      provider: provider,
+      options: {
+        // The URL to redirect back to after authentication is complete
+        redirectTo: window.location.origin,
+      },
     });
   };
 
@@ -195,7 +200,7 @@ export function AuthDialog({
           <div className="space-y-3 mb-6">
             <Button
               variant="outline"
-              onClick={() => handleSocialAuth("Google")}
+              onClick={() => handleSocialAuth("google")}
               className="w-full h-12 bg-white hover:bg-gray-50 border-2 border-gray-200 hover:border-gray-300 transition-all duration-200"
             >
               <svg className="mr-3 h-5 w-5" viewBox="0 0 24 24">

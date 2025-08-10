@@ -2,7 +2,7 @@
 
 ![PricePulse Logo](./public/placeholder-logo.svg)
 
-PricePulse is a modern, intelligent product price monitoring and analytics platform that helps users track product prices across multiple retailers. Built with Next.js, TypeScript, and Tailwind CSS, it provides comprehensive price tracking, forecasting, and analytics capabilities.
+PricePulse is a modern, intelligent product price monitoring and analytics platform that helps users track product prices across multiple retailers. Built with Next.js, TypeScript, and Tailwind CSS, it provides comprehensive price tracking, forecasting, and analytics capabilities. praneeth123@A
 
 ## 🌟 Features
 

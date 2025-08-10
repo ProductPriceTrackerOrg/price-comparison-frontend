@@ -1,103 +1,88 @@
-"use client"
+"use client";
 
-import type React from "react"
-import { createContext, useContext, useState, useEffect } from "react"
+import { createContext, useContext, useState, useEffect } from "react";
+import { supabase } from "@/lib/supabase";
+import { Session, User } from "@supabase/supabase-js";
 
-interface User {
-  user_id: number
-  email: string
-  full_name: string
-  role: "User" | "Admin"
-  is_active: boolean
-  created_at: string
-}
-
+// Define the shape of our context for type safety
 interface AuthContextType {
-  user: User | null
-  isLoggedIn: boolean
-  isAdmin: boolean
-  login: (email: string, password: string) => Promise<void>
-  logout: () => void
-  signup: (email: string, password: string, fullName: string) => Promise<void>
-  updateUser: (userData: Partial<User>) => void
+  user: User | null;
+  session: Session | null;
+  isLoggedIn: boolean;
+  isAdmin: boolean;
+  login: (email: string, password: string) => Promise<any>;
+  signup: (email: string, password: string, fullName: string) => Promise<any>;
+  logout: () => Promise<{ error: any | null }>;
+  // We remove updateUser as Supabase handles this differently
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined)
+// Create the context
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null)
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [session, setSession] = useState<Session | null>(null);
+  const [user, setUser] = useState<User | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
-    // Check for existing session
-    const savedUser = localStorage.getItem("user")
-    if (savedUser) {
-      const userData = JSON.parse(savedUser)
-      setUser(userData)
-      setIsLoggedIn(true)
+    // 1. Check for an existing session on component mount
+    const getActiveSession = async () => {
+      const { data } = await supabase.auth.getSession();
+      setSession(data.session);
+      setUser(data.session?.user ?? null);
+    };
+    getActiveSession();
+
+    // 2. Listen for authentication state changes (login, logout, token refresh)
+    // This is the core of Supabase session management
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        setSession(session);
+        setUser(session?.user ?? null);
+      }
+    );
+
+    // 3. Clean up the listener when the component unmounts
+    return () => {
+      authListener?.subscription.unsubscribe();
+    };
+  }, []);
+
+  // 4. Check for the 'Admin' role whenever the user object changes
+  useEffect(() => {
+    if (user && user.app_metadata?.roles?.includes("Admin")) {
+      setIsAdmin(true);
+    } else {
+      setIsAdmin(false);
     }
-  }, [])
+  }, [user]);
 
-  const login = async (email: string, password: string) => {
-    // Mock login - replace with actual API call
-    // In real implementation, the API would return user data including role
-    const mockUser: User = {
-      user_id: 1,
-      email,
-      full_name: "John Doe",
-      role: email.includes("admin") ? "Admin" : "User", // Simple role assignment for demo
-      is_active: true,
-      created_at: new Date().toISOString(),
-    }
+  // 5. Define the context value, mapping our functions to Supabase's functions
+  const value = {
+    session,
+    user,
+    isLoggedIn: !!user,
+    isAdmin,
+    login: (email: string, password: string) =>
+      supabase.auth.signInWithPassword({ email, password }),
+    signup: (email: string, password: string, fullName: string) =>
+      supabase.auth.signUp({
+        email,
+        password,
+        // We pass the full name here so our database trigger can use it
+        options: { data: { full_name: fullName } },
+      }),
+    logout: () => supabase.auth.signOut(),
+  };
 
-    setUser(mockUser)
-    setIsLoggedIn(true)
-    localStorage.setItem("user", JSON.stringify(mockUser))
-  }
-
-  const logout = () => {
-    setUser(null)
-    setIsLoggedIn(false)
-    localStorage.removeItem("user")
-  }
-
-  const signup = async (email: string, password: string, fullName: string) => {
-    // Mock signup - replace with actual API call
-    const mockUser: User = {
-      user_id: Date.now(), // Simple ID generation for demo
-      email,
-      full_name: fullName,
-      role: "User",
-      is_active: true,
-      created_at: new Date().toISOString(),
-    }
-
-    setUser(mockUser)
-    setIsLoggedIn(true)
-    localStorage.setItem("user", JSON.stringify(mockUser))
-  }
-
-  const updateUser = (userData: Partial<User>) => {
-    if (user) {
-      const updatedUser = { ...user, ...userData }
-      setUser(updatedUser)
-      localStorage.setItem("user", JSON.stringify(updatedUser))
-    }
-  }
-
-  const isAdmin = user?.role === "Admin"
-
-  return (
-    <AuthContext.Provider value={{ user, isLoggedIn, isAdmin, login, logout, signup, updateUser }}>
-      {children}
-    </AuthContext.Provider>
-  )
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
+// Custom hook to easily consume the context
 export function useAuth() {
-  const context = useContext(AuthContext)
+  const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error("useAuth must be used within an AuthProvider")
+    throw new Error("useAuth must be used within an AuthProvider");
   }
-  return context
+  return context;
 }
