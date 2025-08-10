@@ -4,6 +4,18 @@
 
 PricePulse is a modern, intelligent product price monitoring and analytics platform that helps users track product prices across multiple retailers. Built with Next.js, TypeScript, and Tailwind CSS, it provides comprehensive price tracking, forecasting, and analytics capabilities. praneeth123@A
 
+```bash
+
+# The public URL for your Supabase project.
+NEXT_PUBLIC_SUPABASE_URL=""
+
+# The public "anon" key for your Supabase project. This key is safe to expose in the browser.
+NEXT_PUBLIC_SUPABASE_ANON_KEY=""
+
+# The base URL for your FastAPI backend
+NEXT_PUBLIC_API_URL="http://127.0.0.1:8000"
+```
+
 ## 🌟 Features
 
 ### Core Features
