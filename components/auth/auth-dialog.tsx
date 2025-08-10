@@ -46,6 +46,8 @@ export function AuthDialog({
 }: AuthDialogProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showEmailConfirmation, setShowEmailConfirmation] = useState(false);
+  const [confirmationEmail, setConfirmationEmail] = useState("");
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -131,35 +133,60 @@ export function AuthDialog({
 
     try {
       if (mode === "signup") {
-        await signup(formData.email, formData.password, formData.fullName);
-        toast({
-          title: "Account created successfully! 🎉",
-          description:
-            "Welcome to PricePulse! You can now track products and get price alerts.",
+        const result = await signup(
+          formData.email,
+          formData.password,
+          formData.fullName
+        );
+
+        if (result.error) {
+          throw new Error(result.error.message);
+        }
+
+        // Show email confirmation portal
+        setConfirmationEmail(formData.email);
+        setShowEmailConfirmation(true);
+
+        // Clear form data
+        setFormData({
+          email: "",
+          password: "",
+          fullName: "",
+          confirmPassword: "",
+          agreeToTerms: false,
+          subscribeNewsletter: true,
         });
+        setErrors({});
+        setPasswordStrength(0);
       } else {
-        await login(formData.email, formData.password);
+        const result = await login(formData.email, formData.password);
+
+        if (result.error) {
+          throw new Error(result.error.message);
+        }
+
         toast({
           title: "Welcome back! 👋",
           description: "You've successfully signed in to your account.",
         });
-      }
 
-      onClose();
-      setFormData({
-        email: "",
-        password: "",
-        fullName: "",
-        confirmPassword: "",
-        agreeToTerms: false,
-        subscribeNewsletter: true,
-      });
-      setErrors({});
-      setPasswordStrength(0);
-    } catch (error) {
+        onClose();
+        setFormData({
+          email: "",
+          password: "",
+          fullName: "",
+          confirmPassword: "",
+          agreeToTerms: false,
+          subscribeNewsletter: true,
+        });
+        setErrors({});
+        setPasswordStrength(0);
+      }
+    } catch (error: any) {
       toast({
         title: "Authentication failed",
-        description: "Please check your credentials and try again.",
+        description:
+          error.message || "Please check your credentials and try again.",
         variant: "destructive",
       });
     } finally {
@@ -191,6 +218,115 @@ export function AuthDialog({
     if (passwordStrength < 75) return "Good";
     return "Strong";
   };
+
+  const handleCloseDialog = () => {
+    setShowEmailConfirmation(false);
+    onClose();
+  };
+
+  const handleResendEmail = async () => {
+    try {
+      setLoading(true);
+      const { error } = await supabase.auth.resend({
+        type: "signup",
+        email: confirmationEmail,
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Email resent! 📧",
+        description:
+          "Please check your inbox (and spam folder) for the confirmation email.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Failed to resend email",
+        description: error.message || "Please try again later.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Email Confirmation Portal
+  if (showEmailConfirmation) {
+    return (
+      <Dialog open={isOpen} onOpenChange={handleCloseDialog}>
+        <DialogContent className="sm:max-w-lg p-8 overflow-hidden bg-white">
+          <DialogHeader>
+            <DialogTitle className="text-center text-2xl font-bold text-gray-900 mb-2">
+              Check Your Email 📧
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="text-center space-y-6">
+            <div className="mx-auto w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
+              <Mail className="h-8 w-8 text-blue-600" />
+            </div>
+
+            <div className="space-y-3">
+              <h3 className="text-lg font-semibold text-gray-900">
+                We've sent you a confirmation link
+              </h3>
+              <p className="text-gray-600">
+                Please check your email at{" "}
+                <span className="font-medium text-gray-900">
+                  {confirmationEmail}
+                </span>{" "}
+                and click the confirmation link to complete your account setup.
+              </p>
+            </div>
+
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+              <div className="flex items-start space-x-2">
+                <Shield className="h-5 w-5 text-yellow-600 mt-0.5 flex-shrink-0" />
+                <div className="text-sm text-yellow-800">
+                  <p className="font-medium mb-1">Don't see the email?</p>
+                  <p>
+                    Check your spam or junk folder. Sometimes confirmation
+                    emails end up there.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <Button
+                onClick={handleResendEmail}
+                variant="outline"
+                className="w-full"
+                disabled={loading}
+              >
+                {loading ? (
+                  <div className="flex items-center space-x-2">
+                    <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
+                    <span>Sending...</span>
+                  </div>
+                ) : (
+                  "Resend confirmation email"
+                )}
+              </Button>
+
+              <Button
+                onClick={handleCloseDialog}
+                variant="ghost"
+                className="w-full text-gray-600 hover:text-gray-800"
+              >
+                Close
+              </Button>
+            </div>
+
+            <p className="text-xs text-gray-500 mt-4">
+              Once you confirm your email, you'll be automatically signed in to
+              your account.
+            </p>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -497,8 +633,10 @@ export function AuthDialog({
             {/* Enhanced Submit Button */}
             <Button
               type="submit"
-              className="w-full h-12 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-xl transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl"
-              disabled={loading}
+              className="w-full h-12 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-xl transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+              disabled={
+                loading || (mode === "signup" && !formData.agreeToTerms)
+              }
             >
               {loading ? (
                 <div className="flex items-center space-x-2">

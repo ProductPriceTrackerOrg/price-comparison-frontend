@@ -36,9 +36,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // 2. Listen for authentication state changes (login, logout, token refresh)
     // This is the core of Supabase session management
     const { data: authListener } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
+      async (event, session) => {
+        console.log("Auth state change:", event, session?.user?.email);
+
         setSession(session);
         setUser(session?.user ?? null);
+
+        // Handle email confirmation
+        if (event === "SIGNED_IN" && session?.user) {
+          if (
+            session.user.email_confirmed_at &&
+            !session.user.last_sign_in_at
+          ) {
+            // This is likely a new user who just confirmed their email
+            console.log("New user confirmed email and is now signed in");
+          } else if (session.user.email_confirmed_at) {
+            // Existing user signing in
+            console.log("User signed in");
+          }
+        }
+
+        if (event === "TOKEN_REFRESHED") {
+          console.log("Token refreshed");
+        }
       }
     );
 
@@ -70,7 +90,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         email,
         password,
         // We pass the full name here so our database trigger can use it
-        options: { data: { full_name: fullName } },
+        options: {
+          data: { full_name: fullName },
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+        },
       }),
     logout: () => supabase.auth.signOut(),
   };
