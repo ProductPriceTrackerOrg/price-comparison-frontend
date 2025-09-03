@@ -37,7 +37,7 @@ export function HeroSection() {
   };
 
   return (
-    <section className="relative bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800 text-white overflow-hidden min-h-[600px]">
+    <section className="relative bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800 text-white overflow-hidden min-h-[500px]">
       {/* Hero Background Image */}
       <div
         className="absolute inset-0 bg-cover bg-center opacity-20"
@@ -49,14 +49,14 @@ export function HeroSection() {
       {/* Overlay for better text readability */}
       <div className="absolute inset-0 bg-gradient-to-br from-slate-900/80 via-blue-900/70 to-slate-800/80" />
 
-      {/* Floating geometric elements */}
-      <div className="absolute inset-0">
-        <div className="absolute top-20 left-20 w-32 h-32 border border-white/10 rotate-45 rounded-lg"></div>
-        <div className="absolute bottom-20 right-20 w-40 h-40 border border-orange-500/20 rotate-12 rounded-lg"></div>
-        <div className="absolute top-1/2 left-1/4 w-24 h-24 border border-blue-400/20 rotate-45 rounded-lg"></div>
+      {/* Floating geometric elements - constrained to viewport width */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute top-20 left-5 sm:left-20 w-32 h-32 border border-white/10 rotate-45 rounded-lg"></div>
+        <div className="absolute bottom-20 right-5 sm:right-20 w-32 h-32 sm:w-40 sm:h-40 border border-orange-500/20 rotate-12 rounded-lg"></div>
+        <div className="absolute top-1/2 left-1/6 sm:left-1/4 w-20 h-20 sm:w-24 sm:h-24 border border-blue-400/20 rotate-45 rounded-lg"></div>
       </div>
 
-      <div className="container mx-auto px-4 py-20 relative z-10">
+      <div className="container mx-auto px-4 py-16 relative z-10">
         <div className="max-w-5xl mx-auto text-center">
           {/* Main Title */}
           <div className="mb-8 fade-in">
@@ -152,48 +152,6 @@ export function HeroSection() {
                   {search}
                 </Button>
               ))}
-            </div>
-          </div>
-
-          {/* Feature Highlights */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 text-center border border-white/20 hover:bg-white/15 transition-all duration-300 transform hover:scale-105 group">
-              <div className="w-16 h-16 bg-gradient-to-br from-orange-500 to-red-500 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
-                <BarChart3 className="h-8 w-8 text-white" />
-              </div>
-              <h3 className="text-xl font-semibold text-white mb-3">
-                Real-time Analytics
-              </h3>
-              <p className="text-slate-300 text-sm leading-relaxed">
-                Monitor price movements across 25+ retailers with instant
-                notifications and trend analysis
-              </p>
-            </div>
-
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 text-center border border-white/20 hover:bg-white/15 transition-all duration-300 transform hover:scale-105 group">
-              <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
-                <TrendingUp className="h-8 w-8 text-white" />
-              </div>
-              <h3 className="text-xl font-semibold text-white mb-3">
-                AI Forecasting
-              </h3>
-              <p className="text-slate-300 text-sm leading-relaxed">
-                Predict future price trends with 95% accuracy using advanced
-                machine learning models
-              </p>
-            </div>
-
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 text-center border border-white/20 hover:bg-white/15 transition-all duration-300 transform hover:scale-105 group">
-              <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
-                <Zap className="h-8 w-8 text-white" />
-              </div>
-              <h3 className="text-xl font-semibold text-white mb-3">
-                Smart Insights
-              </h3>
-              <p className="text-slate-300 text-sm leading-relaxed">
-                Discover anomalies, market opportunities, and optimal buying
-                moments with AI-driven insights
-              </p>
             </div>
           </div>
 

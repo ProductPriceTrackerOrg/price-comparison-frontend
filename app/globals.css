@@ -2,6 +2,34 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Import custom animations */
+@import "../styles/animations.css";
+
+/* Global styles to prevent overflow */
+html,
+body {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+/* Ensure all sections are properly contained */
+section {
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+/* Fix for SVG elements to stay within bounds */
+svg {
+  max-width: 100%;
+}
+
+/* Constrains container width */
+.container {
+  width: 100%;
+  max-width: 100%;
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;
