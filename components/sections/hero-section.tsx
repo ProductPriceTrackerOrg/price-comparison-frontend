@@ -1,14 +1,23 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Search, Camera, Mic, TrendingUp, Sparkles, BarChart3, Shield, Zap } from "lucide-react"
-import { SearchSuggestions } from "@/components/search/search-suggestions"
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Search,
+  Camera,
+  Mic,
+  TrendingUp,
+  Sparkles,
+  BarChart3,
+  Shield,
+  Zap,
+} from "lucide-react";
+import { SearchSuggestions } from "@/components/search/search-suggestions";
 
 export function HeroSection() {
-  const [searchQuery, setSearchQuery] = useState("")
-  const [showSuggestions, setShowSuggestions] = useState(false)
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showSuggestions, setShowSuggestions] = useState(false);
 
   const frequentSearches = [
     "Samsung Galaxy S24",
@@ -19,13 +28,13 @@ export function HeroSection() {
     "Dell XPS 13",
     "AirPods Pro",
     "Nintendo Switch",
-  ]
+  ];
 
   const handleSearch = (query: string) => {
     if (query.trim()) {
-      window.location.href = `/search?q=${encodeURIComponent(query)}`
+      window.location.href = `/search?q=${encodeURIComponent(query)}`;
     }
-  }
+  };
 
   return (
     <section className="relative bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800 text-white overflow-hidden min-h-[600px]">
@@ -53,7 +62,9 @@ export function HeroSection() {
           <div className="mb-8 fade-in">
             <div className="inline-flex items-center space-x-2 bg-orange-500/20 backdrop-blur-sm border border-orange-500/30 rounded-full px-6 py-2 mb-6">
               <Sparkles className="h-4 w-4 text-orange-400" />
-              <span className="text-sm font-medium text-orange-300">AI-Powered Retail Intelligence</span>
+              <span className="text-sm font-medium text-orange-300">
+                AI-Powered Retail Intelligence
+              </span>
             </div>
 
             <h1 className="text-4xl md:text-6xl font-bold mb-6 leading-tight">
@@ -62,8 +73,9 @@ export function HeroSection() {
               <span className="text-blue-400">INTELLIGENCE</span> Platform
             </h1>
             <p className="text-xl text-slate-300 max-w-3xl mx-auto leading-relaxed">
-              Harness the power of AI to track millions of products, predict price trends, and make data-driven retail
-              decisions with enterprise-grade analytics
+              Harness the power of AI to track millions of products, predict
+              price trends, and make data-driven retail decisions with
+              enterprise-grade analytics
             </p>
           </div>
 
@@ -76,10 +88,12 @@ export function HeroSection() {
                   placeholder="Search products, brands, or categories..."
                   value={searchQuery}
                   onChange={(e) => {
-                    setSearchQuery(e.target.value)
-                    setShowSuggestions(e.target.value.length > 0)
+                    setSearchQuery(e.target.value);
+                    setShowSuggestions(e.target.value.length > 0);
                   }}
-                  onKeyPress={(e) => e.key === "Enter" && handleSearch(searchQuery)}
+                  onKeyPress={(e) =>
+                    e.key === "Enter" && handleSearch(searchQuery)
+                  }
                   className="h-16 pl-6 pr-20 text-lg border-0 focus:ring-0 text-gray-900 placeholder:text-gray-500 bg-transparent rounded-2xl"
                 />
                 <div className="absolute right-2 top-2 flex space-x-1">
@@ -113,9 +127,9 @@ export function HeroSection() {
               <SearchSuggestions
                 query={searchQuery}
                 onSelect={(suggestion) => {
-                  setSearchQuery(suggestion)
-                  setShowSuggestions(false)
-                  handleSearch(suggestion)
+                  setSearchQuery(suggestion);
+                  setShowSuggestions(false);
+                  handleSearch(suggestion);
                 }}
                 onClose={() => setShowSuggestions(false)}
               />
@@ -147,9 +161,12 @@ export function HeroSection() {
               <div className="w-16 h-16 bg-gradient-to-br from-orange-500 to-red-500 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
                 <BarChart3 className="h-8 w-8 text-white" />
               </div>
-              <h3 className="text-xl font-semibold text-white mb-3">Real-time Analytics</h3>
+              <h3 className="text-xl font-semibold text-white mb-3">
+                Real-time Analytics
+              </h3>
               <p className="text-slate-300 text-sm leading-relaxed">
-                Monitor price movements across 25+ retailers with instant notifications and trend analysis
+                Monitor price movements across 25+ retailers with instant
+                notifications and trend analysis
               </p>
             </div>
 
@@ -157,9 +174,12 @@ export function HeroSection() {
               <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
                 <TrendingUp className="h-8 w-8 text-white" />
               </div>
-              <h3 className="text-xl font-semibold text-white mb-3">AI Forecasting</h3>
+              <h3 className="text-xl font-semibold text-white mb-3">
+                AI Forecasting
+              </h3>
               <p className="text-slate-300 text-sm leading-relaxed">
-                Predict future price trends with 95% accuracy using advanced machine learning models
+                Predict future price trends with 95% accuracy using advanced
+                machine learning models
               </p>
             </div>
 
@@ -167,9 +187,12 @@ export function HeroSection() {
               <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
                 <Zap className="h-8 w-8 text-white" />
               </div>
-              <h3 className="text-xl font-semibold text-white mb-3">Smart Insights</h3>
+              <h3 className="text-xl font-semibold text-white mb-3">
+                Smart Insights
+              </h3>
               <p className="text-slate-300 text-sm leading-relaxed">
-                Discover anomalies, market opportunities, and optimal buying moments with AI-driven insights
+                Discover anomalies, market opportunities, and optimal buying
+                moments with AI-driven insights
               </p>
             </div>
           </div>
@@ -192,5 +215,5 @@ export function HeroSection() {
         </div>
       </div>
     </section>
-  )
+  );
 }
