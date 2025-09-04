@@ -16,20 +16,24 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-gray-50 overflow-x-hidden">
       <Header />
-      <NavigationBar />
-      <main className="overflow-x-hidden">
-        <HeroSection />
-        <StatsSection />
-        <ImageGridSection />
-        <FeatureHighlightsSection />
-        <CategoriesSection />
-        <RecommendationsSection />
-        <TrendingSection />
-        <LatestProductsSection />
-        <TopPriceChangesSection />
-        <RetailersSection />
-      </main>
-      <Footer />
+      <div className="pt-20">
+        {" "}
+        {/* Increased padding-top to compensate for fixed header */}
+        <NavigationBar />
+        <main className="overflow-x-hidden">
+          <HeroSection />
+          <StatsSection />
+          <ImageGridSection />
+          <FeatureHighlightsSection />
+          <CategoriesSection />
+          <RecommendationsSection />
+          <TrendingSection />
+          <LatestProductsSection />
+          <TopPriceChangesSection />
+          <RetailersSection />
+        </main>
+        <Footer />
+      </div>
     </div>
   );
 }
