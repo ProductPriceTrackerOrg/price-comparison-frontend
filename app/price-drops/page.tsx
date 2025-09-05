@@ -400,37 +400,76 @@ export default function PriceDropsPage() {
             </Breadcrumb>
           </div>
 
-          {/* Header */}
-          <div className="mb-8">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-3 bg-red-100 rounded-full">
-                <TrendingDown className="h-6 w-6 text-red-600" />
+          {/* Beautiful Header with blue background */}
+          <div className="mb-10 overflow-hidden relative">
+            {/* Background with gradient and glass effect */}
+            <div className="bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-700 rounded-2xl shadow-xl 
+                border border-white/10 backdrop-filter overflow-hidden">
+              {/* Decorative patterns */}
+              <div className="absolute inset-0 overflow-hidden">
+                {/* Animated light streaks */}
+                <div className="absolute top-0 left-0 w-full h-1/2 bg-gradient-to-r from-transparent via-white/10 to-transparent 
+                    transform -skew-y-12 -translate-x-full animate-[shimmer_3s_infinite]"></div>
+                
+                {/* Dots pattern */}
+                <div className="absolute inset-0 opacity-15">
+                  <svg width="100%" height="100%" className="opacity-20">
+                    <defs>
+                      <pattern id="dotPattern" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+                        <circle cx="2" cy="2" r="1" fill="white" />
+                      </pattern>
+                    </defs>
+                    <rect width="100%" height="100%" fill="url(#dotPattern)" />
+                  </svg>
+                </div>
+                
+                {/* Circular decorations */}
+                <div className="absolute -top-16 -right-16 w-40 h-40 rounded-full bg-gradient-to-br from-blue-400/30 to-indigo-500/30 blur-md"></div>
+                <div className="absolute -bottom-20 -left-20 w-60 h-60 rounded-full bg-gradient-to-tr from-indigo-400/20 to-purple-500/20 blur-md"></div>
               </div>
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900">
-                  Price Drops
-                </h1>
-                <p className="text-gray-600">
-                  Discover products with recent price reductions
-                </p>
-              </div>
-            </div>
-
-            {/* Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-              <Card>
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-2">
-                    <TrendingDown className="h-5 w-5 text-red-500" />
-                    <div>
-                      <p className="text-sm text-gray-600">Total Drops</p>
-                      <p className="text-2xl font-bold">
-                        {stats?.totalDrops || filteredDrops.length}
-                      </p>
+              
+              {/* Content section with enhanced styling */}
+              <div className="relative z-10 py-6 px-8 flex items-center justify-center">
+                <div className="flex items-center space-x-4">
+                  {/* Icon with glow effect */}
+                  <div className="relative">
+                    <div className="absolute -inset-1 bg-white/30 rounded-full blur-sm"></div>
+                    <div className="relative bg-gradient-to-br from-blue-400 to-indigo-600 p-3 rounded-full 
+                        shadow-[0_0_15px_rgba(59,130,246,0.5)] animate-pulse border border-white/30">
+                      <TrendingDown className="h-8 w-8 text-white drop-shadow-md" />
                     </div>
                   </div>
-                </CardContent>
-              </Card>
+                  
+                  {/* Text with enhanced styling */}
+                  <div>
+                    <h1 className="text-3xl md:text-4xl font-extrabold text-white tracking-tight drop-shadow-md 
+                        bg-gradient-to-r from-white to-blue-100 bg-clip-text">
+                      <span className="relative inline-block">
+                        Price Drops
+                        <span className="absolute bottom-0 left-0 w-full h-1 bg-white/40 rounded"></span>
+                      </span>
+                    </h1>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Stats */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center gap-2">
+                  <TrendingDown className="h-5 w-5 text-red-500" />
+                  <div>
+                    <p className="text-sm text-gray-600">Total Drops</p>
+                    <p className="text-2xl font-bold">
+                      {stats?.totalDrops || filteredDrops.length}
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
               <Card>
                 <CardContent className="p-4">
                   <div className="flex items-center gap-2">
@@ -485,7 +524,6 @@ export default function PriceDropsPage() {
                 </CardContent>
               </Card>
             </div>
-          </div>
 
           {/* Filters */}
           <Card className="mb-6">

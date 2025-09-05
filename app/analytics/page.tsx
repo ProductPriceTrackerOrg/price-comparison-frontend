@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Header } from "@/components/layout/header";
 import { NavigationBar } from "@/components/layout/navigation-bar";
 import { Footer } from "@/components/layout/footer";
+import { PageHeader } from "@/components/layout/page-header";
 import { AnalyticsOverview } from "@/components/analytics/analytics-overview";
 import { AnalyticsCharts } from "@/components/analytics/analytics-charts";
 import { AnalyticsInsights } from "@/components/analytics/analytics-insights";
@@ -255,44 +256,26 @@ export default function AnalyticsPage() {
 
       <main className="bg-gradient-to-br from-blue-50/30 via-white to-purple-50/30">
         <div className="container mx-auto px-4 py-8">
-          {/* Breadcrumb */}
-          <div className="mb-6">
-            <Breadcrumb>
-              <BreadcrumbList>
-                <BreadcrumbItem>
-                  <BreadcrumbLink href="/" className="flex items-center gap-1">
-                    <Home className="h-4 w-4" />
-                    Home
-                  </BreadcrumbLink>
-                </BreadcrumbItem>
-                <BreadcrumbSeparator />
-                <BreadcrumbItem>
-                  <BreadcrumbPage>Analytics</BreadcrumbPage>
-                </BreadcrumbItem>
-              </BreadcrumbList>
-            </Breadcrumb>
-          </div>
+          {/* Page Header with Beautiful Blue Background */}
+          <PageHeader
+            title="Market Analytics"
+            icon={BarChart3}
+            breadcrumbItems={[{ label: "Analytics" }]}
+          />
 
-          {/* Page Header */}
+          {/* Page Content */}
           <div className="flex items-center justify-between mb-8">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                Market Analytics
-              </h1>
-              <p className="text-gray-600 text-lg">
-                Comprehensive insights into product pricing trends and market
-                dynamics
-              </p>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Badge variant="outline" className="text-sm">
-                <Activity className="h-4 w-4 mr-2" />
-                Real-time Data
-              </Badge>
-              <Badge variant="secondary" className="text-sm">
-                <Globe className="h-4 w-4 mr-2" />
-                47 Retailers
-              </Badge>
+              <div className="flex items-center space-x-2">
+                <Badge variant="outline" className="text-sm">
+                  <Activity className="h-4 w-4 mr-2" />
+                  Real-time Data
+                </Badge>
+                <Badge variant="secondary" className="text-sm">
+                  <Globe className="h-4 w-4 mr-2" />
+                  47 Retailers
+                </Badge>
+              </div>
             </div>
           </div>
 

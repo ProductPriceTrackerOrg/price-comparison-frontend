@@ -29,6 +29,7 @@ import {
 import { Header } from "@/components/layout/header";
 import { NavigationBar } from "@/components/layout/navigation-bar";
 import { Footer } from "@/components/layout/footer";
+import { PageHeader } from "@/components/layout/page-header";
 import { ProductCard } from "@/components/product/product-card";
 import { NewArrivalFilters } from "@/components/new-arrivals/new-arrival-filters";
 import {
@@ -323,42 +324,17 @@ export default function NewArrivalsPage() {
     <div className="min-h-screen bg-gray-50">
       <Header />
       <NavigationBar />
-      <main className="bg-gradient-to-br from-green-50/30 via-white to-blue-50/30">
+      <main className="bg-gradient-to-br from-blue-50/30 via-white to-purple-50/30">
         <div className="container mx-auto px-4 py-8">
-          {/* Breadcrumb */}
-          <div className="mb-6">
-            <Breadcrumb>
-              <BreadcrumbList>
-                <BreadcrumbItem>
-                  <BreadcrumbLink href="/" className="flex items-center gap-1">
-                    <Home className="h-4 w-4" />
-                    Home
-                  </BreadcrumbLink>
-                </BreadcrumbItem>
-                <BreadcrumbSeparator />
-                <BreadcrumbItem>
-                  <BreadcrumbPage>New Arrivals</BreadcrumbPage>
-                </BreadcrumbItem>
-              </BreadcrumbList>
-            </Breadcrumb>
-          </div>
+          {/* Page Header with Beautiful Blue Background */}
+          <PageHeader
+            title="New Arrivals"
+            icon={Sparkles}
+            breadcrumbItems={[{ label: "New Arrivals" }]}
+          />
 
           {/* Header */}
           <div className="mb-8">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-3 bg-green-100 rounded-full">
-                <Sparkles className="h-6 w-6 text-green-600" />
-              </div>
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900">
-                  New Arrivals
-                </h1>
-                <p className="text-gray-600">
-                  Discover the latest products added to our platform
-                </p>
-              </div>
-            </div>
-
             {/* Stats */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
               <Card>
