@@ -86,14 +86,14 @@ export function NavigationBar() {
   ];
 
   return (
-    <nav className="relative bg-white/80 backdrop-blur-md border-b border-gray-200/50 shadow-lg shadow-gray-100/50">
+    <nav className="relative bg-white/90 backdrop-blur-md border-b border-gray-200/50 shadow-lg shadow-gray-100/50 mt-0">
       {/* Gradient overlay for depth */}
       <div className="absolute inset-0 bg-gradient-to-r from-blue-50/30 via-transparent to-purple-50/30 pointer-events-none" />
 
-      <div className="container mx-auto px-4 relative">
-        <div className="flex items-center justify-between py-2">
+      <div className="max-w-6xl mx-auto px-4 relative">
+        <div className="flex items-center justify-between py-1">
           {/* Desktop Navigation */}
-          <div className="hidden lg:flex items-center space-x-2">
+          <div className="hidden lg:flex items-center space-x-1.5">
             {navItems.map((item, index) => (
               <div
                 key={item.label}
@@ -104,7 +104,7 @@ export function NavigationBar() {
                   variant="ghost"
                   size="sm"
                   asChild
-                  className="flex items-center space-x-2 px-4 py-2.5 text-gray-700 transition-all duration-300 ease-out rounded-xl group-hover:shadow-lg relative overflow-hidden"
+                  className="flex items-center space-x-1.5 px-3 py-2 text-gray-700 transition-all duration-300 ease-out rounded-lg group-hover:shadow-md relative overflow-hidden"
                 >
                   <Link href={item.href}>
                     {/* Gradient background on hover */}
@@ -113,9 +113,11 @@ export function NavigationBar() {
                     />
 
                     {/* Content */}
-                    <div className="relative z-10 flex items-center space-x-2">
-                      <item.icon className="h-4 w-4 transition-transform duration-300 group-hover:scale-110" />
-                      <span className="font-medium text-sm">{item.label}</span>
+                    <div className="relative z-10 flex items-center space-x-1.5">
+                      <item.icon className="h-3.5 w-3.5 transition-transform duration-300 group-hover:scale-110" />
+                      <span className="font-medium text-xs tracking-wide">
+                        {item.label}
+                      </span>
                     </div>
 
                     {/* Shine effect */}
@@ -133,11 +135,13 @@ export function NavigationBar() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="flex items-center space-x-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-blue-500 to-purple-500 text-white hover:from-blue-600 hover:to-purple-600 transition-all duration-300 shadow-lg hover:shadow-xl"
+                  className="flex items-center space-x-1.5 px-3 py-2 rounded-lg bg-gradient-to-r from-blue-500 to-purple-500 text-white hover:from-blue-600 hover:to-purple-600 transition-all duration-300 shadow-md hover:shadow-lg"
                 >
-                  <Menu className="h-4 w-4" />
-                  <span className="font-medium">Menu</span>
-                  <ChevronDown className="h-4 w-4 transition-transform duration-200" />
+                  <Menu className="h-3.5 w-3.5" />
+                  <span className="font-medium text-xs tracking-wide">
+                    Menu
+                  </span>
+                  <ChevronDown className="h-3.5 w-3.5 transition-transform duration-200" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-64 mt-2 bg-white/95 backdrop-blur-md border border-gray-200/50 shadow-xl rounded-xl">
@@ -174,7 +178,7 @@ export function NavigationBar() {
           </div>
 
           {/* Right side info */}
-          <div className="hidden md:flex items-center space-x-1">
+          <div className="hidden md:flex items-center space-x-0.5">
             {rightNavItems.map((item, index) => (
               <div
                 key={item.label}
@@ -187,11 +191,13 @@ export function NavigationBar() {
                   variant="ghost"
                   size="sm"
                   asChild
-                  className="flex items-center space-x-2 px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50/80 transition-all duration-300 rounded-lg border border-transparent hover:border-gray-200/50 hover:shadow-sm"
+                  className="flex items-center space-x-1.5 px-2.5 py-1.5 text-gray-600 hover:text-gray-900 hover:bg-gray-50/80 transition-all duration-300 rounded-lg border border-transparent hover:border-gray-200/50 hover:shadow-sm"
                 >
                   <Link href={item.href}>
-                    <item.icon className="h-4 w-4 transition-transform duration-300 group-hover:scale-110" />
-                    <span className="text-sm font-medium">{item.label}</span>
+                    <item.icon className="h-3.5 w-3.5 transition-transform duration-300 group-hover:scale-110" />
+                    <span className="text-xs font-medium tracking-wide">
+                      {item.label}
+                    </span>
                   </Link>
                 </Button>
               </div>
@@ -201,6 +207,9 @@ export function NavigationBar() {
 
         {/* Animated bottom border */}
         <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 opacity-30" />
+
+        {/* Center dot accent */}
+        <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 -translate-y-0.5 w-1.5 h-1.5 rounded-full bg-blue-500 shadow-sm shadow-blue-500/50"></div>
       </div>
     </nav>
   );

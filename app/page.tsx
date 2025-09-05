@@ -16,9 +16,7 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-gray-50 overflow-x-hidden">
       <Header />
-      <div className="pt-20">
-        {" "}
-        {/* Increased padding-top to compensate for fixed header */}
+      <div style={{ paddingTop: "64px" }}>
         <NavigationBar />
         <main className="overflow-x-hidden">
           <HeroSection />

@@ -119,7 +119,7 @@ export function Header() {
       </div>
       <div className="container mx-auto px-4 relative">
         {/* Top bar */}
-        <div className="flex items-center justify-between h-16">
+        <div className="flex items-center justify-between h-16 pb-0">
           {/* Logo with enhanced styling */}
           <Link href="/" className="group flex items-center space-x-3 relative">
             <div className="relative animate-logo-pulse">

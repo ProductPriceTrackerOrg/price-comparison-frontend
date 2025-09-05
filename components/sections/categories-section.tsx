@@ -170,21 +170,117 @@ export function CategoriesSection() {
                   </div>
 
                   <div className="relative">
-                    <div
-                      className={`w-24 h-24 mx-auto mb-6 rounded-2xl shadow-md ${category.bgColor} transition-all duration-300 flex items-center justify-center group-hover:shadow-lg relative overflow-hidden`}
-                    >
-                      {/* Gradient shine effect */}
-                      <div className="absolute inset-0 w-full h-full bg-gradient-to-tr from-white/0 via-white/30 to-white/0 translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-1000"></div>
+                    <div className="relative mx-auto mb-6 w-28 h-28">
+                      {/* Outer glow effect */}
+                      <div
+                        className={`absolute inset-0 rounded-full blur-lg opacity-50 group-hover:opacity-70 transition-opacity duration-300`}
+                        style={{
+                          background: `radial-gradient(circle, ${
+                            category.name === "Smartphones"
+                              ? "rgba(59, 130, 246, 0.5)"
+                              : category.name === "Laptops"
+                              ? "rgba(34, 197, 94, 0.5)"
+                              : category.name === "Smart Watches"
+                              ? "rgba(168, 85, 247, 0.5)"
+                              : category.name === "Headphones"
+                              ? "rgba(249, 115, 22, 0.5)"
+                              : category.name === "Cameras"
+                              ? "rgba(6, 182, 212, 0.5)"
+                              : category.name === "Gaming"
+                              ? "rgba(236, 72, 153, 0.5)"
+                              : category.name === "Tablets"
+                              ? "rgba(99, 102, 241, 0.5)"
+                              : "rgba(239, 68, 68, 0.5)"
+                          } 20%, transparent 65%)`,
+                        }}
+                      ></div>
 
-                      <category.icon
-                        className={`h-12 w-12 ${category.color} transition-all duration-300 group-hover:scale-110`}
-                      />
+                      {/* Main circular background with glass effect */}
+                      <div
+                        className={`w-24 h-24 mx-auto rounded-full shadow-lg backdrop-blur-sm border transition-all duration-500 flex items-center justify-center group-hover:shadow-xl relative overflow-hidden z-10 group-hover:scale-105`}
+                        style={{
+                          background: `linear-gradient(135deg, ${
+                            category.name === "Smartphones"
+                              ? "rgba(219, 234, 254, 0.9)"
+                              : category.name === "Laptops"
+                              ? "rgba(220, 252, 231, 0.9)"
+                              : category.name === "Smart Watches"
+                              ? "rgba(243, 232, 255, 0.9)"
+                              : category.name === "Headphones"
+                              ? "rgba(255, 237, 213, 0.9)"
+                              : category.name === "Cameras"
+                              ? "rgba(207, 250, 254, 0.9)"
+                              : category.name === "Gaming"
+                              ? "rgba(252, 231, 243, 0.9)"
+                              : category.name === "Tablets"
+                              ? "rgba(224, 231, 255, 0.9)"
+                              : "rgba(254, 226, 226, 0.9)"
+                          }, white)`,
+                          borderColor: `${
+                            category.name === "Smartphones"
+                              ? "rgba(96, 165, 250, 0.3)"
+                              : category.name === "Laptops"
+                              ? "rgba(74, 222, 128, 0.3)"
+                              : category.name === "Smart Watches"
+                              ? "rgba(192, 132, 252, 0.3)"
+                              : category.name === "Headphones"
+                              ? "rgba(251, 146, 60, 0.3)"
+                              : category.name === "Cameras"
+                              ? "rgba(34, 211, 238, 0.3)"
+                              : category.name === "Gaming"
+                              ? "rgba(244, 114, 182, 0.3)"
+                              : category.name === "Tablets"
+                              ? "rgba(129, 140, 248, 0.3)"
+                              : "rgba(248, 113, 113, 0.3)"
+                          }`,
+                        }}
+                      >
+                        {/* Inner circle with stronger color */}
+                        <div
+                          className={`w-16 h-16 rounded-full flex items-center justify-center transition-all duration-500 group-hover:scale-110 relative`}
+                          style={{
+                            background: `linear-gradient(135deg, ${
+                              category.name === "Smartphones"
+                                ? "rgba(59, 130, 246, 0.15)"
+                                : category.name === "Laptops"
+                                ? "rgba(34, 197, 94, 0.15)"
+                                : category.name === "Smart Watches"
+                                ? "rgba(168, 85, 247, 0.15)"
+                                : category.name === "Headphones"
+                                ? "rgba(249, 115, 22, 0.15)"
+                                : category.name === "Cameras"
+                                ? "rgba(6, 182, 212, 0.15)"
+                                : category.name === "Gaming"
+                                ? "rgba(236, 72, 153, 0.15)"
+                                : category.name === "Tablets"
+                                ? "rgba(99, 102, 241, 0.15)"
+                                : "rgba(239, 68, 68, 0.15)"
+                            }, rgba(255, 255, 255, 0.8))`,
+                          }}
+                        >
+                          <category.icon
+                            className={`h-9 w-9 ${category.color} transition-all duration-500 group-hover:scale-125 drop-shadow-md`}
+                          />
+                        </div>
+
+                        {/* Shine effect */}
+                        <div className="absolute inset-0 w-full h-full bg-gradient-to-tr from-white/0 via-white/40 to-white/0 translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-1000"></div>
+                      </div>
+
+                      {/* Decorative dots */}
+                      <div className="absolute w-2 h-2 rounded-full bg-white/80 shadow-sm -right-1 top-1/4 group-hover:scale-150 transition-transform duration-500"></div>
+                      <div className="absolute w-1.5 h-1.5 rounded-full bg-white/70 shadow-sm right-6 -top-1 group-hover:scale-150 transition-transform duration-700"></div>
+                      <div className="absolute w-1 h-1 rounded-full bg-white/80 shadow-sm left-8 bottom-2 group-hover:scale-200 transition-transform duration-500"></div>
                     </div>
 
                     <h3
-                      className={`font-bold text-gray-900 mb-3 text-xl group-hover:${category.color} transition-colors relative`}
+                      className={`font-bold mb-3 text-xl transition-colors relative`}
                     >
-                      {category.name}
+                      <span
+                        className={`text-gray-900 group-hover:${category.color} transition-all duration-300`}
+                      >
+                        {category.name}
+                      </span>
                       <div
                         className={`w-0 h-0.5 mx-auto mt-2 ${category.color} opacity-0 group-hover:w-1/2 group-hover:opacity-70 transition-all duration-300`}
                       ></div>
