@@ -6,6 +6,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from "@/contexts/auth-context";
 import { PageLoadingIndicator } from "@/components/layout/page-loading-indicator";
 import { NavigationProgressBar } from "@/components/layout/navigation-progress-bar";
+import { SessionTimeoutProvider } from "@/components/auth/session-timeout-provider";
+import { TokenRefreshHandler } from "@/components/auth/token-refresh-handler";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -27,10 +29,14 @@ export default function RootLayout({
     <html lang="en" className="overflow-x-hidden">
       <body className={`${inter.className} overflow-x-hidden`}>
         <AuthProvider>
-          <PageLoadingIndicator />
-          <NavigationProgressBar />
-          {children}
-          <Toaster />
+          <TokenRefreshHandler>
+            <SessionTimeoutProvider>
+              <PageLoadingIndicator />
+              <NavigationProgressBar />
+              {children}
+              <Toaster />
+            </SessionTimeoutProvider>
+          </TokenRefreshHandler>
         </AuthProvider>
       </body>
     </html>
