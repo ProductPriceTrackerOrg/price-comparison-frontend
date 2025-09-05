@@ -4,10 +4,10 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from "@/contexts/auth-context";
-import { PageLoadingIndicator } from "@/components/layout/page-loading-indicator";
-import { NavigationProgressBar } from "@/components/layout/navigation-progress-bar";
 import { SessionTimeoutProvider } from "@/components/auth/session-timeout-provider";
 import { TokenRefreshHandler } from "@/components/auth/token-refresh-handler";
+import { PageLoadingIndicator } from "@/components/layout/page-loading-indicator";
+import { NavigationProgressBar } from "@/components/layout/navigation-progress-bar";
 
 const inter = Inter({
   variable: "--font-inter",
