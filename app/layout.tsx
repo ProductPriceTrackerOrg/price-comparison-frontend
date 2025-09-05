@@ -4,6 +4,8 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from "@/contexts/auth-context";
+import { PageLoadingIndicator } from "@/components/layout/page-loading-indicator";
+import { NavigationProgressBar } from "@/components/layout/navigation-progress-bar";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -25,6 +27,8 @@ export default function RootLayout({
     <html lang="en" className="overflow-x-hidden">
       <body className={`${inter.className} overflow-x-hidden`}>
         <AuthProvider>
+          <PageLoadingIndicator />
+          <NavigationProgressBar />
           {children}
           <Toaster />
         </AuthProvider>
