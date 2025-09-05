@@ -492,9 +492,12 @@ export default function TrendingPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {filteredProducts.slice(0, 4).map((product) => (
                 <div key={product.id} className="relative group">
-                  <Card className="overflow-hidden hover:shadow-xl transition-all duration-300 group-hover:scale-[1.02]">
+                  <Card
+                    className="overflow-hidden hover:shadow-xl transition-all duration-300 group-hover:scale-[1.02]"
+                    onClick={(e) => e.stopPropagation()}
+                  >
                     {/* Trending Badge */}
-                    <div className="absolute top-3 left-3 z-20 flex gap-2">
+                    <div className="absolute top-3 left-3 z-20 flex gap-2 pointer-events-none">
                       <Badge className="bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white font-bold shadow-lg flex items-center gap-1">
                         <Fire className="h-3 w-3" />#{product.trendingPosition}
                       </Badge>
@@ -505,8 +508,8 @@ export default function TrendingPage() {
                       )}
                     </div>
 
-                    {/* Trending Change Indicator */}
-                    <div className="absolute top-3 right-3 z-20">
+                    {/* Trending Change Indicator - added pointer-events-none */}
+                    <div className="absolute top-3 right-3 z-20 pointer-events-none">
                       <div className="bg-white/90 backdrop-blur-sm rounded-full p-1.5 shadow-md">
                         {getTrendingIcon(product.trendingChange)}
                       </div>
@@ -515,8 +518,8 @@ export default function TrendingPage() {
                     {/* Product Card Content */}
                     <ProductCard product={product} />
 
-                    {/* Trending Metrics Overlay */}
-                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-4 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    {/* Trending Metrics Overlay - added pointer-events-none to prevent blocking clicks */}
+                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-4 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
                       <div className="grid grid-cols-3 gap-3 text-xs">
                         <div className="flex items-center gap-1">
                           <Eye className="h-3 w-3" />

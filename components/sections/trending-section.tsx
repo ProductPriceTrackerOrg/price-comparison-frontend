@@ -378,7 +378,10 @@ export function TrendingSection() {
             {activeTab === "trends" && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {trendingProducts.slice(0, 2).map((product, index) => (
-                  <div key={product.id} className="relative group transform hover:scale-105 transition-all duration-300">
+                  <div
+                    key={product.id}
+                    className="relative group transform hover:scale-105 transition-all duration-300"
+                  >
                     <div className="absolute -top-2 -right-2 z-20">
                       <Badge className="bg-gradient-to-r from-orange-500 to-red-500 text-white font-bold shadow-lg animate-pulse">
                         #{index + 1} TRENDING
@@ -398,9 +401,9 @@ export function TrendingSection() {
 
                     <div className="relative overflow-hidden rounded-2xl shadow-lg border border-white/10 hover:shadow-xl hover:border-white/20 transition-all duration-300">
                       <ProductCard product={product} />
-                      
-                      {/* Glow effect on hover */}
-                      <div className="absolute inset-0 bg-gradient-to-tr from-orange-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+
+                      {/* Glow effect on hover - moved to back with pointer-events-none */}
+                      <div className="absolute inset-0 bg-gradient-to-tr from-orange-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
                     </div>
                   </div>
                 ))}
@@ -410,7 +413,10 @@ export function TrendingSection() {
             {activeTab === "launches" && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {newLaunches.slice(0, 2).map((product) => (
-                  <div key={product.id} className="relative group transform hover:scale-105 transition-all duration-300">
+                  <div
+                    key={product.id}
+                    className="relative group transform hover:scale-105 transition-all duration-300"
+                  >
                     <div className="absolute -top-2 -right-2 z-20">
                       <Badge className="bg-gradient-to-r from-green-500 to-blue-500 text-white font-bold shadow-lg animate-bounce">
                         <Sparkles className="h-3 w-3 mr-1" />
@@ -435,9 +441,9 @@ export function TrendingSection() {
 
                     <div className="relative overflow-hidden rounded-2xl shadow-lg border border-white/10 hover:shadow-xl hover:border-white/20 transition-all duration-300">
                       <ProductCard product={product} />
-                      
-                      {/* Glow effect on hover */}
-                      <div className="absolute inset-0 bg-gradient-to-tr from-blue-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+
+                      {/* Glow effect on hover - moved to back with pointer-events-none */}
+                      <div className="absolute inset-0 bg-gradient-to-tr from-blue-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
                     </div>
                   </div>
                 ))}

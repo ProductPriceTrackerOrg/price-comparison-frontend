@@ -92,7 +92,7 @@ export function TopPriceChangesSection() {
             asChild
             className="hidden md:flex border-green-300 hover:bg-green-100/50 text-green-700"
           >
-            <a href="/price-changes">
+            <a href="/price-drops">
               View All Changes
               <ArrowRight className="ml-2 h-4 w-4" />
             </a>
@@ -123,8 +123,8 @@ export function TopPriceChangesSection() {
                   </div>
                 </div>
 
-                {/* Highlight effect on hover */}
-                <div className="absolute inset-0 bg-gradient-to-tr from-green-500/10 to-emerald-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                {/* Highlight effect on hover - moved to back with pointer-events-none */}
+                <div className="absolute inset-0 bg-gradient-to-tr from-green-500/10 to-emerald-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
               </div>
             </div>
           ))}
@@ -136,7 +136,7 @@ export function TopPriceChangesSection() {
             asChild
             className="bg-gradient-to-r from-green-50 to-emerald-50 hover:from-green-100 hover:to-emerald-100 border-green-300 text-green-700"
           >
-            <a href="/price-changes">
+            <a href="/price-drops">
               View All Price Changes
               <ArrowRight className="ml-2 h-4 w-4" />
             </a>

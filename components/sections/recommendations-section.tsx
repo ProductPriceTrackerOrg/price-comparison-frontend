@@ -156,8 +156,8 @@ export function RecommendationsSection() {
                       </div>
                     </div>
                     <ProductCard product={product} />
-                    {/* Highlight effect on hover */}
-                    <div className="absolute inset-0 bg-gradient-to-tr from-indigo-500/10 to-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    {/* Highlight effect on hover - moved to back with pointer-events-none */}
+                    <div className="absolute inset-0 bg-gradient-to-tr from-indigo-500/10 to-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
                   </div>
                 </div>
               ))}
@@ -191,8 +191,8 @@ export function RecommendationsSection() {
                       </div>
                     </div>
                     <ProductCard product={product} />
-                    {/* Highlight effect on hover */}
-                    <div className="absolute inset-0 bg-gradient-to-tr from-green-500/10 to-teal-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    {/* Highlight effect on hover - moved to back with pointer-events-none */}
+                    <div className="absolute inset-0 bg-gradient-to-tr from-green-500/10 to-teal-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
                   </div>
                 </div>
               ))}
@@ -225,8 +225,8 @@ export function RecommendationsSection() {
                       </div>
                     </div>
                     <ProductCard product={product} />
-                    {/* Highlight effect on hover */}
-                    <div className="absolute inset-0 bg-gradient-to-tr from-purple-500/10 to-pink-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    {/* Highlight effect on hover - moved to back with pointer-events-none */}
+                    <div className="absolute inset-0 bg-gradient-to-tr from-purple-500/10 to-pink-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
                   </div>
                 </div>
               ))}

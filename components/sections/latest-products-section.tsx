@@ -93,7 +93,7 @@ export function LatestProductsSection() {
             asChild
             className="hidden md:flex bg-transparent border-blue-300 hover:bg-blue-50 text-blue-700"
           >
-            <a href="/products/latest">
+            <a href="/new-arrivals">
               View All
               <ArrowRight className="ml-2 h-4 w-4" />
             </a>
@@ -114,8 +114,8 @@ export function LatestProductsSection() {
                 </div>
                 <ProductCard product={product} />
 
-                {/* Highlight effect on hover */}
-                <div className="absolute inset-0 bg-gradient-to-tr from-blue-500/10 to-indigo-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                {/* Highlight effect on hover - moved to back with pointer-events-none */}
+                <div className="absolute inset-0 bg-gradient-to-tr from-blue-500/10 to-indigo-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
               </div>
             </div>
           ))}
@@ -127,7 +127,7 @@ export function LatestProductsSection() {
             asChild
             className="bg-gradient-to-r from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100 border-blue-300 text-blue-700"
           >
-            <a href="/products/latest">
+            <a href="/new-arrivals">
               View All Latest Products
               <ArrowRight className="ml-2 h-4 w-4" />
             </a>

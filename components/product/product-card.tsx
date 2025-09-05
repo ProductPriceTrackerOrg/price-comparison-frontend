@@ -68,7 +68,7 @@ export function ProductCard({ product }: ProductCardProps) {
     e.preventDefault()
     e.stopPropagation()
 
-    navigator.clipboard.writeText(`${window.location.origin}/product/${product.id}`)
+    navigator.clipboard.writeText(`${window.location.origin}/product/${encodeURIComponent(product.id.toString())}`)
     toast({
       title: "Link copied",
       description: "Product link copied to clipboard",
@@ -80,6 +80,7 @@ export function ProductCard({ product }: ProductCardProps) {
       className="group bg-white border border-gray-200 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-3 overflow-hidden h-full flex flex-col relative"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
+      onClick={(e) => e.stopPropagation()}
     >
       {/* Enhanced Gradient Overlay */}
       <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-transparent to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
@@ -87,7 +88,7 @@ export function ProductCard({ product }: ProductCardProps) {
       <CardContent className="p-0 flex flex-col h-full relative z-10">
         {/* Enhanced Image Section */}
         <div className="relative overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100 rounded-t-2xl">
-          <Link href={`/product/${product.id}`} className="block">
+          <Link href={`/product/${encodeURIComponent(product.id.toString())}`} className="block">
             <img
               src={product.image || "/placeholder.svg?height=240&width=240&text=Product"}
               alt={product.name}
@@ -182,7 +183,7 @@ export function ProductCard({ product }: ProductCardProps) {
           </div>
 
           {/* Product Name - Enhanced */}
-          <Link href={`/product/${product.id}`} className="block">
+          <Link href={`/product/${encodeURIComponent(product.id.toString())}`} className="block">
             <h3 className="font-bold text-gray-900 hover:text-blue-600 transition-colors line-clamp-2 leading-tight text-base group-hover:text-blue-600">
               {product.name}
             </h3>
@@ -266,15 +267,15 @@ export function ProductCard({ product }: ProductCardProps) {
 
           {/* Enhanced Action Button */}
           <div className="mt-auto pt-2">
-            <Button
-              asChild
-              className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl rounded-xl h-12 font-semibold"
-            >
-              <Link href={`/product/${product.id}`}>
+            <Link href={`/product/${encodeURIComponent(product.id.toString())}`} passHref className="block">
+              <Button
+                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl rounded-xl h-12 font-semibold"
+                onClick={(e) => e.stopPropagation()}
+              >
                 <Eye className="mr-2 h-4 w-4" />
                 View Details
-              </Link>
-            </Button>
+              </Button>
+            </Link>
           </div>
         </div>
       </CardContent>
