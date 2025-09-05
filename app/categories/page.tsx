@@ -4,6 +4,7 @@ import { useState, useMemo } from "react";
 import { Header } from "@/components/layout/header";
 import { NavigationBar } from "@/components/layout/navigation-bar";
 import { Footer } from "@/components/layout/footer";
+import { PageHeader } from "@/components/layout/page-header";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -288,151 +289,138 @@ export default function CategoriesPage() {
   const trendingCategories = categories.filter((cat) => cat.trending);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+    <div className="min-h-screen bg-gray-50">
       <Header />
       <NavigationBar />
 
-      <main className="container mx-auto px-4 py-8">
-        {/* Breadcrumb Navigation */}
-        <div className="flex items-center gap-2 text-sm text-gray-600 mb-6">
-          <Home className="h-4 w-4" />
-          <span>Home</span>
-          <ChevronRight className="h-4 w-4" />
-          <span className="font-medium text-gray-900">Categories</span>
-        </div>
+      <main className="bg-gradient-to-br from-blue-50/30 via-white to-purple-50/30">
+        <div className="container mx-auto px-4 py-8">
+          {/* Page Header with Beautiful Blue Background */}
+          <PageHeader
+            title="All Categories"
+            icon={Grid3X3}
+            breadcrumbItems={[{ label: "All Categories" }]}
+          />
 
-        {/* Header Section */}
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-3 bg-blue-100 rounded-full">
-              <Grid3X3 className="h-6 w-6 text-blue-600" />
-            </div>
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">
-                All Categories
-              </h1>
-              <p className="text-gray-600">
-                Explore our comprehensive collection of electronics and tech products
-              </p>
-            </div>
-          </div>
-        </div>
+          {/* Search and Filter Section */}
+          <div className="bg-white rounded-2xl shadow-lg p-6 mb-8 border border-gray-200">
+            <div className="flex flex-col lg:flex-row gap-4 items-center">
+              <div className="flex-1 relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                <Input
+                  placeholder="Search categories..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10 h-12 border-2 border-gray-200 focus:border-blue-500 rounded-xl"
+                />
+              </div>
 
-        {/* Search and Filter Section */}
-        <div className="bg-white rounded-2xl shadow-lg p-6 mb-8 border border-gray-200">
-          <div className="flex flex-col lg:flex-row gap-4 items-center">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-              <Input
-                placeholder="Search categories..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 h-12 border-2 border-gray-200 focus:border-blue-500 rounded-xl"
-              />
-            </div>
-
-            <div className="flex gap-3">
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as "name" | "count")}
-                className="px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:outline-none"
-              >
-                <option value="name">Sort by Name</option>
-                <option value="count">Sort by Product Count</option>
-              </select>
-            </div>
-          </div>
-        </div>
-
-        {/* Categories Grid/List */}
-        <div className="mb-6">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-gray-900">
-              All Categories ({filteredCategories.length})
-            </h2>
-            {searchTerm && (
-              <Badge variant="outline" className="text-sm">
-                Showing results for "{searchTerm}"
-              </Badge>
-            )}
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {filteredCategories.map((category, index) => (
-              <Link key={category.name} href={category.href}>
-                <Card
-                  className={`group hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 h-full border-2 ${category.borderColor} hover:border-opacity-50`}
-                  style={{ animationDelay: `${index * 50}ms` }}
+              <div className="flex gap-3">
+                <select
+                  value={sortBy}
+                  onChange={(e) =>
+                    setSortBy(e.target.value as "name" | "count")
+                  }
+                  className="px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:outline-none"
                 >
-                  <CardContent className="p-6 text-center h-full flex flex-col">
-                    <div className="relative mb-4">
-                      <div
-                        className={`w-16 h-16 ${category.bgColor} rounded-2xl flex items-center justify-center mx-auto group-hover:scale-110 transition-transform duration-300 border-2 ${category.borderColor}`}
-                      >
-                        <category.icon
-                          className={`h-8 w-8 ${category.color}`}
-                        />
-                      </div>
-                      {category.trending && (
-                        <div className="absolute -top-2 -right-2 w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center">
-                          <TrendingUp className="h-3 w-3 text-white" />
-                        </div>
-                      )}
-                    </div>
-
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
-                      {category.name}
-                    </h3>
-
-                    <p className="text-sm text-gray-600 mb-4 flex-grow leading-relaxed">
-                      {category.description}
-                    </p>
-
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between text-xs text-gray-500">
-                        <span>Avg. savings</span>
-                        <span className="font-semibold text-green-600">
-                          {category.avgSavings}
-                        </span>
-                      </div>
-
-                      <div className="flex items-center justify-center">
-                        <Badge
-                          variant="secondary"
-                          className="text-xs font-medium"
-                        >
-                          {category.count} products
-                        </Badge>
-                      </div>
-
-                      <div className="flex items-center justify-center text-blue-600 text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity">
-                        Explore category <ArrowRight className="h-4 w-4 ml-1" />
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </Link>
-            ))}
-          </div>
-        </div>
-
-        {/* No Results */}
-        {filteredCategories.length === 0 && (
-          <div className="text-center py-12">
-            <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Search className="h-12 w-12 text-gray-400" />
+                  <option value="name">Sort by Name</option>
+                  <option value="count">Sort by Product Count</option>
+                </select>
+              </div>
             </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">
-              No categories found
-            </h3>
-            <p className="text-gray-600 mb-4">
-              Try adjusting your search terms or browse all categories.
-            </p>
-            <Button onClick={() => setSearchTerm("")} variant="outline">
-              Clear search
-            </Button>
           </div>
-        )}
+
+          {/* Categories Grid/List */}
+          <div className="mb-6">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-gray-900">
+                All Categories ({filteredCategories.length})
+              </h2>
+              {searchTerm && (
+                <Badge variant="outline" className="text-sm">
+                  Showing results for "{searchTerm}"
+                </Badge>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {filteredCategories.map((category, index) => (
+                <Link key={category.name} href={category.href}>
+                  <Card
+                    className={`group hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 h-full border-2 ${category.borderColor} hover:border-opacity-50`}
+                    style={{ animationDelay: `${index * 50}ms` }}
+                  >
+                    <CardContent className="p-6 text-center h-full flex flex-col">
+                      <div className="relative mb-4">
+                        <div
+                          className={`w-16 h-16 ${category.bgColor} rounded-2xl flex items-center justify-center mx-auto group-hover:scale-110 transition-transform duration-300 border-2 ${category.borderColor}`}
+                        >
+                          <category.icon
+                            className={`h-8 w-8 ${category.color}`}
+                          />
+                        </div>
+                        {category.trending && (
+                          <div className="absolute -top-2 -right-2 w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center">
+                            <TrendingUp className="h-3 w-3 text-white" />
+                          </div>
+                        )}
+                      </div>
+
+                      <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
+                        {category.name}
+                      </h3>
+
+                      <p className="text-sm text-gray-600 mb-4 flex-grow leading-relaxed">
+                        {category.description}
+                      </p>
+
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between text-xs text-gray-500">
+                          <span>Avg. savings</span>
+                          <span className="font-semibold text-green-600">
+                            {category.avgSavings}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center justify-center">
+                          <Badge
+                            variant="secondary"
+                            className="text-xs font-medium"
+                          >
+                            {category.count} products
+                          </Badge>
+                        </div>
+
+                        <div className="flex items-center justify-center text-blue-600 text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity">
+                          Explore category{" "}
+                          <ArrowRight className="h-4 w-4 ml-1" />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          {/* No Results */}
+          {filteredCategories.length === 0 && (
+            <div className="text-center py-12">
+              <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Search className="h-12 w-12 text-gray-400" />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                No categories found
+              </h3>
+              <p className="text-gray-600 mb-4">
+                Try adjusting your search terms or browse all categories.
+              </p>
+              <Button onClick={() => setSearchTerm("")} variant="outline">
+                Clear search
+              </Button>
+            </div>
+          )}
+        </div>
       </main>
 
       <Footer />

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Header } from "@/components/layout/header";
 import { NavigationBar } from "@/components/layout/navigation-bar";
 import { Footer } from "@/components/layout/footer";
+import { PageHeader } from "@/components/layout/page-header";
 import { ProductCard } from "@/components/product/product-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -315,283 +316,274 @@ export default function TrendingPage() {
       <Header />
       <NavigationBar />
 
-      <main className="container mx-auto px-4 py-8">
-        {/* Breadcrumb Navigation */}
-        <div className="flex items-center gap-2 text-sm text-gray-600 mb-6">
-          <Home className="h-4 w-4" />
-          <span>Home</span>
-          <ChevronRight className="h-4 w-4" />
-          <span className="font-medium text-gray-900">Trending</span>
-        </div>
+      <main className="bg-gradient-to-br from-blue-50/30 via-white to-purple-50/30">
+        <div className="container mx-auto px-4 py-8">
+          {/* Page Header with Beautiful Blue Background */}
+          <PageHeader
+            title="Trending Products"
+            icon={Fire}
+            breadcrumbItems={[{ label: "Trending" }]}
+          />
 
-        {/* Header Section */}
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-3 bg-red-100 rounded-full">
-              <Fire className="h-6 w-6 text-red-600" />
-            </div>
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">
-                Trending Products
-              </h1>
-              <p className="text-gray-600">
-                Discover what's hot right now! Real-time insights into the most
-                popular products
+          {/* Content Section */}
+          <div className="mb-8"></div>
+
+          {/* Filter Results Summary */}
+          {(selectedCategory !== "all" ||
+            selectedRetailer !== "all" ||
+            selectedPriceRange !== "all") && (
+            <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg max-w-2xl">
+              <p className="text-sm text-blue-800">
+                <span className="font-medium">Filtered Results:</span> Showing{" "}
+                {filteredProducts.length} products
+                {selectedCategory !== "all" && (
+                  <span>
+                    {" "}
+                    in{" "}
+                    {
+                      categories.find((c) => c.value === selectedCategory)
+                        ?.label
+                    }
+                  </span>
+                )}
+                {selectedRetailer !== "all" && (
+                  <span>
+                    {" "}
+                    from{" "}
+                    {retailers.find((r) => r.value === selectedRetailer)?.label}
+                  </span>
+                )}
+                {selectedPriceRange !== "all" && (
+                  <span>
+                    {" "}
+                    priced{" "}
+                    {
+                      priceRanges.find((p) => p.value === selectedPriceRange)
+                        ?.label
+                    }
+                  </span>
+                )}
               </p>
             </div>
-          </div>
-        </div>
+          )}
 
-        {/* Filter Results Summary */}
-        {(selectedCategory !== "all" ||
-          selectedRetailer !== "all" ||
-          selectedPriceRange !== "all") && (
-          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg max-w-2xl">
-            <p className="text-sm text-blue-800">
-              <span className="font-medium">Filtered Results:</span> Showing{" "}
-              {filteredProducts.length} products
-              {selectedCategory !== "all" && (
-                <span>
-                  {" "}
-                  in{" "}
-                  {categories.find((c) => c.value === selectedCategory)?.label}
-                </span>
-              )}
-              {selectedRetailer !== "all" && (
-                <span>
-                  {" "}
-                  from{" "}
-                  {retailers.find((r) => r.value === selectedRetailer)?.label}
-                </span>
-              )}
-              {selectedPriceRange !== "all" && (
-                <span>
-                  {" "}
-                  priced{" "}
-                  {
-                    priceRanges.find((p) => p.value === selectedPriceRange)
-                      ?.label
-                  }
-                </span>
-              )}
-            </p>
-          </div>
-        )}
-
-        {/* Filters Section */}
-        <div className="mb-8">
-          <div className="flex flex-col sm:flex-row gap-4 justify-start items-start flex-wrap">
-            <div className="flex items-center gap-2">
-              <Clock className="h-4 w-4 text-gray-500" />
-              <Select value={timeRange} onValueChange={setTimeRange}>
-                <SelectTrigger className="w-40">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {timeRanges.map((range) => (
-                    <SelectItem key={range.value} value={range.value}>
-                      {range.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <Filter className="h-4 w-4 text-gray-500" />
-              <Select
-                value={selectedCategory}
-                onValueChange={setSelectedCategory}
-              >
-                <SelectTrigger className="w-48">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {categories.map((category) => (
-                    <SelectItem key={category.value} value={category.value}>
-                      {category.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <ShoppingCart className="h-4 w-4 text-gray-500" />
-              <Select
-                value={selectedRetailer}
-                onValueChange={setSelectedRetailer}
-              >
-                <SelectTrigger className="w-48">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {retailers.map((retailer) => (
-                    <SelectItem key={retailer.value} value={retailer.value}>
-                      {retailer.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-gray-500">$</span>
-              <Select
-                value={selectedPriceRange}
-                onValueChange={setSelectedPriceRange}
-              >
-                <SelectTrigger className="w-40">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {priceRanges.map((range) => (
-                    <SelectItem key={range.value} value={range.value}>
-                      {range.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        </div>
-
-        {/* Statistics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {trendingStats.map((stat, index) => (
-            <Card key={index} className="hover:shadow-lg transition-shadow">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-gray-600 mb-1">{stat.title}</p>
-                    <p className="text-2xl font-bold text-gray-900">
-                      {stat.value}
-                    </p>
-                    <div
-                      className={`flex items-center gap-1 text-sm ${getChangeColor(
-                        stat.trend
-                      )}`}
-                    >
-                      {stat.trend === "up" && (
-                        <ArrowUpRight className="h-3 w-3" />
-                      )}
-                      {stat.trend === "down" && (
-                        <ArrowDownRight className="h-3 w-3" />
-                      )}
-                      <span>{stat.change}</span>
-                    </div>
-                  </div>
-                  <div className={`p-3 rounded-full bg-gray-100 ${stat.color}`}>
-                    <stat.icon className="h-6 w-6" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-
-        {/* Trending Products Section */}
-        <div className="space-y-6">
-          <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <Fire className="h-6 w-6 text-red-500" />
-            Trending Now
-          </h2>
-
-          {/* Products Grid - 4 columns on desktop */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {filteredProducts.slice(0, 4).map((product) => (
-              <div key={product.id} className="relative group">
-                <Card className="overflow-hidden hover:shadow-xl transition-all duration-300 group-hover:scale-[1.02]">
-                  {/* Trending Badge */}
-                  <div className="absolute top-3 left-3 z-20 flex gap-2">
-                    <Badge className="bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white font-bold shadow-lg flex items-center gap-1">
-                      <Fire className="h-3 w-3" />#{product.trendingPosition}
-                    </Badge>
-                    {product.trendingChange === "new" && (
-                      <Badge className="bg-gradient-to-r from-green-500 to-emerald-500 text-white font-bold">
-                        NEW
-                      </Badge>
-                    )}
-                  </div>
-
-                  {/* Trending Change Indicator */}
-                  <div className="absolute top-3 right-3 z-20">
-                    <div className="bg-white/90 backdrop-blur-sm rounded-full p-1.5 shadow-md">
-                      {getTrendingIcon(product.trendingChange)}
-                    </div>
-                  </div>
-
-                  {/* Product Card Content */}
-                  <ProductCard product={product} />
-
-                  {/* Trending Metrics Overlay */}
-                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-4 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    <div className="grid grid-cols-3 gap-3 text-xs">
-                      <div className="flex items-center gap-1">
-                        <Eye className="h-3 w-3" />
-                        <span>{product.views}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Heart className="h-3 w-3" />
-                        <span>{product.favorites}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <BarChart3 className="h-3 w-3" />
-                        <span>{product.trendingScore}%</span>
-                      </div>
-                    </div>
-                    <div className="mt-2 text-xs opacity-80">
-                      Trending for {product.daysInTrending} days
-                      {product.lastWeekPosition && (
-                        <span>
-                          {" "}
-                          • Was #{product.lastWeekPosition} last week
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </Card>
+          {/* Filters Section */}
+          <div className="mb-8">
+            <div className="flex flex-col sm:flex-row gap-4 justify-start items-start flex-wrap">
+              <div className="flex items-center gap-2">
+                <Clock className="h-4 w-4 text-gray-500" />
+                <Select value={timeRange} onValueChange={setTimeRange}>
+                  <SelectTrigger className="w-40">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {timeRanges.map((range) => (
+                      <SelectItem key={range.value} value={range.value}>
+                        {range.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
+
+              <div className="flex items-center gap-2">
+                <Filter className="h-4 w-4 text-gray-500" />
+                <Select
+                  value={selectedCategory}
+                  onValueChange={setSelectedCategory}
+                >
+                  <SelectTrigger className="w-48">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map((category) => (
+                      <SelectItem key={category.value} value={category.value}>
+                        {category.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <ShoppingCart className="h-4 w-4 text-gray-500" />
+                <Select
+                  value={selectedRetailer}
+                  onValueChange={setSelectedRetailer}
+                >
+                  <SelectTrigger className="w-48">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {retailers.map((retailer) => (
+                      <SelectItem key={retailer.value} value={retailer.value}>
+                        {retailer.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-gray-500">$</span>
+                <Select
+                  value={selectedPriceRange}
+                  onValueChange={setSelectedPriceRange}
+                >
+                  <SelectTrigger className="w-40">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {priceRanges.map((range) => (
+                      <SelectItem key={range.value} value={range.value}>
+                        {range.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+
+          {/* Statistics Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            {trendingStats.map((stat, index) => (
+              <Card key={index} className="hover:shadow-lg transition-shadow">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-gray-600 mb-1">{stat.title}</p>
+                      <p className="text-2xl font-bold text-gray-900">
+                        {stat.value}
+                      </p>
+                      <div
+                        className={`flex items-center gap-1 text-sm ${getChangeColor(
+                          stat.trend
+                        )}`}
+                      >
+                        {stat.trend === "up" && (
+                          <ArrowUpRight className="h-3 w-3" />
+                        )}
+                        {stat.trend === "down" && (
+                          <ArrowDownRight className="h-3 w-3" />
+                        )}
+                        <span>{stat.change}</span>
+                      </div>
+                    </div>
+                    <div
+                      className={`p-3 rounded-full bg-gray-100 ${stat.color}`}
+                    >
+                      <stat.icon className="h-6 w-6" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             ))}
           </div>
 
-          {/* Show message when no products match filters */}
-          {filteredProducts.length === 0 && (
-            <div className="text-center py-12">
-              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Filter className="h-8 w-8 text-gray-400" />
-              </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
-                No products found
-              </h3>
-              <p className="text-gray-600 mb-4">
-                Try adjusting your filters to see more trending products.
-              </p>
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setSelectedCategory("all");
-                  setSelectedRetailer("all");
-                  setSelectedPriceRange("all");
-                }}
-              >
-                Clear all filters
-              </Button>
-            </div>
-          )}
+          {/* Trending Products Section */}
+          <div className="space-y-6">
+            <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+              <Fire className="h-6 w-6 text-red-500" />
+              Trending Now
+            </h2>
 
-          {/* Load More Button - only show if there are products */}
-          {filteredProducts.length > 0 && (
-            <div className="text-center">
-              <Button
-                size="lg"
-                className="bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600"
-              >
-                <Fire className="h-4 w-4 mr-2" />
-                Load More Trending Products
-              </Button>
+            {/* Products Grid - 4 columns on desktop */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {filteredProducts.slice(0, 4).map((product) => (
+                <div key={product.id} className="relative group">
+                  <Card className="overflow-hidden hover:shadow-xl transition-all duration-300 group-hover:scale-[1.02]">
+                    {/* Trending Badge */}
+                    <div className="absolute top-3 left-3 z-20 flex gap-2">
+                      <Badge className="bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white font-bold shadow-lg flex items-center gap-1">
+                        <Fire className="h-3 w-3" />#{product.trendingPosition}
+                      </Badge>
+                      {product.trendingChange === "new" && (
+                        <Badge className="bg-gradient-to-r from-green-500 to-emerald-500 text-white font-bold">
+                          NEW
+                        </Badge>
+                      )}
+                    </div>
+
+                    {/* Trending Change Indicator */}
+                    <div className="absolute top-3 right-3 z-20">
+                      <div className="bg-white/90 backdrop-blur-sm rounded-full p-1.5 shadow-md">
+                        {getTrendingIcon(product.trendingChange)}
+                      </div>
+                    </div>
+
+                    {/* Product Card Content */}
+                    <ProductCard product={product} />
+
+                    {/* Trending Metrics Overlay */}
+                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-4 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      <div className="grid grid-cols-3 gap-3 text-xs">
+                        <div className="flex items-center gap-1">
+                          <Eye className="h-3 w-3" />
+                          <span>{product.views}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Heart className="h-3 w-3" />
+                          <span>{product.favorites}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <BarChart3 className="h-3 w-3" />
+                          <span>{product.trendingScore}%</span>
+                        </div>
+                      </div>
+                      <div className="mt-2 text-xs opacity-80">
+                        Trending for {product.daysInTrending} days
+                        {product.lastWeekPosition && (
+                          <span>
+                            {" "}
+                            • Was #{product.lastWeekPosition} last week
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </Card>
+                </div>
+              ))}
             </div>
-          )}
+
+            {/* Show message when no products match filters */}
+            {filteredProducts.length === 0 && (
+              <div className="text-center py-12">
+                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Filter className="h-8 w-8 text-gray-400" />
+                </div>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  No products found
+                </h3>
+                <p className="text-gray-600 mb-4">
+                  Try adjusting your filters to see more trending products.
+                </p>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setSelectedCategory("all");
+                    setSelectedRetailer("all");
+                    setSelectedPriceRange("all");
+                  }}
+                >
+                  Clear all filters
+                </Button>
+              </div>
+            )}
+
+            {/* Load More Button - only show if there are products */}
+            {filteredProducts.length > 0 && (
+              <div className="text-center">
+                <Button
+                  size="lg"
+                  className="bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600"
+                >
+                  <Fire className="h-4 w-4 mr-2" />
+                  Load More Trending Products
+                </Button>
+              </div>
+            )}
+          </div>
         </div>
       </main>
 
