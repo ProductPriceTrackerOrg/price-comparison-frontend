@@ -24,6 +24,47 @@ svg {
   max-width: 100%;
 }
 
+/* Chat component styles */
+.chat-wrapper {
+  overscroll-behavior: contain;
+}
+
+.scrollbar-contained {
+  overscroll-behavior: contain;
+  scroll-behavior: smooth;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.1) transparent;
+}
+
+.scrollbar-contained::-webkit-scrollbar {
+  width: 6px;
+}
+
+.scrollbar-contained::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-contained::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.1);
+  border-radius: 20px;
+}
+
+/* Chat message animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.flex-col > div > div:last-child {
+  animation: fadeIn 0.3s ease-out;
+}
+
 /* Constrains container width */
 .container {
   width: 100%;
