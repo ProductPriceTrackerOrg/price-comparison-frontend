@@ -1,126 +1,97 @@
 "use client";
 
-import { useSessionTimeout } from "@/hooks/use-session-timeout";
-import { useAuth } from "@/contexts/auth-context";
 import { useEffect, useState } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Clock } from "lucide-react";
+import { useAuth } from "@/contexts/auth-context";
+import { useToast } from "@/hooks/use-toast";
+import { useRouter } from "next/navigation";
+
+// Constants for session timeouts
+const USER_SESSION_TIMEOUT = 12 * 60 * 60 * 1000; // 12 hours in milliseconds
+const ADMIN_SESSION_TIMEOUT = 1 * 60 * 60 * 1000; // 1 hour in milliseconds
+const WARNING_BEFORE_TIMEOUT = 5 * 60 * 1000; // 5 minutes warning before timeout
 
 export function SessionTimeoutProvider({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const { isLoggedIn, isAdmin } = useAuth();
-  const { timeoutDuration } = useSessionTimeout();
-  const [showWarning, setShowWarning] = useState(false);
-  const [timeRemaining, setTimeRemaining] = useState(5 * 60); // 5 minutes in seconds
+  const { user, isLoggedIn, isAdmin, logout } = useAuth();
+  const { toast } = useToast();
+  const router = useRouter();
 
-  // Show warning dialog 5 minutes before timeout
+  const [lastActivity, setLastActivity] = useState<number>(Date.now());
+  const [warningShown, setWarningShown] = useState(false);
+
+  // Reset the inactivity timer when user is active
+  const handleActivity = () => {
+    setLastActivity(Date.now());
+    setWarningShown(false);
+  };
+
+  // Effect for monitoring user activity
   useEffect(() => {
     if (!isLoggedIn) return;
 
-    const warningTime = timeoutDuration - 5 * 60 * 1000; // 5 minutes before timeout
+    // Track user activity
+    const events = ["mousedown", "keydown", "touchstart", "scroll"];
+    events.forEach((event) => {
+      window.addEventListener(event, handleActivity);
+    });
 
-    const checkForWarning = () => {
-      const lastActivity = localStorage.getItem("lastActivityTime");
-      if (!lastActivity) return;
-
-      const timeSinceLastActivity = Date.now() - parseInt(lastActivity);
-
-      // If approaching timeout, show warning
-      if (timeSinceLastActivity > warningTime) {
-        setShowWarning(true);
-
-        // Calculate remaining time in seconds
-        const remaining = Math.floor(
-          (timeoutDuration - timeSinceLastActivity) / 1000
-        );
-        setTimeRemaining(remaining > 0 ? remaining : 0);
-      } else {
-        setShowWarning(false);
-      }
+    return () => {
+      events.forEach((event) => {
+        window.removeEventListener(event, handleActivity);
+      });
     };
+  }, [isLoggedIn]);
 
-    const intervalId = setInterval(checkForWarning, 10000); // Check every 10 seconds
+  // Effect for checking session timeout
+  useEffect(() => {
+    if (!isLoggedIn || !user) return;
+
+    const sessionTimeout = isAdmin
+      ? ADMIN_SESSION_TIMEOUT
+      : USER_SESSION_TIMEOUT;
+    const warningTime = sessionTimeout - WARNING_BEFORE_TIMEOUT;
+
+    const intervalId = setInterval(() => {
+      const now = Date.now();
+      const timeElapsed = now - lastActivity;
+
+      // Show warning before timeout
+      if (timeElapsed > warningTime && !warningShown) {
+        setWarningShown(true);
+        const timeLeft = Math.ceil(WARNING_BEFORE_TIMEOUT / 60000); // minutes
+        toast({
+          title: "Session Expiring Soon",
+          description: `Your session will expire in about ${timeLeft} minutes due to inactivity. Please continue using the app to stay logged in.`,
+          duration: 10000, // 10 seconds
+        });
+      }
+
+      // Logout when session expires
+      if (timeElapsed > sessionTimeout) {
+        toast({
+          title: "Session Expired",
+          description: "You have been logged out due to inactivity.",
+          variant: "destructive",
+        });
+        logout();
+        router.push("/");
+      }
+    }, 60000); // Check every minute
 
     return () => clearInterval(intervalId);
-  }, [isLoggedIn, timeoutDuration]);
+  }, [
+    isLoggedIn,
+    user,
+    isAdmin,
+    lastActivity,
+    warningShown,
+    logout,
+    toast,
+    router,
+  ]);
 
-  // Update countdown timer
-  useEffect(() => {
-    if (!showWarning) return;
-
-    const countdownInterval = setInterval(() => {
-      setTimeRemaining((prev) => {
-        if (prev <= 1) {
-          clearInterval(countdownInterval);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => clearInterval(countdownInterval);
-  }, [showWarning]);
-
-  // Format remaining time as mm:ss
-  const formatTimeRemaining = () => {
-    const minutes = Math.floor(timeRemaining / 60);
-    const seconds = timeRemaining % 60;
-    return `${minutes}:${seconds.toString().padStart(2, "0")}`;
-  };
-
-  // Function to continue session
-  const { refreshSession } = useAuth();
-
-  const continueSession = async () => {
-    // Refresh the session token
-    await refreshSession();
-
-    // Update last activity time
-    localStorage.setItem("lastActivityTime", Date.now().toString());
-    setShowWarning(false);
-  };
-
-  if (!isLoggedIn) {
-    return <>{children}</>;
-  }
-
-  return (
-    <>
-      {children}
-
-      <Dialog open={showWarning} onOpenChange={setShowWarning}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Clock className="h-5 w-5 text-amber-500" />
-              Session Timeout Warning
-            </DialogTitle>
-            <DialogDescription>
-              Your session will expire in {formatTimeRemaining()} due to
-              inactivity.
-              {isAdmin
-                ? " Admin sessions timeout after 1 hour of inactivity."
-                : " User sessions timeout after 12 hours of inactivity."}
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="flex justify-end space-x-2 pt-4">
-            <Button variant="outline" onClick={continueSession}>
-              Continue Session
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-    </>
-  );
+  return <>{children}</>;
 }

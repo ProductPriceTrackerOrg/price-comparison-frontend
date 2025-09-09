@@ -1,40 +1,50 @@
 "use client";
 
 import { useEffect } from "react";
+import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/auth-context";
 
-// Time before expiry to refresh the token (10 minutes)
-const REFRESH_TIME_BEFORE_EXPIRY = 10 * 60 * 1000;
+// Constants for token refresh
+const REFRESH_THRESHOLD = 10 * 60 * 1000; // 10 minutes before expiration
 
 export function TokenRefreshHandler({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const { session, refreshSession } = useAuth();
+  const { session, isLoggedIn } = useAuth();
 
-  // Set up automatic token refresh
   useEffect(() => {
-    if (!session?.expires_at) return;
+    if (!isLoggedIn || !session) return;
 
-    // Calculate when the token expires
-    const expiresAt = new Date(session.expires_at * 1000);
-    const timeUntilExpiry = expiresAt.getTime() - Date.now();
+    // Calculate when to refresh the token (10 minutes before expiration)
+    const calculateRefreshTime = () => {
+      if (!session?.expires_at) return null;
 
-    // If token is about to expire soon, refresh it immediately
-    if (timeUntilExpiry < REFRESH_TIME_BEFORE_EXPIRY) {
-      refreshSession();
+      // expires_at is in seconds, convert to milliseconds
+      const expiresAt = session.expires_at * 1000;
+      const refreshAt = expiresAt - REFRESH_THRESHOLD;
+      return refreshAt;
+    };
+
+    const refreshAt = calculateRefreshTime();
+    if (!refreshAt) return;
+
+    // Set up a timer to refresh the token
+    const timeUntilRefresh = refreshAt - Date.now();
+    if (timeUntilRefresh <= 0) {
+      // Token is about to expire, refresh now
+      supabase.auth.refreshSession();
+      return;
     }
 
-    // Set up refresh before token expiry
-    const timeToRefresh = timeUntilExpiry - REFRESH_TIME_BEFORE_EXPIRY;
-    const refreshTimeoutId = setTimeout(
-      refreshSession,
-      timeToRefresh > 0 ? timeToRefresh : 0
-    );
+    // Schedule token refresh
+    const refreshTimeout = setTimeout(() => {
+      supabase.auth.refreshSession();
+    }, timeUntilRefresh);
 
-    return () => clearTimeout(refreshTimeoutId);
-  }, [session?.expires_at, refreshSession]);
+    return () => clearTimeout(refreshTimeout);
+  }, [session, isLoggedIn]);
 
   return <>{children}</>;
 }

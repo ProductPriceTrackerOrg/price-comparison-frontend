@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Heart, ExternalLink, Phone, MessageCircle, Store, Share2, Eye } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
+import { ProductChat } from "@/components/product/product-chat"
 
 interface ProductDetailsProps {
   product: any
@@ -35,8 +36,8 @@ export function ProductDetails({ product }: ProductDetailsProps) {
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-      {/* Product Image */}
-      <div className="space-y-4">
+      {/* Product Image and Chat */}
+      <div className="space-y-6">
         <div className="relative">
           <img
             src={product.image || "/placeholder.svg"}
@@ -46,6 +47,11 @@ export function ProductDetails({ product }: ProductDetailsProps) {
           {product.discount && (
             <Badge className="absolute top-4 left-4 bg-red-500 text-white">-{product.discount}% OFF</Badge>
           )}
+        </div>
+        
+        {/* Product Chat - Isolate from page scroll events */}
+        <div className="mt-6" onClick={(e) => e.stopPropagation()} onScroll={(e) => e.stopPropagation()}>
+          <ProductChat productId={product.id} productName={product.name} />
         </div>
       </div>
 
