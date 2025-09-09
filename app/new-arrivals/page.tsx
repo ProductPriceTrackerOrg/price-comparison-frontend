@@ -222,7 +222,7 @@ export default function NewArrivalsPage() {
 
   // Transform NewArrivalResponse to Product interface for ProductCard
   const transformToProduct = (arrival: NewArrivalResponse) => ({
-    id: arrival.variant_id,
+    id: arrival.shop_product_id, // Use shop_product_id instead of variant_id
     name: arrival.product_title,
     brand: arrival.brand,
     category: arrival.category_name,
@@ -233,6 +233,7 @@ export default function NewArrivalsPage() {
     image: arrival.image_url,
     isNew: true,
     launchDate: arrival.arrival_date,
+    variant_id: arrival.variant_id, // Keep variant_id as an additional property
   });
 
   return (

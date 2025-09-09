@@ -126,9 +126,9 @@ export function NewArrivalFilters({
               onValueChange={(value) =>
                 setFilters({ ...filters, priceRange: value })
               }
-              max={5000}
+              max={1000000}
               min={0}
-              step={50}
+              step={1000}
               className="mt-2"
             />
           </div>
