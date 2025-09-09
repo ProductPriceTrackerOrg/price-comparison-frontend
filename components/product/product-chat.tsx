@@ -18,6 +18,7 @@ interface Message {
   from: "user" | "bot";
   text: string;
   sources?: string[];
+  isTyping?: boolean;
 }
 
 // Define the props the component will accept
@@ -47,13 +48,27 @@ export function ProductChat({ productId, productName }: ProductChatProps) {
 
   // Generate session ID and show welcome message on initial component mount
   useEffect(() => {
-    setSessionId(uuidv4());
+    const newSessionId = uuidv4();
+    setSessionId(newSessionId);
     setMessages([
       {
         from: "bot",
         text: `Hello! How can I help you with the ${productName} today?`,
       },
     ]);
+    
+    // Clean up function to delete the session when component unmounts
+    return () => {
+      // Only attempt to delete if we've interacted with the chat (more than welcome message)
+      if (messages.length > 1) {
+        fetch(`/api/v1/chat/${newSessionId}`, { 
+          method: "DELETE" 
+        }).catch(err => {
+          // Silently handle errors during cleanup
+          console.log("Failed to clean up chat session:", err);
+        });
+      }
+    };
   }, [productName]);
 
   // Scroll to bottom whenever messages array is updated
@@ -89,9 +104,17 @@ export function ProductChat({ productId, productName }: ProductChatProps) {
     }, 50);
 
     const userMessage: Message = { from: "user", text: input };
+    const userInput = input.trim();
     setMessages((prev) => [...prev, userMessage]);
     setInput("");
     setIsLoading(true);
+    
+    // Add a typing indicator message
+    setMessages((prev) => [...prev, { 
+      from: "bot", 
+      text: "...",
+      isTyping: true 
+    }]);
 
     try {
       const response = await fetch("/api/v1/chat", {
@@ -109,20 +132,44 @@ export function ProductChat({ productId, productName }: ProductChatProps) {
       }
 
       const data = await response.json();
+      
+      // Check if we got a fallback response (frontend mock)
+      if (data.fallback) {
+        console.log("Using fallback chat response (backend not available)");
+        toast({
+          title: "Limited AI capabilities",
+          description: "The AI backend is currently offline. Using basic responses.",
+          variant: "default",
+          duration: 5000,
+        });
+      }
 
-      const botMessage: Message = {
-        from: "bot",
-        text: data.response,
-        sources: data.sources || [],
-      };
-      setMessages((prev) => [...prev, botMessage]);
+      // Remove the typing indicator and add the real response
+      setMessages((prev) => {
+        // Filter out the typing indicator
+        const filteredMessages = prev.filter(msg => !msg.isTyping);
+        
+        // Add the new bot message
+        return [...filteredMessages, {
+          from: "bot",
+          text: data.response,
+          sources: data.sources || [],
+        }];
+      });
     } catch (error) {
       console.error("Failed to send message:", error);
-      const errorMessage: Message = {
-        from: "bot",
-        text: "Sorry, I seem to be having trouble connecting. Please try again in a moment.",
-      };
-      setMessages((prev) => [...prev, errorMessage]);
+      
+      // Remove the typing indicator and add the error message
+      setMessages((prev) => {
+        // Filter out the typing indicator
+        const filteredMessages = prev.filter(msg => !msg.isTyping);
+        
+        // Add the error message
+        return [...filteredMessages, {
+          from: "bot",
+          text: "Sorry, I seem to be having trouble connecting. Please try again in a moment.",
+        }];
+      });
 
       toast({
         title: "Error",
@@ -187,7 +234,15 @@ export function ProductChat({ productId, productName }: ProductChatProps) {
                           : "bg-gradient-to-br from-muted to-background border border-muted text-foreground rounded-bl-none"
                       }`}
                     >
-                      <p className="text-sm leading-relaxed">{msg.text}</p>
+                      {msg.isTyping ? (
+                        <div className="flex items-center space-x-1">
+                          <span className="h-2 w-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
+                          <span className="h-2 w-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
+                          <span className="h-2 w-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '600ms' }}></span>
+                        </div>
+                      ) : (
+                        <p className="text-sm leading-relaxed">{msg.text}</p>
+                      )}
                       {msg.sources && msg.sources.length > 0 && (
                         <div className="mt-2 pt-2 border-t border-gray-200/30">
                           <div className="flex items-center gap-1 text-xs">
@@ -261,13 +316,41 @@ export function ProductChat({ productId, productName }: ProductChatProps) {
               </div>
             </div>
 
-            {/* Assistant info footer */}
-            {/* <div className="px-4 py-1 border-t text-xs text-center text-muted-foreground">
+            {/* Controls and assistant info footer */}
+            <div className="px-4 py-1 border-t text-xs flex justify-between items-center text-muted-foreground">
               <p>
-                PricePulse AI Assistant provides product information and
-                shopping advice
+                PricePulse AI Assistant
               </p>
-            </div> */}
+              {messages.length > 1 && (
+                <button 
+                  onClick={async (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (window.confirm("Clear this conversation and start a new one?")) {
+                      try {
+                        await fetch(`/api/v1/chat/${sessionId}`, { method: "DELETE" });
+                        // Generate new session ID and reset messages
+                        const newSessionId = uuidv4();
+                        setSessionId(newSessionId);
+                        setMessages([{
+                          from: "bot",
+                          text: `Hello! How can I help you with the ${productName} today?`,
+                        }]);
+                        toast({
+                          title: "Conversation cleared",
+                          description: "Started a new conversation",
+                        });
+                      } catch (error) {
+                        console.error("Failed to clear chat session:", error);
+                      }
+                    }
+                  }}
+                  className="text-xs text-blue-500 hover:text-blue-700 hover:underline"
+                >
+                  Clear conversation
+                </button>
+              )}
+            </div>
           </div>
         </CardContent>
       </Card>
