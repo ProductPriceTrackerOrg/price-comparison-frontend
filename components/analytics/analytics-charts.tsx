@@ -3,13 +3,13 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { 
-  LineChart, 
-  Line, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
   ResponsiveContainer,
   BarChart,
   Bar,
@@ -17,21 +17,21 @@ import {
   Pie,
   Cell,
   AreaChart,
-  Area
+  Area,
 } from "recharts";
-import { 
-  TrendingUp, 
-  TrendingDown, 
-  BarChart3, 
+import {
+  TrendingUp,
+  TrendingDown,
+  BarChart3,
   PieChart as PieChartIcon,
   Activity,
   Store,
-  Target
+  Target,
 } from "lucide-react";
-import { 
-  PriceTrendData, 
-  CategoryPerformance, 
-  RetailerInsights 
+import {
+  PriceTrendData,
+  CategoryPerformance,
+  RetailerInsights,
 } from "@/lib/types/analytics";
 
 interface AnalyticsChartsProps {
@@ -42,14 +42,13 @@ interface AnalyticsChartsProps {
   viewMode?: "all" | "trends" | "categories" | "retailers";
 }
 
-export function AnalyticsCharts({ 
-  priceTrends, 
-  categoryPerformance, 
-  retailerInsights, 
+export function AnalyticsCharts({
+  priceTrends,
+  categoryPerformance,
+  retailerInsights,
   loading,
-  viewMode = "all"
+  viewMode = "all",
 }: AnalyticsChartsProps) {
-  
   if (loading) {
     return (
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -67,13 +66,20 @@ export function AnalyticsCharts({
     );
   }
 
-  const formatCurrency = (value: number) => `$${value.toLocaleString()}`;
+  const formatCurrency = (value: number) => `Rs ${value.toLocaleString()}`;
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
   };
 
-  const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#06B6D4'];
+  const COLORS = [
+    "#3B82F6",
+    "#10B981",
+    "#F59E0B",
+    "#EF4444",
+    "#8B5CF6",
+    "#06B6D4",
+  ];
 
   const PriceTrendsChart = () => (
     <Card>
@@ -81,7 +87,9 @@ export function AnalyticsCharts({
         <CardTitle className="flex items-center gap-2">
           <TrendingUp className="h-5 w-5 text-blue-600" />
           Price Trend Analysis
-          <Badge variant="outline" className="ml-2">Last 30 Days</Badge>
+          <Badge variant="outline" className="ml-2">
+            Last 30 Days
+          </Badge>
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -90,27 +98,30 @@ export function AnalyticsCharts({
             <AreaChart data={priceTrends}>
               <defs>
                 <linearGradient id="priceGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.8}/>
-                  <stop offset="95%" stopColor="#3B82F6" stopOpacity={0.1}/>
+                  <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.8} />
+                  <stop offset="95%" stopColor="#3B82F6" stopOpacity={0.1} />
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
-              <XAxis 
-                dataKey="date" 
+              <XAxis
+                dataKey="date"
                 tickFormatter={formatDate}
                 className="text-xs"
               />
-              <YAxis 
+              <YAxis
                 tickFormatter={(value) => `${value}%`}
                 className="text-xs"
               />
-              <Tooltip 
-                formatter={(value: number) => [`${value.toFixed(2)}%`, "Avg Price Change"]}
+              <Tooltip
+                formatter={(value: number) => [
+                  `${value.toFixed(2)}%`,
+                  "Avg Price Change",
+                ]}
                 labelFormatter={(label) => `Date: ${formatDate(label)}`}
                 contentStyle={{
                   backgroundColor: "white",
                   border: "1px solid #e5e7eb",
-                  borderRadius: "8px"
+                  borderRadius: "8px",
                 }}
               />
               <Area
@@ -133,7 +144,9 @@ export function AnalyticsCharts({
         <CardTitle className="flex items-center gap-2">
           <Activity className="h-5 w-5 text-orange-600" />
           Market Volatility
-          <Badge variant="secondary" className="ml-2">Real-time</Badge>
+          <Badge variant="secondary" className="ml-2">
+            Real-time
+          </Badge>
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -141,22 +154,25 @@ export function AnalyticsCharts({
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={priceTrends}>
               <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
-              <XAxis 
-                dataKey="date" 
+              <XAxis
+                dataKey="date"
                 tickFormatter={formatDate}
                 className="text-xs"
               />
-              <YAxis 
+              <YAxis
                 tickFormatter={(value) => value.toFixed(2)}
                 className="text-xs"
               />
-              <Tooltip 
-                formatter={(value: number) => [value.toFixed(3), "Volatility Index"]}
+              <Tooltip
+                formatter={(value: number) => [
+                  value.toFixed(3),
+                  "Volatility Index",
+                ]}
                 labelFormatter={(label) => `Date: ${formatDate(label)}`}
                 contentStyle={{
                   backgroundColor: "white",
                   border: "1px solid #e5e7eb",
-                  borderRadius: "8px"
+                  borderRadius: "8px",
                 }}
               />
               <Line
@@ -180,7 +196,9 @@ export function AnalyticsCharts({
         <CardTitle className="flex items-center gap-2">
           <BarChart3 className="h-5 w-5 text-purple-600" />
           Category Performance
-          <Badge variant="outline" className="ml-2">Top 5</Badge>
+          <Badge variant="outline" className="ml-2">
+            Top 5
+          </Badge>
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -188,27 +206,30 @@ export function AnalyticsCharts({
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={categoryPerformance} layout="horizontal">
               <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
-              <XAxis 
+              <XAxis
                 type="number"
                 tickFormatter={(value) => `${value}%`}
                 className="text-xs"
               />
-              <YAxis 
+              <YAxis
                 type="category"
                 dataKey="categoryName"
                 className="text-xs"
                 width={80}
               />
-              <Tooltip 
-                formatter={(value: number) => [`${value.toFixed(1)}%`, "Avg Price Change"]}
+              <Tooltip
+                formatter={(value: number) => [
+                  `${value.toFixed(1)}%`,
+                  "Avg Price Change",
+                ]}
                 contentStyle={{
                   backgroundColor: "white",
                   border: "1px solid #e5e7eb",
-                  borderRadius: "8px"
+                  borderRadius: "8px",
                 }}
               />
-              <Bar 
-                dataKey="avgPriceChange" 
+              <Bar
+                dataKey="avgPriceChange"
                 fill="#8B5CF6"
                 radius={[0, 4, 4, 0]}
               />
@@ -223,7 +244,7 @@ export function AnalyticsCharts({
     const pieData = categoryPerformance.map((category, index) => ({
       name: category.categoryName,
       value: category.totalProducts,
-      fill: COLORS[index % COLORS.length]
+      fill: COLORS[index % COLORS.length],
     }));
 
     return (
@@ -232,7 +253,9 @@ export function AnalyticsCharts({
           <CardTitle className="flex items-center gap-2">
             <PieChartIcon className="h-5 w-5 text-green-600" />
             Product Distribution
-            <Badge variant="secondary" className="ml-2">By Category</Badge>
+            <Badge variant="secondary" className="ml-2">
+              By Category
+            </Badge>
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -244,7 +267,9 @@ export function AnalyticsCharts({
                   cx="50%"
                   cy="50%"
                   labelLine={false}
-                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                  label={({ name, percent }) =>
+                    `${name} ${((percent ?? 0) * 100).toFixed(0)}%`
+                  }
                   outerRadius={80}
                   fill="#8884d8"
                   dataKey="value"
@@ -253,12 +278,15 @@ export function AnalyticsCharts({
                     <Cell key={`cell-${index}`} fill={entry.fill} />
                   ))}
                 </Pie>
-                <Tooltip 
-                  formatter={(value: number) => [value.toLocaleString(), "Products"]}
+                <Tooltip
+                  formatter={(value: number) => [
+                    value.toLocaleString(),
+                    "Products",
+                  ]}
                   contentStyle={{
                     backgroundColor: "white",
                     border: "1px solid #e5e7eb",
-                    borderRadius: "8px"
+                    borderRadius: "8px",
                   }}
                 />
               </PieChart>
@@ -275,7 +303,9 @@ export function AnalyticsCharts({
         <CardTitle className="flex items-center gap-2">
           <Store className="h-5 w-5 text-blue-600" />
           Retailer Market Share
-          <Badge variant="outline" className="ml-2">Top 5</Badge>
+          <Badge variant="outline" className="ml-2">
+            Top 5
+          </Badge>
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -283,30 +313,29 @@ export function AnalyticsCharts({
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={retailerInsights}>
               <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
-              <XAxis 
+              <XAxis
                 dataKey="retailerName"
                 className="text-xs"
                 angle={-45}
                 textAnchor="end"
                 height={60}
               />
-              <YAxis 
+              <YAxis
                 tickFormatter={(value) => `${value}%`}
                 className="text-xs"
               />
-              <Tooltip 
-                formatter={(value: number) => [`${value.toFixed(1)}%`, "Market Share"]}
+              <Tooltip
+                formatter={(value: number) => [
+                  `${value.toFixed(1)}%`,
+                  "Market Share",
+                ]}
                 contentStyle={{
                   backgroundColor: "white",
                   border: "1px solid #e5e7eb",
-                  borderRadius: "8px"
+                  borderRadius: "8px",
                 }}
               />
-              <Bar 
-                dataKey="marketShare" 
-                fill="#10B981"
-                radius={[4, 4, 0, 0]}
-              />
+              <Bar dataKey="marketShare" fill="#10B981" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -320,7 +349,9 @@ export function AnalyticsCharts({
         <CardTitle className="flex items-center gap-2">
           <Target className="h-5 w-5 text-red-600" />
           Competitive Rating
-          <Badge variant="secondary" className="ml-2">0-10 Scale</Badge>
+          <Badge variant="secondary" className="ml-2">
+            0-10 Scale
+          </Badge>
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -328,27 +359,23 @@ export function AnalyticsCharts({
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={retailerInsights} layout="horizontal">
               <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
-              <XAxis 
-                type="number"
-                domain={[0, 10]}
-                className="text-xs"
-              />
-              <YAxis 
+              <XAxis type="number" domain={[0, 10]} className="text-xs" />
+              <YAxis
                 type="category"
                 dataKey="retailerName"
                 className="text-xs"
                 width={80}
               />
-              <Tooltip 
+              <Tooltip
                 formatter={(value: number) => [value.toFixed(1), "Rating"]}
                 contentStyle={{
                   backgroundColor: "white",
                   border: "1px solid #e5e7eb",
-                  borderRadius: "8px"
+                  borderRadius: "8px",
                 }}
               />
-              <Bar 
-                dataKey="competitiveRating" 
+              <Bar
+                dataKey="competitiveRating"
                 fill="#EF4444"
                 radius={[0, 4, 4, 0]}
               />
@@ -394,7 +421,7 @@ export function AnalyticsCharts({
         <PriceTrendsChart />
         <VolatilityChart />
       </div>
-      
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <CategoryPerformanceChart />
         <CategoryDistributionChart />

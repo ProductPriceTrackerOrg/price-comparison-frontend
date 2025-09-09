@@ -2,21 +2,23 @@
 
 // New Arrival Product Response
 export interface NewArrivalResponse {
+  id?: number; // Main product ID from API response
   variant_id: number;
-  canonical_product_id: number;
+  shop_product_id?: number; // Correct product ID for navigation - this is what we need!
+  canonical_product_id?: number; // Make optional since it might not be in API response
   product_title: string;
-  brand: string;
-  category_name: string;
-  variant_title: string;
-  shop_name: string;
-  shop_id: number;
+  brand?: string; // Make optional for safety
+  category_name?: string; // Make optional for safety
+  variant_title?: string;
+  shop_name?: string; // Make optional for safety
+  shop_id?: number; // Make optional for safety
   current_price: number;
   original_price?: number;
-  image_url: string;
-  product_url: string;
-  is_available: boolean;
-  arrival_date: string;
-  days_since_arrival: number;
+  image_url?: string; // Make optional for safety
+  product_url?: string; // Make optional for safety
+  is_available?: boolean; // Make optional for safety
+  arrival_date?: string; // Make optional for safety
+  days_since_arrival?: number; // Make optional for safety
   // Additional fields that might be useful
   contact_phone?: string;
   contact_whatsapp?: string;

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -16,7 +16,6 @@ import {
 } from "@/components/ui/breadcrumb";
 import {
   Sparkles,
-  Filter,
   Store,
   Tag,
   DollarSign,
@@ -35,9 +34,24 @@ import { NewArrivalFilters } from "@/components/new-arrivals/new-arrival-filters
 import {
   NewArrivalResponse,
   NewArrivalFilters as FilterType,
-  NewArrivalStats,
 } from "@/lib/types/new-arrivals";
 import { Category, Retailer } from "@/lib/types/price-drops";
+
+// API response interfaces based on your FastAPI backend
+interface NewArrivalsStats {
+  total_new_arrivals: number;
+  average_price: number;
+  in_stock_count: number;
+  category_count: number;
+}
+
+interface NewArrivalsListResponse {
+  items: NewArrivalResponse[];
+  total: number;
+  page: number;
+  limit: number;
+  has_next: boolean;
+}
 
 interface FilterState {
   category: string;
@@ -50,370 +64,476 @@ interface FilterState {
 
 export default function NewArrivalsPage() {
   const [newArrivals, setNewArrivals] = useState<NewArrivalResponse[]>([]);
-  const [filteredArrivals, setFilteredArrivals] = useState<
-    NewArrivalResponse[]
-  >([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [retailers, setRetailers] = useState<Retailer[]>([]);
-  const [stats, setStats] = useState<NewArrivalStats | null>(null);
+  const [stats, setStats] = useState<NewArrivalsStats | null>(null);
+  const [totalStats, setTotalStats] = useState<NewArrivalsStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [statsLoading, setStatsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [hasNext, setHasNext] = useState(false);
   const [filters, setFilters] = useState<FilterState>({
     category: "all",
     retailer: "all",
-    priceRange: [0, 2000],
+    priceRange: [0, 10000000], // Increased to Rs 10,000,000 for LKR currency
     sortBy: "newest",
-    timeRange: "30d",
+    timeRange: "90d", // Show all by default
     inStockOnly: false,
   });
 
-  useEffect(() => {
-    fetchNewArrivals();
-    fetchFiltersData();
-  }, [filters.timeRange]);
+  // Get API URL from environment variable
+  const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
   useEffect(() => {
-    applyFilters();
-  }, [newArrivals, filters]);
+    if (!API_BASE_URL) {
+      setError(
+        "API URL is not configured. Please check environment variables."
+      );
+      setLoading(false);
+      return;
+    }
+    fetchNewArrivals();
+    // Only fetch filtered stats, not total stats
+  }, [filters, currentPage, API_BASE_URL]);
+
+  useEffect(() => {
+    // Fetch total unfiltered stats only once when component mounts
+    if (API_BASE_URL) {
+      fetchTotalStats();
+    }
+  }, [API_BASE_URL]);
+
+  useEffect(() => {
+    fetchFiltersData();
+  }, [API_BASE_URL]);
+
+  // Function to normalize timeRange values for API compatibility
+  const normalizeTimeRange = (timeRange: string): string => {
+    const timeRangeMap: { [key: string]: string } = {
+      "24h": "24h",
+      "1d": "24h",
+      "7d": "7d",
+      "30d": "30d",
+      "90d": "3m",
+      "3m": "3m",
+    };
+    return timeRangeMap[timeRange] || timeRange;
+  };
 
   const fetchFiltersData = async () => {
+    if (!API_BASE_URL) return;
+
     try {
-      // Mock data for now - would come from API
-      const mockCategories: Category[] = [
-        { category_id: 1, category_name: "Smartphones" },
-        { category_id: 2, category_name: "Laptops" },
-        { category_id: 3, category_name: "Audio" },
-        { category_id: 4, category_name: "Monitors" },
-        { category_id: 5, category_name: "Tablets" },
-        { category_id: 6, category_name: "Accessories" },
-        { category_id: 7, category_name: "Gaming" },
-        { category_id: 8, category_name: "Wearables" },
-      ];
+      // Fetch categories and retailers from the debug endpoint or create dedicated endpoints
+      const response = await fetch(`${API_BASE_URL}/api/v1/new-arrivals/debug`);
+      if (!response.ok) throw new Error("Failed to fetch filter data");
 
-      const mockRetailers: Retailer[] = [
-        { shop_id: 1, shop_name: "MobileWorld" },
-        { shop_id: 2, shop_name: "ComputerHub" },
-        { shop_id: 3, shop_name: "AudioStore" },
-        { shop_id: 4, shop_name: "TechMart" },
-        { shop_id: 5, shop_name: "ElectroShop" },
-        { shop_id: 6, shop_name: "GadgetZone" },
-      ];
+      const debugData = await response.json();
 
-      setCategories(mockCategories);
-      setRetailers(mockRetailers);
+      if (debugData.status === "success" && debugData.sample_data) {
+        // Extract unique categories and retailers from sample data
+        const uniqueCategories = Array.from(
+          new Set(debugData.sample_data.map((item: any) => item.category_name))
+        ).map((name, index) => ({
+          category_id: index + 1,
+          category_name: name as string,
+        }));
+
+        const uniqueRetailers = Array.from(
+          new Set(debugData.sample_data.map((item: any) => item.shop_name))
+        ).map((name, index) => ({
+          shop_id: index + 1,
+          shop_name: name as string,
+        }));
+
+        setCategories(uniqueCategories);
+        setRetailers(uniqueRetailers);
+      }
     } catch (error) {
       console.error("Error fetching filter data:", error);
+      // Set fallback empty arrays
+      setCategories([]);
+      setRetailers([]);
+    }
+  };
+
+  const fetchTotalStats = async () => {
+    if (!API_BASE_URL) return;
+
+    setStatsLoading(true);
+    try {
+      // Fetch total stats without any filters - this represents ALL products
+      const response = await fetch(`${API_BASE_URL}/api/v1/new-arrivals/stats`);
+
+      if (response.ok) {
+        const statsData: NewArrivalsStats = await response.json();
+
+        // Ensure stats data has proper structure
+        const normalizedStats = {
+          total_new_arrivals: statsData.total_new_arrivals || 0,
+          average_price: statsData.average_price || 0,
+          in_stock_count: statsData.in_stock_count || 0,
+          category_count: statsData.category_count || 0,
+        };
+
+        setTotalStats(normalizedStats);
+      } else {
+        setTotalStats(null);
+      }
+    } catch (error) {
+      setTotalStats(null);
+    } finally {
+      setStatsLoading(false);
     }
   };
 
   const fetchNewArrivals = async () => {
+    if (!API_BASE_URL) return;
+
     setLoading(true);
     setError(null);
+    setNewArrivals([]); // Clear previous results immediately
 
     try {
-      // In real implementation:
-      // const params = new URLSearchParams({
-      //   timeRange: filters.timeRange,
-      //   limit: '50'
-      // })
-      // const response = await fetch(`/api/new-arrivals?${params}`)
-      // if (!response.ok) throw new Error('Failed to fetch new arrivals')
-      // const data = await response.json()
+      const params = new URLSearchParams({
+        sortBy: filters.sortBy,
+        limit: "20",
+        page: currentPage.toString(),
+      });
 
-      // Mock data based on your schema structure
-      const mockData: NewArrivalResponse[] = [
-        {
-          variant_id: 101,
-          canonical_product_id: 201,
-          product_title: "iPhone 16 Pro",
-          brand: "Apple",
-          category_name: "Smartphones",
-          variant_title: "iPhone 16 Pro 128GB Blue Titanium",
-          shop_name: "MobileWorld",
-          shop_id: 1,
-          current_price: 1199.99,
-          original_price: 1199.99,
-          image_url: "/placeholder.svg?height=200&width=200",
-          product_url: "https://example.com/product101",
-          is_available: true,
-          arrival_date: "2025-08-05",
-          days_since_arrival: 1,
-        },
-        {
-          variant_id: 102,
-          canonical_product_id: 202,
-          product_title: "MacBook Pro M4",
-          brand: "Apple",
-          category_name: "Laptops",
-          variant_title: "MacBook Pro 14-inch M4 Chip 512GB Space Black",
-          shop_name: "ComputerHub",
-          shop_id: 2,
-          current_price: 2199.99,
-          image_url: "/placeholder.svg?height=200&width=200",
-          product_url: "https://example.com/product102",
-          is_available: true,
-          arrival_date: "2025-08-04",
-          days_since_arrival: 2,
-        },
-        {
-          variant_id: 103,
-          canonical_product_id: 203,
-          product_title: "Samsung Galaxy Watch 7",
-          brand: "Samsung",
-          category_name: "Wearables",
-          variant_title: "Samsung Galaxy Watch 7 44mm Silver",
-          shop_name: "GadgetZone",
-          shop_id: 6,
-          current_price: 329.99,
-          image_url: "/placeholder.svg?height=200&width=200",
-          product_url: "https://example.com/product103",
-          is_available: true,
-          arrival_date: "2025-08-03",
-          days_since_arrival: 3,
-        },
-        {
-          variant_id: 104,
-          canonical_product_id: 204,
-          product_title: "Sony PlayStation 5 Pro",
-          brand: "Sony",
-          category_name: "Gaming",
-          variant_title: "Sony PlayStation 5 Pro 2TB Digital Edition",
-          shop_name: "ElectroShop",
-          shop_id: 5,
-          current_price: 699.99,
-          image_url: "/placeholder.svg?height=200&width=200",
-          product_url: "https://example.com/product104",
-          is_available: false,
-          arrival_date: "2025-08-02",
-          days_since_arrival: 4,
-        },
-        {
-          variant_id: 105,
-          canonical_product_id: 205,
-          product_title: "ASUS ROG Strix G18",
-          brand: "ASUS",
-          category_name: "Laptops",
-          variant_title: "ASUS ROG Strix G18 RTX 4080 32GB Gaming Laptop",
-          shop_name: "ComputerHub",
-          shop_id: 2,
-          current_price: 2899.99,
-          image_url: "/placeholder.svg?height=200&width=200",
-          product_url: "https://example.com/product105",
-          is_available: true,
-          arrival_date: "2025-08-01",
-          days_since_arrival: 5,
-        },
-        {
-          variant_id: 106,
-          canonical_product_id: 206,
-          product_title: "Meta Quest 4",
-          brand: "Meta",
-          category_name: "Gaming",
-          variant_title: "Meta Quest 4 256GB VR Headset",
-          shop_name: "TechMart",
-          shop_id: 4,
-          current_price: 499.99,
-          image_url: "/placeholder.svg?height=200&width=200",
-          product_url: "https://example.com/product106",
-          is_available: true,
-          arrival_date: "2025-07-31",
-          days_since_arrival: 6,
-        },
-      ];
+      // Add timeRange only if not showing all items (90d/3m)
+      if (filters.timeRange !== "90d") {
+        params.append("timeRange", normalizeTimeRange(filters.timeRange));
+      }
 
-      setNewArrivals(mockData);
+      // Add optional filters
+      if (filters.category !== "all") {
+        params.append("category", filters.category);
+      }
+      if (filters.retailer !== "all") {
+        params.append("retailer", filters.retailer);
+      }
+      if (filters.priceRange[0] > 0) {
+        params.append("minPrice", filters.priceRange[0].toString());
+      }
+      if (filters.priceRange[1] < 10000000) {
+        params.append("maxPrice", filters.priceRange[1].toString());
+      }
 
-      // Calculate stats
-      const inStockProducts = mockData.filter(
-        (product) => product.is_available
+      // Handle stock filter properly based on your API logic
+      if (filters.inStockOnly === true) {
+        params.append("inStockOnly", "true");
+      } else if (filters.inStockOnly === false) {
+        // Don't add inStockOnly parameter to show all items by default
+        // Only add if you specifically want out-of-stock only (uncomment below)
+        // params.append("inStockOnly", "false");
+      }
+
+      const response = await fetch(
+        `${API_BASE_URL}/api/v1/new-arrivals?${params}`
       );
-      const mockStats: NewArrivalStats = {
-        totalArrivals: mockData.length,
-        avgPrice:
-          mockData.reduce((sum, product) => sum + product.current_price, 0) /
-          mockData.length,
-        retailerCount: new Set(mockData.map((d) => d.shop_name)).size,
-        categoryCount: new Set(mockData.map((d) => d.category_name)).size,
-        newestProduct: mockData.reduce((newest, current) =>
-          current.days_since_arrival < newest.days_since_arrival
-            ? current
-            : newest
-        ),
-        topCategory: "Smartphones",
-        inStockCount: inStockProducts.length,
-      };
-      setStats(mockStats);
-    } catch (error) {
-      console.error("Error fetching new arrivals:", error);
-      setError("Failed to load new arrivals. Please try again.");
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || "Failed to fetch new arrivals");
+      }
+
+      const data: NewArrivalsListResponse = await response.json();
+
+      setNewArrivals(data.items);
+      setCurrentPage(data.page);
+      setHasNext(data.has_next);
+      setTotalPages(Math.ceil(data.total / data.limit));
+    } catch (error: any) {
+      setError(
+        error.message || "Failed to load new arrivals. Please try again."
+      );
     } finally {
       setLoading(false);
     }
   };
 
-  const applyFilters = () => {
-    let filtered = [...newArrivals];
+  const fetchStats = async () => {
+    if (!API_BASE_URL) return;
 
-    // Category filter
-    if (filters.category !== "all") {
-      filtered = filtered.filter(
-        (product) => product.category_name === filters.category
+    setStatsLoading(true);
+    try {
+      const params = new URLSearchParams();
+
+      // Add timeRange only if not showing all items
+      if (filters.timeRange !== "90d") {
+        params.append("timeRange", normalizeTimeRange(filters.timeRange));
+      }
+
+      // Add optional filters for stats
+      if (filters.category !== "all") {
+        params.append("category", filters.category);
+      }
+      if (filters.retailer !== "all") {
+        params.append("retailer", filters.retailer);
+      }
+      if (filters.priceRange[0] > 0) {
+        params.append("minPrice", filters.priceRange[0].toString());
+      }
+      if (filters.priceRange[1] < 500000) {
+        params.append("maxPrice", filters.priceRange[1].toString());
+      }
+
+      // Add stock filter for stats
+      if (filters.inStockOnly === true) {
+        params.append("inStockOnly", "true");
+      }
+
+      const response = await fetch(
+        `${API_BASE_URL}/api/v1/new-arrivals/stats?${params}`
       );
+
+      if (response.ok) {
+        const statsData: NewArrivalsStats = await response.json();
+
+        // Ensure stats data has proper structure even if empty
+        const normalizedStats = {
+          total_new_arrivals: statsData.total_new_arrivals || 0,
+          average_price: statsData.average_price || 0,
+          in_stock_count: statsData.in_stock_count || 0,
+          category_count: statsData.category_count || 0,
+        };
+
+        setStats(normalizedStats);
+      } else {
+        setStats(null);
+      }
+    } catch (error) {
+      // Set stats to null so fallback calculations are used
+      setStats(null);
+    } finally {
+      setStatsLoading(false);
     }
+  };
 
-    // Retailer filter
-    if (filters.retailer !== "all") {
-      filtered = filtered.filter(
-        (product) => product.shop_name === filters.retailer
-      );
-    }
+  const handleFilterChange = (newFilters: FilterState) => {
+    setFilters(newFilters);
+    setCurrentPage(1); // Reset to first page when filters change
+    setStats(null); // Reset stats to trigger fresh fetch
+  };
 
-    // Price range filter
-    filtered = filtered.filter(
-      (product) =>
-        product.current_price >= filters.priceRange[0] &&
-        product.current_price <= filters.priceRange[1]
-    );
-
-    // In stock filter
-    if (filters.inStockOnly) {
-      filtered = filtered.filter((product) => product.is_available);
-    }
-
-    // Sort
-    switch (filters.sortBy) {
-      case "newest":
-        filtered.sort((a, b) => a.days_since_arrival - b.days_since_arrival);
-        break;
-      case "oldest":
-        filtered.sort((a, b) => b.days_since_arrival - a.days_since_arrival);
-        break;
-      case "price_asc":
-        filtered.sort((a, b) => a.current_price - b.current_price);
-        break;
-      case "price_desc":
-        filtered.sort((a, b) => b.current_price - a.current_price);
-        break;
-      case "name_asc":
-        filtered.sort((a, b) => a.product_title.localeCompare(b.product_title));
-        break;
-      case "name_desc":
-        filtered.sort((a, b) => b.product_title.localeCompare(a.product_title));
-        break;
-    }
-
-    setFilteredArrivals(filtered);
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
   };
 
   // Transform NewArrivalResponse to Product interface for ProductCard
-  const transformToProduct = (arrival: NewArrivalResponse) => ({
-    id: arrival.variant_id,
-    name: arrival.product_title,
-    brand: arrival.brand,
-    category: arrival.category_name,
-    price: arrival.current_price,
-    originalPrice: arrival.original_price,
-    retailer: arrival.shop_name,
-    inStock: arrival.is_available,
-    image: arrival.image_url,
-    isNew: true,
-    launchDate: arrival.arrival_date,
-  });
+  const transformToProduct = (arrival: NewArrivalResponse) => {
+    if (!arrival) {
+      return null;
+    }
+
+    // Use shop_product_id as the main product ID for navigation
+    const productId =
+      arrival.shop_product_id ||
+      arrival.id ||
+      arrival.canonical_product_id ||
+      arrival.variant_id ||
+      0;
+
+    if (!productId || productId === 0) {
+      return null;
+    }
+
+    const transformedProduct = {
+      id: productId,
+      name: arrival.product_title || "Unknown Product",
+      brand: arrival.brand || "Unknown",
+      category: arrival.category_name || "Unknown",
+      price: arrival.current_price || 0,
+      originalPrice: arrival.original_price || arrival.current_price || 0,
+      retailer: arrival.shop_name || "Unknown Store",
+      inStock: arrival.is_available !== false, // Default to true unless explicitly false
+      image: arrival.image_url || "/placeholder.svg?height=200&width=200",
+      isNew: true,
+      launchDate: arrival.arrival_date || new Date().toISOString(),
+      url: arrival.product_url || "",
+    };
+
+    return transformedProduct;
+  };
+
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat("en-LK", {
+      style: "currency",
+      currency: "LKR",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    })
+      .format(price)
+      .replace("LKR", "Rs ");
+  };
+
+  const calculateDisplayStats = () => {
+    // Always show total unfiltered statistics - independent of current filters
+    // This shows the total product statistics, not filtered results
+    if (totalStats) {
+      return totalStats;
+    }
+
+    // Fallback: if totalStats not loaded yet, show reasonable defaults
+    const fallbackStats = {
+      total_new_arrivals: 0,
+      average_price: 0,
+      in_stock_count: 0,
+      category_count: 0,
+    };
+
+    return fallbackStats;
+  };
+
+  const displayStats = calculateDisplayStats();
+
+  const getEmptyStateMessage = () => {
+    if (filters.timeRange === "1d") {
+      return {
+        title: "No new products in the last 24 hours",
+        description: "No new products have been added in the last 24 hours.",
+        showExpandButton: true,
+      };
+    } else if (filters.timeRange === "7d") {
+      return {
+        title: "No new products in the last week",
+        description: "No new products have been added in the last 7 days.",
+        showExpandButton: true,
+      };
+    } else if (filters.timeRange === "30d") {
+      return {
+        title: "No new products in the last month",
+        description: "No new products have been added in the last 30 days.",
+        showExpandButton: true,
+      };
+    } else {
+      return {
+        title: "No new arrivals found",
+        description: "Try adjusting your filters to see more results.",
+        showExpandButton: false,
+      };
+    }
+  };
+
+  const emptyState = getEmptyStateMessage();
+
+  // Show error if API URL is not configured
+  if (!API_BASE_URL) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <NavigationBar />
+        <main className="container mx-auto px-4 py-8">
+          <Alert className="mb-6">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription>
+              API configuration error. Please check that NEXT_PUBLIC_API_URL is
+              set in your environment variables.
+            </AlertDescription>
+          </Alert>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
       <NavigationBar />
-      <main className="bg-gradient-to-br from-blue-50/30 via-white to-purple-50/30">
+      <main className="bg-gradient-to-br from-green-50/30 via-white to-blue-50/30">
         <div className="container mx-auto px-4 py-8">
-          {/* Page Header with Beautiful Blue Background */}
+          {/* Page Header */}
           <PageHeader
             title="New Arrivals"
             icon={Sparkles}
             breadcrumbItems={[{ label: "New Arrivals" }]}
           />
 
-          {/* Header */}
-          <div className="mb-8">
-            {/* Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-              <Card>
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-2">
-                    <Package className="h-5 w-5 text-green-500" />
-                    <div>
-                      <p className="text-sm text-gray-600">Total Arrivals</p>
-                      <p className="text-2xl font-bold">
-                        {stats?.totalArrivals || filteredArrivals.length}
-                      </p>
+          {/* Stats */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center gap-2">
+                  <Package className="h-5 w-5 text-green-500" />
+                  <div>
+                    <p className="text-sm text-gray-600">Total Arrivals</p>
+                    <div className="text-2xl font-bold">
+                      {statsLoading ? (
+                        <Skeleton className="h-8 w-12" />
+                      ) : (
+                        displayStats.total_new_arrivals.toLocaleString()
+                      )}
                     </div>
                   </div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-2">
-                    <DollarSign className="h-5 w-5 text-blue-500" />
-                    <div>
-                      <p className="text-sm text-gray-600">Avg Price</p>
-                      <p className="text-2xl font-bold">
-                        $
-                        {stats?.avgPrice
-                          ? Math.round(stats.avgPrice)
-                          : filteredArrivals.length > 0
-                          ? Math.round(
-                              filteredArrivals.reduce(
-                                (sum, product) => sum + product.current_price,
-                                0
-                              ) / filteredArrivals.length
-                            )
-                          : 0}
-                      </p>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center gap-2">
+                  <DollarSign className="h-5 w-5 text-blue-500" />
+                  <div>
+                    <p className="text-sm text-gray-600">Avg Price</p>
+                    <div className="text-2xl font-bold">
+                      {statsLoading ? (
+                        <Skeleton className="h-8 w-16" />
+                      ) : (
+                        formatPrice(displayStats.average_price)
+                      )}
                     </div>
                   </div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-2">
-                    <Store className="h-5 w-5 text-purple-500" />
-                    <div>
-                      <p className="text-sm text-gray-600">In Stock</p>
-                      <p className="text-2xl font-bold">
-                        {stats?.inStockCount ||
-                          filteredArrivals.filter((p) => p.is_available).length}
-                      </p>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center gap-2">
+                  <Store className="h-5 w-5 text-purple-500" />
+                  <div>
+                    <p className="text-sm text-gray-600">In Stock</p>
+                    <div className="text-2xl font-bold">
+                      {statsLoading ? (
+                        <Skeleton className="h-8 w-12" />
+                      ) : (
+                        displayStats.in_stock_count.toLocaleString()
+                      )}
                     </div>
                   </div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-2">
-                    <Tag className="h-5 w-5 text-orange-500" />
-                    <div>
-                      <p className="text-sm text-gray-600">Categories</p>
-                      <p className="text-2xl font-bold">
-                        {stats?.categoryCount ||
-                          new Set(filteredArrivals.map((d) => d.category_name))
-                            .size}
-                      </p>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center gap-2">
+                  <Tag className="h-5 w-5 text-orange-500" />
+                  <div>
+                    <p className="text-sm text-gray-600">Categories</p>
+                    <div className="text-2xl font-bold">
+                      {statsLoading ? (
+                        <Skeleton className="h-8 w-8" />
+                      ) : (
+                        displayStats.category_count
+                      )}
                     </div>
                   </div>
-                </CardContent>
-              </Card>
-            </div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
 
           {/* Filters */}
           <NewArrivalFilters
             filters={filters}
-            setFilters={setFilters}
+            setFilters={handleFilterChange}
             categories={categories}
             retailers={retailers}
           />
 
-          {/* Results */}
+          {/* Error Alert */}
           {error && (
             <Alert className="mb-6">
               <AlertTriangle className="h-4 w-4" />
@@ -427,6 +547,7 @@ export default function NewArrivalsPage() {
             </Alert>
           )}
 
+          {/* Results */}
           {loading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {[...Array(8)].map((_, i) => (
@@ -459,44 +580,145 @@ export default function NewArrivalsPage() {
               ))}
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {filteredArrivals.map((arrival) => (
-                <div key={arrival.variant_id} className="relative">
-                  <ProductCard product={transformToProduct(arrival)} />
-                  <div className="absolute top-2 left-2">
-                    <Badge className="bg-green-500 hover:bg-green-600 text-white font-semibold flex items-center gap-1">
-                      <Sparkles className="h-3 w-3" />
-                      NEW
-                    </Badge>
-                  </div>
-                  <div className="absolute top-2 right-2">
-                    <Badge
-                      variant="outline"
-                      className="bg-white/90 text-gray-600 text-xs"
-                    >
-                      <Calendar className="h-3 w-3 mr-1" />
-                      {arrival.days_since_arrival === 0
-                        ? "Today"
-                        : arrival.days_since_arrival === 1
-                        ? "Yesterday"
-                        : `${arrival.days_since_arrival}d ago`}
-                    </Badge>
-                  </div>
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {(() => {
+                  const transformedProducts = newArrivals
+                    .map((arrival) => {
+                      return transformToProduct(arrival);
+                    })
+                    .filter(
+                      (product): product is NonNullable<typeof product> => {
+                        return product !== null;
+                      }
+                    );
+
+                  return transformedProducts.map((product, index) => (
+                    <div key={product.id || index} className="relative">
+                      <ProductCard product={product} />
+                      <div className="absolute top-2 left-2">
+                        <Badge className="bg-green-500 hover:bg-green-600 text-white font-semibold flex items-center gap-1">
+                          <Sparkles className="h-3 w-3" />
+                          NEW
+                        </Badge>
+                      </div>
+                      <div className="absolute top-2 right-2">
+                        <Badge
+                          variant="outline"
+                          className="bg-white/90 text-gray-600 text-xs"
+                        >
+                          <Calendar className="h-3 w-3 mr-1" />
+                          {/* Get days from original arrival data if available */}
+                          {newArrivals.find(
+                            (a) =>
+                              (a.canonical_product_id || a.variant_id) ===
+                              product.id
+                          )?.days_since_arrival === 0
+                            ? "Today"
+                            : newArrivals.find(
+                                (a) =>
+                                  (a.canonical_product_id || a.variant_id) ===
+                                  product.id
+                              )?.days_since_arrival === 1
+                            ? "Yesterday"
+                            : `${
+                                newArrivals.find(
+                                  (a) =>
+                                    (a.canonical_product_id || a.variant_id) ===
+                                    product.id
+                                )?.days_since_arrival || 0
+                              }d ago`}
+                        </Badge>
+                      </div>
+                      {!product.inStock && (
+                        <div className="absolute inset-0 bg-gray-900/50 flex items-center justify-center rounded-lg">
+                          <Badge
+                            variant="destructive"
+                            className="font-semibold"
+                          >
+                            Out of Stock
+                          </Badge>
+                        </div>
+                      )}
+                    </div>
+                  ));
+                })()}
+              </div>
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="flex justify-center mt-8 gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage === 1}
+                  >
+                    Previous
+                  </Button>
+                  {[...Array(Math.min(5, totalPages))].map((_, i) => {
+                    const pageNum = i + 1;
+                    return (
+                      <Button
+                        key={pageNum}
+                        variant={
+                          currentPage === pageNum ? "default" : "outline"
+                        }
+                        onClick={() => handlePageChange(pageNum)}
+                      >
+                        {pageNum}
+                      </Button>
+                    );
+                  })}
+                  <Button
+                    variant="outline"
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={!hasNext}
+                  >
+                    Next
+                  </Button>
                 </div>
-              ))}
-            </div>
+              )}
+            </>
           )}
 
-          {!loading && !error && filteredArrivals.length === 0 && (
+          {!loading && !error && newArrivals.length === 0 && (
             <Card className="text-center py-12">
               <CardContent>
                 <Package className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  No new arrivals found
+                  {emptyState.title}
                 </h3>
-                <p className="text-gray-600">
-                  Try adjusting your filters to see more results.
-                </p>
+                <p className="text-gray-600 mb-4">{emptyState.description}</p>
+                <div className="flex gap-2 justify-center">
+                  {emptyState.showExpandButton && (
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setFilters((prev) => ({
+                          ...prev,
+                          timeRange: "90d", // Show all time
+                        }));
+                      }}
+                    >
+                      Show All Time
+                    </Button>
+                  )}
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setFilters({
+                        category: "all",
+                        retailer: "all",
+                        priceRange: [0, 500000],
+                        sortBy: "newest",
+                        timeRange: "90d",
+                        inStockOnly: false,
+                      });
+                    }}
+                  >
+                    Clear All Filters
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           )}

@@ -146,7 +146,7 @@ export function Header() {
             {/* Language/Region */}
             <div className="hidden md:flex items-center space-x-2 text-sm text-gray-600 bg-gray-50 py-1.5 px-3 rounded-full border border-gray-100 hover:bg-gray-100 transition-colors duration-200">
               <Globe className="h-4 w-4 text-blue-500" />
-              <span className="font-medium">English-USD</span>
+              <span className="font-medium">English-LKR</span>
             </div>
 
             {isLoggedIn ? (

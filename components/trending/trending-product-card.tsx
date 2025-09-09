@@ -1,16 +1,16 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import Link from "next/link"
-import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { 
-  Heart, 
-  Eye, 
-  Share2, 
-  ExternalLink, 
-  TrendingUp, 
+import { useState } from "react";
+import Link from "next/link";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Heart,
+  Eye,
+  Share2,
+  ExternalLink,
+  TrendingUp,
   TrendingDown,
   Zap,
   Star,
@@ -19,109 +19,115 @@ import {
   ArrowUpRight,
   ArrowDownRight,
   Minus,
-  Flame
-} from "lucide-react"
+  Flame,
+} from "lucide-react";
 
 interface TrendingProduct {
-  id: number
-  name: string
-  brand: string
-  category: string
-  price: number
-  originalPrice: number
-  retailer: string
-  inStock: boolean
-  image: string
-  discount: number
-  trendingScore: number
-  views: string
-  favorites: string
-  priceChange: number
-  trendingPosition: number
-  trendingChange: "up" | "down" | "new" | "neutral"
-  lastWeekPosition: number | null
-  daysInTrending: number
-  rating?: number
-  reviews?: number
+  id: number;
+  name: string;
+  brand: string;
+  category: string;
+  price: number;
+  originalPrice: number;
+  retailer: string;
+  inStock: boolean;
+  image: string;
+  discount: number;
+  trendingScore: number;
+  views: string;
+  favorites: string;
+  priceChange: number;
+  trendingPosition: number;
+  trendingChange: "up" | "down" | "new" | "neutral";
+  lastWeekPosition: number | null;
+  daysInTrending: number;
+  rating?: number;
+  reviews?: number;
 }
 
 interface TrendingProductCardProps {
-  product: TrendingProduct
-  rank: number
+  product: TrendingProduct;
+  rank: number;
 }
 
-export function TrendingProductCard({ product, rank }: TrendingProductCardProps) {
-  const [isFavorited, setIsFavorited] = useState(false)
-  const [isSharing, setIsSharing] = useState(false)
+export function TrendingProductCard({
+  product,
+  rank,
+}: TrendingProductCardProps) {
+  const [isFavorited, setIsFavorited] = useState(false);
+  const [isSharing, setIsSharing] = useState(false);
 
   const getTrendingIcon = (change: string) => {
     switch (change) {
       case "up":
-        return <ArrowUpRight className="h-3 w-3 text-green-500" />
+        return <ArrowUpRight className="h-3 w-3 text-green-500" />;
       case "down":
-        return <ArrowDownRight className="h-3 w-3 text-red-500" />
+        return <ArrowDownRight className="h-3 w-3 text-red-500" />;
       case "new":
-        return <Zap className="h-3 w-3 text-orange-500" />
+        return <Zap className="h-3 w-3 text-orange-500" />;
       default:
-        return <Minus className="h-3 w-3 text-gray-500" />
+        return <Minus className="h-3 w-3 text-gray-500" />;
     }
-  }
+  };
 
   const getTrendingBadgeColor = (change: string) => {
     switch (change) {
       case "up":
-        return "from-green-500 to-emerald-500"
+        return "from-green-500 to-emerald-500";
       case "down":
-        return "from-red-500 to-rose-500"
+        return "from-red-500 to-rose-500";
       case "new":
-        return "from-orange-500 to-amber-500"
+        return "from-orange-500 to-amber-500";
       default:
-        return "from-gray-500 to-slate-500"
+        return "from-gray-500 to-slate-500";
     }
-  }
+  };
 
   const getPositionBadgeColor = (position: number) => {
-    if (position === 1) return "from-yellow-500 to-orange-500"
-    if (position <= 3) return "from-gray-400 to-gray-600"
-    if (position <= 10) return "from-blue-500 to-blue-600"
-    return "from-purple-500 to-purple-600"
-  }
+    if (position === 1) return "from-yellow-500 to-orange-500";
+    if (position <= 3) return "from-gray-400 to-gray-600";
+    if (position <= 10) return "from-blue-500 to-blue-600";
+    return "from-purple-500 to-purple-600";
+  };
 
   const handleFavorite = () => {
-    setIsFavorited(!isFavorited)
+    setIsFavorited(!isFavorited);
     // TODO: Implement API call to add/remove favorite
-  }
+  };
 
   const handleShare = async () => {
-    setIsSharing(true)
+    setIsSharing(true);
     try {
       if (navigator.share) {
         await navigator.share({
           title: product.name,
           text: `Check out this trending product: ${product.name} - ${product.discount}% off!`,
-          url: window.location.href
-        })
+          url: window.location.href,
+        });
       } else {
         // Fallback: copy to clipboard
-        await navigator.clipboard.writeText(window.location.href)
+        await navigator.clipboard.writeText(window.location.href);
         // Show toast notification
       }
     } catch (error) {
-      console.error('Error sharing:', error)
+      console.error("Error sharing:", error);
     } finally {
-      setIsSharing(false)
+      setIsSharing(false);
     }
-  }
+  };
 
   return (
     <Card className="group relative overflow-hidden hover:shadow-2xl transition-all duration-500 hover:scale-[1.02] bg-gradient-to-br from-white to-gray-50">
       {/* Trending Position Badge */}
       <div className="absolute top-3 left-3 z-30 flex gap-2">
-        <Badge className={`bg-gradient-to-r ${getPositionBadgeColor(product.trendingPosition)} text-white font-bold shadow-lg px-3 py-1`}>
-          <Flame className="h-3 w-3 mr-1" />
-          #{product.trendingPosition}
+        <Badge
+          className={`bg-gradient-to-r ${getPositionBadgeColor(
+            product.trendingPosition
+          )} text-white font-bold shadow-lg px-3 py-1`}
+        >
+          <Flame className="h-3 w-3 mr-1" />#{product.trendingPosition}
         </Badge>
-        
+
         {product.trendingChange === "new" && (
           <Badge className="bg-gradient-to-r from-green-500 to-emerald-500 text-white font-bold animate-pulse">
             NEW
@@ -155,7 +161,7 @@ export function TrendingProductCard({ product, rank }: TrendingProductCardProps)
               className="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-500"
             />
           </Link>
-          
+
           {/* Trending Score Overlay */}
           <div className="absolute bottom-2 left-2 bg-black/70 backdrop-blur-sm text-white px-2 py-1 rounded-full text-xs font-medium">
             <BarChart3 className="inline h-3 w-3 mr-1" />
@@ -185,7 +191,7 @@ export function TrendingProductCard({ product, rank }: TrendingProductCardProps)
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <span className="text-xl font-bold text-gray-900">
-                  ${product.price.toFixed(2)}
+                  Rs {product.price.toFixed(2)}
                 </span>
                 {product.originalPrice > product.price && (
                   <span className="text-sm text-gray-500 line-through">
@@ -193,20 +199,33 @@ export function TrendingProductCard({ product, rank }: TrendingProductCardProps)
                   </span>
                 )}
               </div>
-              <div className={`text-sm font-medium ${
-                product.priceChange < 0 ? 'text-green-600' : 
-                product.priceChange > 0 ? 'text-red-600' : 'text-gray-600'
-              }`}>
-                {product.priceChange < 0 ? '↓' : product.priceChange > 0 ? '↑' : '→'} 
+              <div
+                className={`text-sm font-medium ${
+                  product.priceChange < 0
+                    ? "text-green-600"
+                    : product.priceChange > 0
+                    ? "text-red-600"
+                    : "text-gray-600"
+                }`}
+              >
+                {product.priceChange < 0
+                  ? "↓"
+                  : product.priceChange > 0
+                  ? "↑"
+                  : "→"}
                 {Math.abs(product.priceChange).toFixed(1)}%
               </div>
             </div>
-            
+
             {/* Retailer and Stock */}
             <div className="flex items-center justify-between text-sm">
               <span className="text-gray-600">at {product.retailer}</span>
-              <span className={`font-medium ${product.inStock ? 'text-green-600' : 'text-red-600'}`}>
-                {product.inStock ? 'In Stock' : 'Out of Stock'}
+              <span
+                className={`font-medium ${
+                  product.inStock ? "text-green-600" : "text-red-600"
+                }`}
+              >
+                {product.inStock ? "In Stock" : "Out of Stock"}
               </span>
             </div>
           </div>
@@ -244,10 +263,14 @@ export function TrendingProductCard({ product, rank }: TrendingProductCardProps)
               className="flex-1"
               onClick={handleFavorite}
             >
-              <Heart className={`h-4 w-4 mr-1 ${isFavorited ? 'fill-red-500 text-red-500' : ''}`} />
-              {isFavorited ? 'Saved' : 'Track'}
+              <Heart
+                className={`h-4 w-4 mr-1 ${
+                  isFavorited ? "fill-red-500 text-red-500" : ""
+                }`}
+              />
+              {isFavorited ? "Saved" : "Track"}
             </Button>
-            
+
             <Button
               variant="outline"
               size="sm"
@@ -256,13 +279,13 @@ export function TrendingProductCard({ product, rank }: TrendingProductCardProps)
             >
               <Share2 className="h-4 w-4" />
             </Button>
-            
-            <Button
-              variant="outline"
-              size="sm"
-              asChild
-            >
-              <a href={`/product/${product.id}`} target="_blank" rel="noopener noreferrer">
+
+            <Button variant="outline" size="sm" asChild>
+              <a
+                href={`/product/${product.id}`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
                 <ExternalLink className="h-4 w-4" />
               </a>
             </Button>
@@ -280,9 +303,7 @@ export function TrendingProductCard({ product, rank }: TrendingProductCardProps)
                   ↘ Dropped from #{product.lastWeekPosition} last week
                 </span>
               ) : (
-                <span>
-                  → Maintained position from last week
-                </span>
+                <span>→ Maintained position from last week</span>
               )}
             </div>
           )}
@@ -296,20 +317,29 @@ export function TrendingProductCard({ product, rank }: TrendingProductCardProps)
           <div className="grid grid-cols-2 gap-4 text-xs">
             <div>
               <div className="font-semibold">Engagement Rate</div>
-              <div className="text-green-300">+{(product.trendingScore * 1.2).toFixed(0)}%</div>
+              <div className="text-green-300">
+                +{(product.trendingScore * 1.2).toFixed(0)}%
+              </div>
             </div>
             <div>
               <div className="font-semibold">Price Trend</div>
-              <div className={product.priceChange < 0 ? 'text-green-300' : 'text-red-300'}>
-                {product.priceChange < 0 ? 'Decreasing' : 'Increasing'}
+              <div
+                className={
+                  product.priceChange < 0 ? "text-green-300" : "text-red-300"
+                }
+              >
+                {product.priceChange < 0 ? "Decreasing" : "Increasing"}
               </div>
             </div>
           </div>
-          <Button size="sm" className="w-full bg-white/20 hover:bg-white/30 border-white/30">
+          <Button
+            size="sm"
+            className="w-full bg-white/20 hover:bg-white/30 border-white/30"
+          >
             View Full Analysis
           </Button>
         </div>
       </div>
     </Card>
-  )
+  );
 }

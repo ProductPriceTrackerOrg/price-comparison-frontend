@@ -69,11 +69,11 @@ const retailers = [
 
 const priceRanges = [
   { value: "all", label: "All Prices" },
-  { value: "0-300", label: "Under $300" },
-  { value: "300-600", label: "$300 - $600" },
-  { value: "600-1000", label: "$600 - $1,000" },
-  { value: "1000-1500", label: "$1,000 - $1,500" },
-  { value: "1500+", label: "Over $1,500" },
+  { value: "0-300", label: "Under Rs 50,000" },
+  { value: "300-600", label: "Rs 50,000 - Rs 100,000" },
+  { value: "600-1000", label: "Rs 100,000 - Rs 200,000" },
+  { value: "1000-1500", label: "Rs 200,000 - Rs 300,000" },
+  { value: "1500+", label: "Over Rs 300,000" },
 ];
 
 const trendingStats = [

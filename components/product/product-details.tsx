@@ -60,12 +60,12 @@ export function ProductDetails({ product }: ProductDetailsProps) {
           </div>
 
           <div className="flex items-center space-x-4 mb-4">
-            <span className="text-4xl font-bold text-foreground">${product.price}</span>
+            <span className="text-4xl font-bold text-foreground">Rs {product.price}</span>
             {product.originalPrice && (
-              <span className="text-xl text-muted-foreground line-through">${product.originalPrice}</span>
+              <span className="text-xl text-muted-foreground line-through">Rs {product.originalPrice}</span>
             )}
             {product.discount && (
-              <Badge variant="destructive">Save ${(product.originalPrice - product.price).toFixed(2)}</Badge>
+              <Badge variant="destructive">Save Rs {(product.originalPrice - product.price).toFixed(2)}</Badge>
             )}
           </div>
 

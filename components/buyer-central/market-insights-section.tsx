@@ -51,7 +51,7 @@ export function MarketInsightsSection({
     );
   }
 
-  const formatPrice = (price: number) => `$${price.toLocaleString()}`;
+  const formatPrice = (price: number) => `Rs ${price.toLocaleString()}`;
 
   const getActionColor = (action: string) => {
     switch (action) {

@@ -130,7 +130,7 @@ export function PriceForecasting({ productId }: PriceForecastingProps) {
   const priceChangePercentage = (priceChange / currentPrice) * 100;
   const accuracy = 89.5; // Mock accuracy percentage
 
-  const formatCurrency = (value: number) => `$${value.toLocaleString()}`;
+  const formatCurrency = (value: number) => `Rs ${value.toLocaleString()}`;
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
     return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
@@ -253,7 +253,7 @@ export function PriceForecasting({ productId }: PriceForecastingProps) {
               />
               <YAxis
                 className="text-muted-foreground text-xs"
-                tickFormatter={(value) => `$${value.toLocaleString()}`}
+                tickFormatter={(value) => `Rs ${value.toLocaleString()}`}
                 axisLine={false}
                 tickLine={false}
                 domain={["dataMin - 20", "dataMax + 20"]}

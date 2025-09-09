@@ -118,18 +118,58 @@ export function NewArrivalFilters({
           {/* Price Range */}
           <div>
             <label className="text-sm font-medium mb-2 block">
-              Price Range: ${filters.priceRange[0]} - ${filters.priceRange[1]}
+              Price Range: Rs {filters.priceRange[0].toLocaleString()} - Rs{" "}
+              {filters.priceRange[1].toLocaleString()}
             </label>
-            <Slider
-              value={filters.priceRange}
-              onValueChange={(value) =>
-                setFilters({ ...filters, priceRange: value })
-              }
-              max={5000}
-              min={0}
-              step={50}
-              className="mt-2"
-            />
+            <div className="space-y-3">
+              {/* Minimum Value Slider */}
+              <div>
+                <label className="text-xs text-blue-600 font-medium mb-1 block">
+                  Minimum: Rs {filters.priceRange[0].toLocaleString()}
+                </label>
+                <Slider
+                  value={[filters.priceRange[0]]}
+                  onValueChange={(value) => {
+                    const newMin = Math.min(
+                      value[0],
+                      filters.priceRange[1] - 10000
+                    );
+                    setFilters({
+                      ...filters,
+                      priceRange: [newMin, filters.priceRange[1]],
+                    });
+                  }}
+                  max={filters.priceRange[1] - 10000}
+                  min={0}
+                  step={10000}
+                  className="w-full"
+                />
+              </div>
+
+              {/* Maximum Value Slider */}
+              <div>
+                <label className="text-xs text-red-600 font-medium mb-1 block">
+                  Maximum: Rs {filters.priceRange[1].toLocaleString()}
+                </label>
+                <Slider
+                  value={[filters.priceRange[1]]}
+                  onValueChange={(value) => {
+                    const newMax = Math.max(
+                      value[0],
+                      filters.priceRange[0] + 10000
+                    );
+                    setFilters({
+                      ...filters,
+                      priceRange: [filters.priceRange[0], newMax],
+                    });
+                  }}
+                  max={10000000}
+                  min={filters.priceRange[0] + 10000}
+                  step={10000}
+                  className="w-full"
+                />
+              </div>
+            </div>
           </div>
 
           {/* Sort By */}

@@ -74,7 +74,7 @@ export function BuyingGuidesSection({
     );
   }
 
-  const formatPrice = (price: number) => `$${price.toLocaleString()}`;
+  const formatPrice = (price: number) => `Rs ${price.toLocaleString()}`;
 
   return (
     <div className="space-y-8">
@@ -133,9 +133,9 @@ Choosing the right smartphone can be overwhelming with hundreds of options avail
 ## Key Factors to Consider
 
 ### 1. Budget Planning
-- **Budget Range (Under $300)**: Focus on essential features like battery life, basic camera, and reliable performance
-- **Mid-range ($300-$700)**: Balance of performance, camera quality, and premium features
-- **Premium ($700+)**: Latest technology, superior cameras, and flagship performance
+- **Budget Range (Under Rs 50,000)**: Focus on essential features like battery life, basic camera, and reliable performance
+- **Mid-range (Rs 50,000-Rs 120,000)**: Balance of performance, camera quality, and premium features
+- **Premium (Rs 120,000+)**: Latest technology, superior cameras, and flagship performance
 
 ### 2. Operating System
 - **Android**: More customization options, wider price range, Google ecosystem integration
