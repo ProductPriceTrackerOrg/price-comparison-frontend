@@ -90,10 +90,13 @@ export function PriceDropCard({ priceDrop }: PriceDropCardProps) {
   };
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-    }).format(amount);
+    return (
+      "Rs " +
+      new Intl.NumberFormat("en-US", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }).format(amount)
+    );
   };
 
   const getTimeSince = (days: number) => {

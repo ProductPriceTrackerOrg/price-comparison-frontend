@@ -41,80 +41,66 @@ export function PriceForecasting({ productId }: PriceForecastingProps) {
   // Enhanced mock forecasting data with more points for smoother visualization
   const mockForecastData: ForecastDataPoint[] = [
     {
-      date: "2024-03-27",
+      date: "2025-09-12",
       predicted: 1199.99,
       upper: 1199.99,
       lower: 1199.99,
       isActual: true,
     },
     {
-      date: "2024-03-28",
+      date: "2025-09-13",
       predicted: 1195.99,
       upper: 1220.99,
       lower: 1170.99,
       isActual: false,
     },
     {
-      date: "2024-03-29",
+      date: "2025-09-14",
       predicted: 1189.99,
       upper: 1215.99,
       lower: 1163.99,
       isActual: false,
     },
     {
-      date: "2024-03-30",
+      date: "2025-09-15",
       predicted: 1185.99,
       upper: 1212.99,
       lower: 1158.99,
       isActual: false,
     },
     {
-      date: "2024-03-31",
+      date: "2025-09-16",
       predicted: 1179.99,
       upper: 1207.99,
       lower: 1151.99,
       isActual: false,
     },
     {
-      date: "2024-04-01",
+      date: "2025-09-17",
       predicted: 1175.99,
       upper: 1203.99,
       lower: 1147.99,
       isActual: false,
     },
     {
-      date: "2024-04-02",
+      date: "2025-09-18",
       predicted: 1169.99,
       upper: 1198.99,
       lower: 1140.99,
       isActual: false,
     },
     {
-      date: "2024-04-03",
+      date: "2025-09-19",
       predicted: 1165.99,
       upper: 1195.99,
       lower: 1135.99,
       isActual: false,
     },
     {
-      date: "2024-04-04",
+      date: "2025-09-20",
       predicted: 1160.99,
       upper: 1190.99,
       lower: 1130.99,
-      isActual: false,
-    },
-    {
-      date: "2024-04-05",
-      predicted: 1158.99,
-      upper: 1188.99,
-      lower: 1128.99,
-      isActual: false,
-    },
-    {
-      date: "2024-04-06",
-      predicted: 1155.99,
-      upper: 1185.99,
-      lower: 1125.99,
       isActual: false,
     },
   ];
@@ -287,7 +273,7 @@ export function PriceForecasting({ productId }: PriceForecastingProps) {
               />
               <YAxis
                 className="text-muted-foreground text-xs"
-                tickFormatter={(value) => `$${value.toLocaleString()}`}
+                tickFormatter={(value) => `Rs ${value.toLocaleString()}`}
                 axisLine={false}
                 tickLine={false}
                 domain={["dataMin - 20", "dataMax + 20"]}

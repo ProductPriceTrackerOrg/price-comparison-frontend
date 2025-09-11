@@ -178,12 +178,12 @@ export function PriceHistory({ productId }: PriceHistoryProps) {
         }
 
         setPriceData(transformedPriceData);
-        setPriceChanges(changes.length > 0 ? changes : mockPriceChanges);
+        setPriceChanges(changes.length > 0 ? changes : []);
       } catch (error) {
         console.error("Error fetching price history:", error);
         // Fall back to mock data if API fails
         setPriceData(mockPriceData);
-        setPriceChanges(mockPriceChanges);
+        setPriceChanges([]); // Don't show mock price changes when there are errors
       }
     };
 
@@ -336,7 +336,7 @@ export function PriceHistory({ productId }: PriceHistoryProps) {
                 />
                 <YAxis
                   className="text-muted-foreground text-xs"
-                  tickFormatter={(value) => `$${value.toLocaleString()}`}
+                  tickFormatter={(value) => `Rs ${value.toLocaleString()}`}
                   axisLine={false}
                   tickLine={false}
                   domain={["dataMin - 50", "dataMax + 50"]}
@@ -445,7 +445,7 @@ export function PriceHistory({ productId }: PriceHistoryProps) {
         </Card>
       </div>
 
-      {/* Price Changes Table */}
+      {/* Price Changes Table - Always shown even if empty */}
       <Card>
         <CardHeader>
           <CardTitle>Price Change History</CardTitle>
@@ -463,46 +463,54 @@ export function PriceHistory({ productId }: PriceHistoryProps) {
                 </tr>
               </thead>
               <tbody>
-                {priceChanges.map((change, index) => (
-                  <tr
-                    key={index}
-                    className="border-b border-border last:border-b-0"
-                  >
-                    <td className="py-3 px-4 text-muted-foreground">
-                      {change.date}
-                    </td>
-                    <td className="py-3 px-4">${change.oldPrice}</td>
-                    <td className="py-3 px-4 font-semibold">
-                      ${change.newPrice}
-                    </td>
-                    <td className="py-3 px-4">
-                      <div
-                        className={`flex items-center space-x-1 ${
-                          change.change < 0 ? "text-green-600" : "text-red-600"
-                        }`}
-                      >
-                        {change.change < 0 ? (
-                          <TrendingDown className="h-4 w-4" />
-                        ) : (
-                          <TrendingUp className="h-4 w-4" />
-                        )}
-                        <span>${Math.abs(change.change).toFixed(2)}</span>
-                      </div>
-                    </td>
-                    <td className="py-3 px-4">
-                      <span
-                        className={
-                          change.percentage < 0
-                            ? "text-green-600"
-                            : "text-red-600"
-                        }
-                      >
-                        {change.percentage > 0 ? "+" : ""}
-                        {change.percentage.toFixed(2)}%
-                      </span>
+                {priceChanges.length > 0 ? (
+                  priceChanges.map((change, index) => (
+                    <tr
+                      key={index}
+                      className="border-b border-border last:border-b-0"
+                    >
+                      <td className="py-3 px-4 text-muted-foreground">
+                        {change.date}
+                      </td>
+                      <td className="py-3 px-4">Rs {change.oldPrice}</td>
+                      <td className="py-3 px-4 font-semibold">
+                        Rs {change.newPrice}
+                      </td>
+                      <td className="py-3 px-4">
+                        <div
+                          className={`flex items-center space-x-1 ${
+                            change.change < 0 ? "text-green-600" : "text-red-600"
+                          }`}
+                        >
+                          {change.change < 0 ? (
+                            <TrendingDown className="h-4 w-4" />
+                          ) : (
+                            <TrendingUp className="h-4 w-4" />
+                          )}
+                          <span>Rs {Math.abs(change.change).toFixed(2)}</span>
+                        </div>
+                      </td>
+                      <td className="py-3 px-4">
+                        <span
+                          className={
+                            change.percentage < 0
+                              ? "text-green-600"
+                              : "text-red-600"
+                          }
+                        >
+                          {change.percentage > 0 ? "+" : ""}
+                          {change.percentage.toFixed(2)}%
+                        </span>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={5} className="py-8 text-center text-muted-foreground">
+                      No price changes recorded for this product in the selected timeframe.
                     </td>
                   </tr>
-                ))}
+                )}
               </tbody>
             </table>
           </div>

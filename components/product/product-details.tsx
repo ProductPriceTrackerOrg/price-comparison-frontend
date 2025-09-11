@@ -52,7 +52,7 @@ export function ProductDetails({ product }: ProductDetailsProps) {
             alt={product.name}
             className="w-full h-96 object-cover rounded-lg"
           />
-          {product.discount && (
+          {product.discount && product.originalPrice && (
             <Badge className="absolute top-4 left-4 bg-red-500 text-white">
               -{product.discount}% OFF
             </Badge>
@@ -83,16 +83,20 @@ export function ProductDetails({ product }: ProductDetailsProps) {
 
           <div className="flex items-center space-x-4 mb-4">
             <span className="text-4xl font-bold text-foreground">
-              Rs {product.price.toLocaleString('en-US')}
+              Rs {product.price.toLocaleString("en-US")}
             </span>
             {product.originalPrice && (
               <span className="text-xl text-muted-foreground line-through">
-                Rs {product.originalPrice.toLocaleString('en-US')}
+                Rs {product.originalPrice.toLocaleString("en-US")}
               </span>
             )}
-            {product.discount && (
+            {product.discount && product.originalPrice && (
               <Badge variant="destructive">
-                Save Rs {(product.originalPrice - product.price).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                Save Rs{" "}
+                {(product.originalPrice - product.price).toLocaleString(
+                  "en-US",
+                  { minimumFractionDigits: 2, maximumFractionDigits: 2 }
+                )}
               </Badge>
             )}
           </div>

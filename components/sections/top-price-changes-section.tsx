@@ -1,12 +1,49 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { TrendingDown, ArrowRight } from "lucide-react";
 import { ProductCard } from "@/components/product/product-card";
+import { Spinner } from "@/components/ui/spinner";
+
+// Define interfaces for the API response
+interface Product {
+  id: number;
+  name: string;
+  brand: string;
+  category: string;
+  price: number;
+  originalPrice?: number;
+  retailer: string;
+  inStock: boolean;
+  image: string;
+  discount?: number;
+  priceChange?: number;
+}
+
+interface ApiProduct {
+  id: number;
+  name: string;
+  brand: string;
+  category: string;
+  price: number;
+  original_price?: number;
+  retailer: string;
+  retailer_id?: number;
+  in_stock: boolean;
+  image: string;
+  discount?: number;
+  price_change?: number;
+}
 
 export function TopPriceChangesSection() {
-  const priceDrops = [
+  const [priceDrops, setPriceDrops] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Default fallback products in case API fails
+  const fallbackPriceDrops = [
     {
       id: 17,
       name: "iPhone 15 Pro Max",
@@ -56,6 +93,51 @@ export function TopPriceChangesSection() {
       discount: 25,
     },
   ];
+
+  useEffect(() => {
+    const fetchPriceDrops = async () => {
+      try {
+        // Since there's no dedicated price changes endpoint in the provided endpoints,
+        // we'll use the trending endpoint with the price_change sort parameter
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/v1/trending?limit=4&sort=price_change&type=trends`
+        );
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch price drops");
+        }
+
+        const data = await response.json();
+
+        // Map API response to our Product interface
+        const products: Product[] = data.products.map(
+          (product: ApiProduct) => ({
+            id: product.id,
+            name: product.name,
+            brand: product.brand || "Unknown",
+            category: product.category,
+            price: product.price,
+            originalPrice: product.original_price,
+            retailer: product.retailer,
+            inStock: product.in_stock,
+            image: product.image || "/placeholder.svg?height=200&width=200",
+            discount: product.discount,
+            priceChange: product.price_change,
+          })
+        );
+
+        setPriceDrops(products);
+        setLoading(false);
+      } catch (error) {
+        console.error("Error fetching price drops:", error);
+        setPriceDrops(fallbackPriceDrops);
+        setError("Failed to load price drops");
+        setLoading(false);
+      }
+    };
+
+    fetchPriceDrops();
+  }, []);
 
   return (
     <section className="py-16 bg-gradient-to-r from-green-50 to-emerald-50 relative overflow-hidden">
@@ -119,7 +201,10 @@ export function TopPriceChangesSection() {
                 {/* Savings callout */}
                 <div className="absolute top-3 right-3 z-10">
                   <div className="bg-white/90 backdrop-blur-sm text-green-700 text-xs font-bold px-2 py-1 rounded-md shadow-sm border border-green-100">
-                    Save ${(product.originalPrice - product.price).toFixed(2)}
+                    Save $
+                    {(
+                      (product.originalPrice || product.price) - product.price
+                    ).toFixed(2)}
                   </div>
                 </div>
 

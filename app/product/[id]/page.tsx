@@ -87,6 +87,15 @@ export default function ProductPage() {
         <Header />
         <NavigationBar />
         <main className="container mx-auto px-4 py-8">
+          {/* Breadcrumb Navigation */}
+          <div className="flex items-center text-sm text-muted-foreground mb-4">
+            <Link href="/" className="hover:text-foreground transition-colors">
+              Home
+            </Link>
+            <span className="mx-2">&gt;</span>
+            <span>Product</span>
+          </div>
+
           <div className="animate-pulse space-y-8">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               <div className="bg-muted h-96 rounded-lg"></div>
@@ -109,6 +118,15 @@ export default function ProductPage() {
         <Header />
         <NavigationBar />
         <main className="container mx-auto px-4 py-8">
+          {/* Breadcrumb Navigation */}
+          <div className="flex items-center text-sm text-muted-foreground mb-4">
+            <Link href="/" className="hover:text-foreground transition-colors">
+              Home
+            </Link>
+            <span className="mx-2">&gt;</span>
+            <span>Product</span>
+          </div>
+
           <div className="flex flex-col items-center justify-center space-y-4 py-12">
             <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center max-w-lg">
               <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
@@ -141,6 +159,15 @@ export default function ProductPage() {
       <NavigationBar />
 
       <main className="container mx-auto px-4 py-8 space-y-12">
+        {/* Breadcrumb Navigation */}
+        <div className="flex items-center text-sm text-muted-foreground mb-4">
+          <Link href="/" className="hover:text-foreground transition-colors">
+            Home
+          </Link>
+          <span className="mx-2">&gt;</span>
+          <span>{product.name}</span>
+        </div>
+
         <ProductDetails product={product} />
         <PriceHistory productId={productId} />
         <PriceForecasting productId={productId} />

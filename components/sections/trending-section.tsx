@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ProductCard } from "@/components/product/product-card";
+import { Spinner } from "@/components/ui/spinner";
 import {
   TrendingUp,
   Sparkles,
@@ -17,10 +18,72 @@ import {
   Users,
 } from "lucide-react";
 
+// Define interfaces for API responses
+interface TrendingProduct {
+  id: number;
+  name: string;
+  brand: string;
+  category: string;
+  price: number;
+  originalPrice?: number;
+  retailer: string;
+  inStock: boolean;
+  image: string;
+  discount?: number;
+  trendScore?: number;
+  searchVolume?: string;
+  priceChange?: number;
+  isNew?: boolean;
+  launchDate?: string;
+  preOrders?: number;
+  rating?: number;
+}
+
+interface ApiTrendingProduct {
+  id: number;
+  name: string;
+  brand: string;
+  category: string;
+  price: number;
+  original_price?: number;
+  retailer: string;
+  retailer_id?: number;
+  in_stock: boolean;
+  image: string;
+  trend_score?: number;
+  discount?: number;
+  search_volume?: string;
+  price_change?: number;
+  is_trending?: boolean;
+}
+
+interface ApiLaunchProduct {
+  id: number;
+  name: string;
+  brand: string;
+  category: string;
+  price: number;
+  retailer: string;
+  retailer_id?: number;
+  in_stock: boolean;
+  image: string;
+  launch_date?: string;
+  pre_orders?: number;
+  rating?: number;
+  is_new?: boolean;
+}
+
 export function TrendingSection() {
   const [activeTab, setActiveTab] = useState("trends");
   const router = useRouter();
+  const [trendingProducts, setTrendingProducts] = useState<TrendingProduct[]>(
+    []
+  );
+  const [newLaunches, setNewLaunches] = useState<TrendingProduct[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
+  // Handle explore all button click
   const handleExploreAll = () => {
     if (activeTab === "trends") {
       router.push("/trending");
@@ -29,153 +92,150 @@ export function TrendingSection() {
     }
   };
 
-  const trendingProducts = [
-    {
-      id: 7,
-      name: "iPhone 15 Pro Max",
-      brand: "Apple",
-      category: "Smartphones",
-      price: 1299.99,
-      originalPrice: 1399.99,
-      retailer: "MobileWorld",
-      inStock: true,
-      image:
-        "https://imagedelivery.net/7D3NQGy_afPWwbfcO5Acjw/celltronics.lk/2023/07/galaxy-watch6-kv-pc.jpg/w=9999",
-      discount: 7,
-      trendScore: 98,
-      searchVolume: "+245%",
-      priceChange: -7.2,
-    },
-    {
-      id: 8,
-      name: "Samsung Galaxy Watch 6",
-      brand: "Samsung",
-      category: "Smartwatches",
-      price: 329.99,
-      originalPrice: 399.99,
-      retailer: "WearableTech",
-      inStock: true,
-      image:
-        "https://imagedelivery.net/7D3NQGy_afPWwbfcO5Acjw/celltronics.lk/2023/07/galaxy-watch6-kv-pc.jpg/w=9999",
-      discount: 18,
-      trendScore: 94,
-      searchVolume: "+189%",
-      priceChange: -17.5,
-    },
-    {
-      id: 9,
-      name: "Google Pixel 8 Pro",
-      brand: "Google",
-      category: "Smartphones",
-      price: 799.99,
-      originalPrice: 899.99,
-      retailer: "TechMart",
-      inStock: true,
-      image:
-        "https://imagedelivery.net/7D3NQGy_afPWwbfcO5Acjw/celltronics.lk/2023/07/galaxy-watch6-kv-pc.jpg/w=9999",
-      discount: 11,
-      trendScore: 91,
-      searchVolume: "+156%",
-      priceChange: -11.1,
-    },
-    {
-      id: 10,
-      name: "Microsoft Surface Pro 9",
-      brand: "Microsoft",
-      category: "Tablets",
-      price: 999.99,
-      originalPrice: 1199.99,
-      retailer: "ComputerStore",
-      inStock: true,
-      image:
-        "https://imagedelivery.net/7D3NQGy_afPWwbfcO5Acjw/celltronics.lk/2023/07/galaxy-watch6-kv-pc.jpg/w=9999",
-      discount: 17,
-      trendScore: 87,
-      searchVolume: "+134%",
-      priceChange: -16.7,
-    },
-    {
-      id: 8,
-      name: "Samsung Galaxy Watch 6",
-      brand: "Samsung",
-      category: "Smartwatches",
-      price: 329.99,
-      originalPrice: 399.99,
-      retailer: "WearableTech",
-      inStock: true,
-      image:
-        "https://imagedelivery.net/7D3NQGy_afPWwbfcO5Acjw/celltronics.lk/2023/07/galaxy-watch6-kv-pc.jpg/w=9999",
-      discount: 18,
-      trendScore: 94,
-      searchVolume: "+189%",
-      priceChange: -17.5,
-    },
-    {
-      id: 9,
-      name: "Google Pixel 8 Pro",
-      brand: "Google",
-      category: "Smartphones",
-      price: 799.99,
-      originalPrice: 899.99,
-      retailer: "TechMart",
-      inStock: true,
-      image:
-        "https://imagedelivery.net/7D3NQGy_afPWwbfcO5Acjw/celltronics.lk/2023/07/galaxy-watch6-kv-pc.jpg/w=9999",
-      discount: 11,
-      trendScore: 91,
-      searchVolume: "+156%",
-      priceChange: -11.1,
-    },
-    {
-      id: 10,
-      name: "Microsoft Surface Pro 9",
-      brand: "Microsoft",
-      category: "Tablets",
-      price: 999.99,
-      originalPrice: 1199.99,
-      retailer: "ComputerStore",
-      inStock: true,
-      image:
-        "https://imagedelivery.net/7D3NQGy_afPWwbfcO5Acjw/celltronics.lk/2023/07/galaxy-watch6-kv-pc.jpg/w=9999",
-      discount: 17,
-      trendScore: 87,
-      searchVolume: "+134%",
-      priceChange: -16.7,
-    },
-  ];
+  useEffect(() => {
+    const fetchProducts = async () => {
+      setLoading(true);
+      setError(null);
 
-  const newLaunches = [
-    {
-      id: 11,
-      name: "Nothing Phone 2a",
-      brand: "Nothing",
-      category: "Smartphones",
-      price: 399.99,
-      retailer: "TechStore",
-      inStock: true,
-      image:
-        "https://imagedelivery.net/7D3NQGy_afPWwbfcO5Acjw/celltronics.lk/2023/07/galaxy-watch6-kv-pc.jpg/w=9999",
-      launchDate: "2024-01-15",
-      preOrders: 15420,
-      rating: 4.8,
-      isNew: true,
-    },
-    {
-      id: 12,
-      name: "Framework Laptop 16",
-      brand: "Framework",
-      category: "Laptops",
-      price: 1699.99,
-      retailer: "FrameworkStore",
-      inStock: true,
-      image:
-        "https://imagedelivery.net/7D3NQGy_afPWwbfcO5Acjw/celltronics.lk/2023/07/galaxy-watch6-kv-pc.jpg/w=9999",
-      launchDate: "2024-01-10",
-      preOrders: 8930,
-      rating: 4.9,
-      isNew: true,
-    },
-  ];
+      try {
+        // Fetch the trending products
+        const trendingResponse = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/v1/home/trending?type=trends&limit=4`
+        );
+
+        if (!trendingResponse.ok) {
+          throw new Error("Failed to fetch trending products");
+        }
+
+        const trendingData = await trendingResponse.json();
+
+        // Map API response to our Product interface
+        const mappedTrending: TrendingProduct[] = trendingData.products.map(
+          (product: ApiTrendingProduct) => ({
+            id: product.id,
+            name: product.name,
+            brand: product.brand || "Unknown",
+            category: product.category,
+            price: product.price,
+            originalPrice: product.original_price,
+            retailer: product.retailer,
+            inStock: product.in_stock,
+            image: product.image || "/placeholder.svg?height=200&width=200",
+            discount: product.discount,
+            trendScore: product.trend_score,
+            searchVolume: product.search_volume,
+            priceChange: product.price_change,
+          })
+        );
+
+        setTrendingProducts(mappedTrending);
+
+        // Fetch the new launches
+        const launchesResponse = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/v1/home/trending?type=launches&limit=4`
+        );
+
+        if (!launchesResponse.ok) {
+          throw new Error("Failed to fetch new launches");
+        }
+
+        const launchesData = await launchesResponse.json();
+
+        // Map API response to our Product interface
+        const mappedLaunches: TrendingProduct[] = launchesData.products.map(
+          (product: ApiLaunchProduct) => ({
+            id: product.id,
+            name: product.name,
+            brand: product.brand || "Unknown",
+            category: product.category,
+            price: product.price,
+            retailer: product.retailer,
+            inStock: product.in_stock,
+            image: product.image || "/placeholder.svg?height=200&width=200",
+            isNew: true,
+            launchDate: product.launch_date,
+            preOrders: product.pre_orders,
+            rating: product.rating,
+          })
+        );
+
+        setNewLaunches(mappedLaunches);
+        setLoading(false);
+      } catch (error) {
+        console.error("Error fetching products:", error);
+        setError("Failed to load products");
+
+        // Use fallback data
+        setTrendingProducts([
+          {
+            id: 7,
+            name: "iPhone 15 Pro Max",
+            brand: "Apple",
+            category: "Smartphones",
+            price: 1299.99,
+            originalPrice: 1399.99,
+            retailer: "MobileWorld",
+            inStock: true,
+            image: "/placeholder.svg?height=200&width=200",
+            discount: 7,
+            trendScore: 98,
+            searchVolume: "+245%",
+            priceChange: -7.2,
+          },
+          {
+            id: 8,
+            name: "Samsung Galaxy Watch 6",
+            brand: "Samsung",
+            category: "Smartwatches",
+            price: 329.99,
+            originalPrice: 399.99,
+            retailer: "WearableTech",
+            inStock: true,
+            image: "/placeholder.svg?height=200&width=200",
+            discount: 18,
+            trendScore: 94,
+            searchVolume: "+189%",
+            priceChange: -17.5,
+          },
+        ]);
+
+        setNewLaunches([
+          {
+            id: 11,
+            name: "Nothing Phone 2a",
+            brand: "Nothing",
+            category: "Smartphones",
+            price: 399.99,
+            retailer: "TechStore",
+            inStock: true,
+            image: "/placeholder.svg?height=200&width=200",
+            isNew: true,
+            launchDate: "2024-01-15",
+            preOrders: 15420,
+            rating: 4.8,
+          },
+          {
+            id: 12,
+            name: "Framework Laptop 16",
+            brand: "Framework",
+            category: "Laptops",
+            price: 1699.99,
+            retailer: "FrameworkStore",
+            inStock: true,
+            image: "/placeholder.svg?height=200&width=200",
+            isNew: true,
+            launchDate: "2024-01-10",
+            preOrders: 8930,
+            rating: 4.9,
+          },
+        ]);
+
+        setLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, []);
 
   return (
     <section className="py-16 bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 text-white relative overflow-hidden">
@@ -426,17 +486,23 @@ export function TrendingSection() {
 
                     {/* Launch Metrics Overlay */}
                     <div className="absolute top-4 left-4 z-20 space-y-1">
-                      <Badge className="bg-black/70 text-white text-xs backdrop-blur-sm">
-                        <Clock className="h-3 w-3 mr-1" />
-                        {new Date(product.launchDate).toLocaleDateString()}
-                      </Badge>
-                      <Badge className="bg-blue-600/80 text-white text-xs backdrop-blur-sm">
-                        {product.preOrders.toLocaleString()} pre-orders
-                      </Badge>
-                      <Badge className="bg-yellow-600/80 text-white text-xs backdrop-blur-sm">
-                        <Star className="h-3 w-3 mr-1" />
-                        {product.rating}
-                      </Badge>
+                      {product.launchDate && (
+                        <Badge className="bg-black/70 text-white text-xs backdrop-blur-sm">
+                          <Clock className="h-3 w-3 mr-1" />
+                          {new Date(product.launchDate).toLocaleDateString()}
+                        </Badge>
+                      )}
+                      {product.preOrders && (
+                        <Badge className="bg-blue-600/80 text-white text-xs backdrop-blur-sm">
+                          {product.preOrders.toLocaleString()} pre-orders
+                        </Badge>
+                      )}
+                      {product.rating && (
+                        <Badge className="bg-yellow-600/80 text-white text-xs backdrop-blur-sm">
+                          <Star className="h-3 w-3 mr-1" />
+                          {product.rating}
+                        </Badge>
+                      )}
                     </div>
 
                     <div className="relative overflow-hidden rounded-2xl shadow-lg border border-white/10 hover:shadow-xl hover:border-white/20 transition-all duration-300">

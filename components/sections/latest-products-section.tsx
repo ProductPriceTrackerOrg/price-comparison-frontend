@@ -1,11 +1,53 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/product/product-card";
 import { ArrowRight, Clock } from "lucide-react";
+import { Spinner } from "@/components/ui/spinner";
+
+// Define interface for the products
+interface Product {
+  id: number;
+  name: string;
+  brand: string;
+  category: string;
+  price: number;
+  originalPrice?: number;
+  retailer: string;
+  retailer_id?: number;
+  inStock: boolean;
+  image: string;
+  discount?: number;
+  rating?: number;
+  reviews_count?: number;
+  added_date?: string;
+}
+
+interface ApiProduct {
+  id: number;
+  name: string;
+  brand: string;
+  category: string;
+  price: number;
+  original_price?: number;
+  retailer: string;
+  retailer_id?: number;
+  in_stock: boolean;
+  image: string;
+  discount?: number;
+  rating?: number;
+  reviews_count?: number;
+  added_date?: string;
+}
 
 export function LatestProductsSection() {
-  const latestProducts = [
+  const [latestProducts, setLatestProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  
+  // Default fallback products in case API fails
+  const fallbackProducts = [
     {
       id: 13,
       name: "Samsung Galaxy S24 Ultra",
@@ -15,8 +57,7 @@ export function LatestProductsSection() {
       originalPrice: 1299.99,
       retailer: "TechStore",
       inStock: true,
-      image:
-        "https://imagedelivery.net/7D3NQGy_afPWwbfcO5Acjw/celltronics.lk/2023/07/galaxy-watch6-kv-pc.jpg/w=9999",
+      image: "/placeholder.svg?height=200&width=200",
       discount: 8,
     },
     {
@@ -28,8 +69,7 @@ export function LatestProductsSection() {
       originalPrice: 1199.99,
       retailer: "AppleStore",
       inStock: true,
-      image:
-        "https://imagedelivery.net/7D3NQGy_afPWwbfcO5Acjw/celltronics.lk/2023/07/galaxy-watch6-kv-pc.jpg/w=9999",
+      image: "/placeholder.svg?height=200&width=200",
       discount: 8,
     },
     {
@@ -41,8 +81,7 @@ export function LatestProductsSection() {
       originalPrice: 399.99,
       retailer: "AudioHub",
       inStock: true,
-      image:
-        "https://imagedelivery.net/7D3NQGy_afPWwbfcO5Acjw/celltronics.lk/2023/07/galaxy-watch6-kv-pc.jpg/w=9999",
+      image: "/placeholder.svg?height=200&width=200",
       discount: 13,
     },
     {
@@ -53,10 +92,49 @@ export function LatestProductsSection() {
       price: 1099.99,
       retailer: "TechMart",
       inStock: true,
-      image:
-        "https://imagedelivery.net/7D3NQGy_afPWwbfcO5Acjw/celltronics.lk/2023/07/galaxy-watch6-kv-pc.jpg/w=9999",
+      image: "/placeholder.svg?height=200&width=200",
     },
   ];
+
+  useEffect(() => {
+    const fetchLatestProducts = async () => {
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/home/latest?limit=4`);
+        if (!response.ok) {
+          throw new Error('Failed to fetch latest products');
+        }
+        
+        const data = await response.json();
+        
+        // Map API response to our Product interface
+        const products: Product[] = data.products.map((product: ApiProduct) => ({
+          id: product.id,
+          name: product.name,
+          brand: product.brand || "Unknown",
+          category: product.category,
+          price: product.price,
+          originalPrice: product.original_price,
+          retailer: product.retailer,
+          inStock: product.in_stock,
+          image: product.image || "/placeholder.svg?height=200&width=200",
+          discount: product.discount,
+          rating: product.rating,
+          reviews_count: product.reviews_count,
+          added_date: product.added_date
+        }));
+        
+        setLatestProducts(products);
+        setLoading(false);
+      } catch (error) {
+        console.error('Error fetching latest products:', error);
+        setLatestProducts(fallbackProducts);
+        setError('Failed to load latest products');
+        setLoading(false);
+      }
+    };
+
+    fetchLatestProducts();
+  }, []);
 
   return (
     <section className="py-14 bg-gradient-to-br from-gray-50 to-blue-50 relative overflow-hidden">
