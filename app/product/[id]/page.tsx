@@ -4,9 +4,9 @@ import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { AlertTriangle } from "lucide-react";
-import { Header } from "@/components/layout/header";
-import { NavigationBar } from "@/components/layout/navigation-bar";
-import { Footer } from "@/components/layout/footer";
+
+
+
 import { Button } from "@/components/ui/button";
 import { ProductDetails } from "@/components/product/product-details";
 import { PriceHistory } from "@/components/product/price-history";
@@ -84,8 +84,8 @@ export default function ProductPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-background">
-        <Header />
-        <NavigationBar />
+        
+        
         <main className="container mx-auto px-4 py-8">
           {/* Breadcrumb Navigation */}
           <div className="flex items-center text-sm text-muted-foreground mb-4">
@@ -107,7 +107,7 @@ export default function ProductPage() {
             </div>
           </div>
         </main>
-        <Footer />
+        
       </div>
     );
   }
@@ -115,8 +115,8 @@ export default function ProductPage() {
   if (error || !product) {
     return (
       <div className="min-h-screen bg-background">
-        <Header />
-        <NavigationBar />
+        
+        
         <main className="container mx-auto px-4 py-8">
           {/* Breadcrumb Navigation */}
           <div className="flex items-center text-sm text-muted-foreground mb-4">
@@ -148,15 +148,15 @@ export default function ProductPage() {
             </div>
           </div>
         </main>
-        <Footer />
+        
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-background">
-      <Header />
-      <NavigationBar />
+      
+      
 
       <main className="container mx-auto px-4 py-8 space-y-12">
         {/* Breadcrumb Navigation */}
@@ -176,7 +176,7 @@ export default function ProductPage() {
         <ProductRecommendations productId={productId} />
       </main>
 
-      <Footer />
+      
     </div>
   );
 }

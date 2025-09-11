@@ -8,6 +8,8 @@ import { SessionTimeoutProvider } from "@/components/auth/session-timeout-provid
 import { TokenRefreshHandler } from "@/components/auth/token-refresh-handler";
 import { PageLoadingIndicator } from "@/components/layout/page-loading-indicator";
 import { NavigationProgressBar } from "@/components/layout/navigation-progress-bar";
+import { Header } from "@/components/layout/header";
+import { Footer } from "@/components/layout/footer";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -33,7 +35,9 @@ export default function RootLayout({
             <SessionTimeoutProvider>
               <PageLoadingIndicator />
               <NavigationProgressBar />
-              {children}
+              <Header />
+              <main className="min-h-screen pt-16">{children}</main>
+              <Footer />
               <Toaster />
             </SessionTimeoutProvider>
           </TokenRefreshHandler>

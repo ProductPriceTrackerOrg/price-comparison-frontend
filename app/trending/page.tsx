@@ -1,9 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Header } from "@/components/layout/header";
-import { NavigationBar } from "@/components/layout/navigation-bar";
-import { Footer } from "@/components/layout/footer";
+
 import { PageHeader } from "@/components/layout/page-header";
 import { ProductCard } from "@/components/product/product-card";
 import { Badge } from "@/components/ui/badge";
@@ -321,11 +319,10 @@ export default function TrendingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50">
-      <Header />
-      <NavigationBar />
+    <div className="bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50">
+      
 
-      <main className="bg-gradient-to-br from-blue-50/30 via-white to-purple-50/30">
+      <div className="bg-gradient-to-br from-blue-50/30 via-white to-purple-50/30">
         <div className="container mx-auto px-4 py-8">
           {/* Page Header with Beautiful Blue Background */}
           <PageHeader
@@ -663,9 +660,7 @@ export default function TrendingPage() {
             </>
           )}
         </div>
-      </main>
-
-      <Footer />
+      </div>
     </div>
   );
 }

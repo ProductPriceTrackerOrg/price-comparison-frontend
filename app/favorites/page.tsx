@@ -92,17 +92,18 @@ export default function FavoritesPage() {
   }
 
   return (
-    <div className="container max-w-7xl py-10">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold flex items-center">
-          <Heart className="h-8 w-8 mr-2 text-rose-500" />
-          Tracked Products
-        </h1>
-        <Button variant="outline" className="gap-2" disabled={isLoading}>
-          <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
-          Refresh
-        </Button>
-      </div>
+    <div className="mx-4 md:mx-8 lg:mx-16 xl:mx-24">
+      <div className="container max-w-7xl py-10">
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-3xl font-bold flex items-center">
+            <Heart className="h-8 w-8 mr-2 text-rose-500" />
+            Tracked Products
+          </h1>
+          <Button variant="outline" className="gap-2" disabled={isLoading}>
+            <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
+            Refresh
+          </Button>
+        </div>
 
       {isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -191,6 +192,7 @@ export default function FavoritesPage() {
           </CardContent>
         </Card>
       )}
+      </div>
     </div>
   );
 }

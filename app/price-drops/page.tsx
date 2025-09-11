@@ -32,9 +32,9 @@ import {
   AlertTriangle,
   Home,
 } from "lucide-react";
-import { Header } from "@/components/layout/header";
-import { NavigationBar } from "@/components/layout/navigation-bar";
-import { Footer } from "@/components/layout/footer";
+
+
+
 import { ProductCard } from "@/components/product/product-card";
 import {
   PriceDropResponse,
@@ -383,8 +383,8 @@ export default function PriceDropsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header />
-      <NavigationBar />
+      
+      
       <main className="bg-gradient-to-br from-blue-50/30 via-white to-purple-50/30">
         <div className="container mx-auto px-4 py-8">
           {/* Breadcrumb */}
@@ -766,7 +766,7 @@ export default function PriceDropsPage() {
           )}
         </div>
       </main>
-      <Footer />
+      
     </div>
   );
 }

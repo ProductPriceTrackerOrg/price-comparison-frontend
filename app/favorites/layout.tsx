@@ -3,5 +3,5 @@ export default function FavoritesLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return <section className="min-h-screen pt-16">{children}</section>;
+  return <section>{children}</section>;
 }

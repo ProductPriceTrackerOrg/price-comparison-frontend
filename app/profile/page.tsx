@@ -20,7 +20,14 @@ import * as z from "zod";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
-import { User, Calendar, Shield, Save, RefreshCw } from "lucide-react";
+import {
+  User,
+  Calendar,
+  Shield,
+  Save,
+  RefreshCw,
+  AlertTriangle,
+} from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { format } from "date-fns";
 
@@ -38,6 +45,8 @@ export default function ProfilePage() {
   const { user, isLoggedIn, isAdmin } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [profileData, setProfileData] = useState<any>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [loadError, setLoadError] = useState(false);
   const { toast } = useToast();
 
   // Initialize form with default values
@@ -55,6 +64,7 @@ export default function ProfilePage() {
 
     const fetchProfileData = async () => {
       setIsLoading(true);
+      setLoadError(false);
       try {
         // Get profile data from the profiles table using user_id
         const { data, error } = await supabase
@@ -78,14 +88,21 @@ export default function ProfilePage() {
         console.log("Profile data loaded:", data);
       } catch (error: any) {
         console.error("Error fetching profile:", error);
-        toast({
-          title: "Error",
-          description: "Failed to load profile data. Please try again later.",
-          variant: "destructive",
-        });
+        setLoadError(true);
 
         // If we can't load from profiles table, fallback to auth user metadata
         if (user) {
+          // Create a basic profile object with user metadata
+          const fallbackProfile = {
+            full_name: user.user_metadata?.full_name || "",
+            email: user.email || "",
+            created_at: user.created_at,
+            is_active: true,
+            user_id: user.id,
+          };
+
+          setProfileData(fallbackProfile);
+
           form.reset({
             fullName: user.user_metadata?.full_name || "",
             email: user.email || "",
@@ -97,7 +114,7 @@ export default function ProfilePage() {
     };
 
     fetchProfileData();
-  }, [isLoggedIn, user, toast, form]);
+  }, [isLoggedIn, user, form]);
 
   // Handle form submission
   const onSubmit = async (values: z.infer<typeof profileSchema>) => {
@@ -173,23 +190,33 @@ export default function ProfilePage() {
   // If user is not logged in, show a message
   if (!isLoggedIn) {
     return (
-      <div className="container max-w-5xl py-10">
-        <Card>
-          <CardHeader>
-            <CardTitle>Profile</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p>Please sign in to view your profile.</p>
-          </CardContent>
-        </Card>
+      <div className="mx-4 md:mx-8 lg:mx-16 xl:mx-24">
+        <div className="container max-w-5xl py-10">
+          <Card>
+            <CardHeader>
+              <CardTitle>Profile</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p>Please sign in to view your profile.</p>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="container max-w-5xl py-10">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">My Profile</h1>
+    <div className="mx-4 md:mx-8 lg:mx-16 xl:mx-24">
+      <div className="container max-w-5xl pb-10">
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-800">
+              My Profile
+            </h1>
+            <p className="text-gray-500 mt-1">
+              View and manage your personal information
+            </p>
+          </div>
         {isAdmin && (
           <div className="flex items-center space-x-1 bg-orange-100 rounded-full px-3 py-1">
             <Shield className="h-4 w-4 text-orange-600" />
@@ -200,10 +227,39 @@ export default function ProfilePage() {
         )}
       </div>
 
+      {loadError && (
+        <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-lg mb-6 relative">
+          <button
+            className="absolute top-2 right-2 text-red-500 hover:text-red-700"
+            onClick={() => setLoadError(false)}
+          >
+            ✕
+          </button>
+          <div className="flex items-center">
+            <AlertTriangle className="h-5 w-5 mr-2 text-red-500" />
+            <div>
+              <h4 className="font-medium">Failed to load profile data</h4>
+              <p className="text-sm text-red-600 mt-1">
+                Using available information. Some details may be incomplete.
+              </p>
+              <Button
+                variant="outline"
+                size="sm"
+                className="mt-2 text-red-600 border-red-200 bg-white hover:bg-red-50"
+                onClick={() => window.location.reload()}
+              >
+                <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
+                Try Again
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-        <Card className="md:col-span-1 bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-100">
+        <Card className="md:col-span-1 bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-100 shadow-md hover:shadow-lg transition-shadow duration-300">
           <CardContent className="p-6 flex flex-col items-center text-center">
-            <div className="w-24 h-24 relative mb-4">
+            <div className="w-28 h-28 relative mb-4">
               <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-400 to-indigo-500 animate-pulse opacity-50"></div>
               <div className="absolute inset-0.5 rounded-full bg-white flex items-center justify-center">
                 {user?.user_metadata?.avatar_url ? (
@@ -213,7 +269,7 @@ export default function ProfilePage() {
                     className="w-full h-full rounded-full object-cover"
                   />
                 ) : (
-                  <div className="w-full h-full rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-3xl font-bold">
+                  <div className="w-full h-full rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-4xl font-bold">
                     {profileData?.full_name?.charAt(0) ||
                       user?.user_metadata?.full_name?.charAt(0) ||
                       user?.email?.charAt(0) ||
@@ -222,7 +278,7 @@ export default function ProfilePage() {
                 )}
               </div>
             </div>
-            <h3 className="font-bold text-lg text-blue-900">
+            <h3 className="font-bold text-xl text-blue-900">
               {profileData?.full_name ||
                 user?.user_metadata?.full_name ||
                 "User"}
@@ -254,30 +310,48 @@ export default function ProfilePage() {
                 </span>
               </div>
             </div>
+
+            <Button
+              variant="outline"
+              className="mt-4 w-full bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200 text-blue-700 hover:bg-blue-100 hover:text-blue-800"
+              onClick={() => setIsEditing(!isEditing)}
+            >
+              {isEditing ? "Cancel Edit" : "Edit Profile"}
+            </Button>
           </CardContent>
         </Card>
 
         <div className="md:col-span-3">
           <Tabs defaultValue="personal" className="space-y-6">
-            <TabsList>
-              <TabsTrigger value="personal">Personal Information</TabsTrigger>
-              <TabsTrigger value="account">Account Settings</TabsTrigger>
+            <TabsList className="bg-gradient-to-r from-blue-100/50 to-indigo-100/50 p-1">
+              <TabsTrigger
+                value="personal"
+                className="data-[state=active]:bg-white data-[state=active]:text-blue-700"
+              >
+                Personal Information
+              </TabsTrigger>
+              <TabsTrigger
+                value="account"
+                className="data-[state=active]:bg-white data-[state=active]:text-blue-700"
+              >
+                Account Settings
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="personal">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center">
+              <Card className="shadow-md border-blue-100">
+                <CardHeader className="bg-gradient-to-r from-blue-50/50 to-indigo-50/50 border-b border-blue-100">
+                  <CardTitle className="flex items-center text-blue-800">
                     <User className="h-5 w-5 mr-2 text-blue-600" />
                     Personal Information
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="p-6">
                   {isLoading ? (
                     <div className="flex items-center justify-center h-48">
                       <RefreshCw className="h-6 w-6 animate-spin text-blue-600" />
                     </div>
-                  ) : (
+                  ) : isEditing ? (
                     <Form {...form}>
                       <form
                         onSubmit={form.handleSubmit(onSubmit)}
@@ -293,6 +367,7 @@ export default function ProfilePage() {
                                 <Input
                                   placeholder="Enter your full name"
                                   {...field}
+                                  className="border-blue-200 focus:border-blue-400"
                                 />
                               </FormControl>
                               <FormDescription>
@@ -314,6 +389,7 @@ export default function ProfilePage() {
                                 <Input
                                   placeholder="Enter your email"
                                   {...field}
+                                  className="border-blue-200 focus:border-blue-400"
                                 />
                               </FormControl>
                               <FormDescription>
@@ -325,7 +401,7 @@ export default function ProfilePage() {
                           )}
                         />
 
-                        <Separator />
+                        <Separator className="my-6" />
 
                         <div className="flex justify-between items-center">
                           <div className="flex items-center text-sm text-muted-foreground">
@@ -333,12 +409,16 @@ export default function ProfilePage() {
                             Account created:{" "}
                             {profileData?.created_at
                               ? format(new Date(profileData.created_at), "PPP")
-                              : "Loading..."}
+                              : "—"}
                           </div>
                           <Button
                             type="submit"
                             disabled={isLoading}
-                            className="space-x-2"
+                            className="space-x-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+                            onClick={() => {
+                              // Will call onSubmit and then disable editing mode
+                              setTimeout(() => setIsEditing(false), 100);
+                            }}
                           >
                             <Save className="h-4 w-4" />
                             <span>Save Changes</span>
@@ -346,42 +426,98 @@ export default function ProfilePage() {
                         </div>
                       </form>
                     </Form>
+                  ) : (
+                    <div className="space-y-6">
+                      <div className="p-4 bg-blue-50/50 rounded-lg border border-blue-100">
+                        <div className="mb-4">
+                          <h3 className="text-sm font-semibold text-gray-500 mb-1">
+                            Full Name
+                          </h3>
+                          <p className="text-lg font-medium text-gray-800">
+                            {profileData?.full_name ||
+                              user?.user_metadata?.full_name ||
+                              "Not set"}
+                          </p>
+                        </div>
+                        <div>
+                          <h3 className="text-sm font-semibold text-gray-500 mb-1">
+                            Email Address
+                          </h3>
+                          <p className="text-lg font-medium text-gray-800">
+                            {profileData?.email ||
+                              user?.email ||
+                              "Not available"}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex justify-between items-center px-4">
+                        <div className="flex items-center text-sm text-muted-foreground">
+                          <Calendar className="h-4 w-4 mr-2" />
+                          Account created:{" "}
+                          {profileData?.created_at
+                            ? format(new Date(profileData.created_at), "PPP")
+                            : "—"}
+                        </div>
+                        <Button
+                          variant="outline"
+                          className="space-x-2 bg-white border-blue-200 text-blue-700 hover:bg-blue-50"
+                          onClick={() => setIsEditing(true)}
+                        >
+                          <User className="h-4 w-4" />
+                          <span>Edit Profile</span>
+                        </Button>
+                      </div>
+                    </div>
                   )}
                 </CardContent>
               </Card>
             </TabsContent>
 
             <TabsContent value="account">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center">
+              <Card className="shadow-md border-blue-100">
+                <CardHeader className="bg-gradient-to-r from-blue-50/50 to-indigo-50/50 border-b border-blue-100">
+                  <CardTitle className="flex items-center text-blue-800">
                     <Shield className="h-5 w-5 mr-2 text-blue-600" />
                     Account Settings
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="p-6">
                   <div className="space-y-6">
-                    <div className="flex justify-between items-start border p-4 rounded-md">
+                    <div className="flex justify-between items-start border border-gray-200 p-4 rounded-lg bg-white shadow-sm hover:shadow-md transition-shadow">
                       <div>
-                        <h3 className="font-medium">Email Notifications</h3>
-                        <p className="text-sm text-muted-foreground">
-                          Configure your notification preferences
+                        <h3 className="font-medium text-gray-800">
+                          Email Notifications
+                        </h3>
+                        <p className="text-sm text-gray-500">
+                          Configure your notification preferences for alerts and
+                          updates
                         </p>
                       </div>
-                      <Button variant="outline">Manage Notifications</Button>
+                      <Button
+                        variant="outline"
+                        className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200 text-blue-700 hover:bg-blue-100"
+                      >
+                        Manage Notifications
+                      </Button>
                     </div>
 
-                    <div className="flex justify-between items-start border p-4 rounded-md">
+                    <div className="flex justify-between items-start border border-gray-200 p-4 rounded-lg bg-white shadow-sm hover:shadow-md transition-shadow">
                       <div>
-                        <h3 className="font-medium">Password</h3>
-                        <p className="text-sm text-muted-foreground">
-                          Change your password
+                        <h3 className="font-medium text-gray-800">Password</h3>
+                        <p className="text-sm text-gray-500">
+                          Change your password or update security settings
                         </p>
                       </div>
-                      <Button variant="outline">Reset Password</Button>
+                      <Button
+                        variant="outline"
+                        className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200 text-blue-700 hover:bg-blue-100"
+                      >
+                        Reset Password
+                      </Button>
                     </div>
 
-                    <div className="flex justify-between items-start border p-4 rounded-md bg-red-50 border-red-200">
+                    <div className="flex justify-between items-start border border-red-200 p-4 rounded-lg bg-red-50/70 shadow-sm hover:shadow-md transition-shadow">
                       <div>
                         <h3 className="font-medium text-red-700">
                           Delete Account
@@ -390,7 +526,12 @@ export default function ProfilePage() {
                           Permanently delete your account and all your data
                         </p>
                       </div>
-                      <Button variant="destructive">Delete Account</Button>
+                      <Button
+                        variant="destructive"
+                        className="bg-red-600 hover:bg-red-700"
+                      >
+                        Delete Account
+                      </Button>
                     </div>
                   </div>
                 </CardContent>
@@ -399,6 +540,7 @@ export default function ProfilePage() {
           </Tabs>
         </div>
       </div>
+    </div>
     </div>
   );
 }

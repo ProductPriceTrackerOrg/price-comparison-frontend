@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import { Header } from "@/components/layout/header";
-import { Footer } from "@/components/layout/footer";
+
+
 
 export const metadata: Metadata = {
   title: "Privacy Policy - PricePulse",
@@ -14,10 +14,10 @@ export default function PrivacyLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen flex flex-col">
-      <Header />
+    <div className=" flex flex-col">
+      
       <main className="flex-1">{children}</main>
-      <Footer />
+      
     </div>
   );
 }

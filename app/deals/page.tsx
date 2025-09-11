@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Header } from "@/components/layout/header";
+
 import { CompactNavigationBar } from "@/components/layout/compact-navigation-bar";
-import { Footer } from "@/components/layout/footer";
+
 import { PageHeader } from "@/components/layout/page-header";
 import { ProductCard } from "@/components/product/product-card";
 import { Badge } from "@/components/ui/badge";
@@ -143,7 +143,7 @@ export default function DealsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header />
+      
       {/* Compact Navigation Bar instead of full Navigation Bar */}
       <CompactNavigationBar />
 
@@ -321,7 +321,7 @@ export default function DealsPage() {
         </div>
       </main>
 
-      <Footer />
+      
     </div>
   );
 }

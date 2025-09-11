@@ -1,4 +1,3 @@
-import { Header } from "@/components/layout/header";
 import { NavigationBar } from "@/components/layout/navigation-bar";
 import { HeroSection } from "@/components/sections/hero-section";
 import { StatsSection } from "@/components/sections/stats-section";
@@ -11,30 +10,25 @@ import { TopPriceChangesSection } from "@/components/sections/top-price-changes-
 import { RetailersSection } from "@/components/sections/retailers-section";
 import { TrendingSection } from "@/components/sections/trending-section";
 import { FeaturedProducts } from "@/components/sections/featured-products";
-import { Footer } from "@/components/layout/footer";
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-gray-50 overflow-x-hidden">
-      <Header />
-      <div style={{ paddingTop: "64px" }}>
-        <NavigationBar />
-        <main className="overflow-x-hidden">
-          <HeroSection />
-          <StatsSection />
-          <ImageGridSection />
-          <FeatureHighlightsSection />
-          <CategoriesSection />
-          <RecommendationsSection />
-          {/* <div className="container mx-auto px-4 py-12">
-            <FeaturedProducts />
-          </div> */}
-          <TrendingSection />
-          <LatestProductsSection />
-          <TopPriceChangesSection />
-          <RetailersSection />
-        </main>
-        <Footer />
+    <div className="bg-gray-50 overflow-x-hidden">
+      <NavigationBar />
+      <div className="overflow-x-hidden">
+        <HeroSection />
+        <StatsSection />
+        <ImageGridSection />
+        <FeatureHighlightsSection />
+        <CategoriesSection />
+        <RecommendationsSection />
+        {/* <div className="container mx-auto px-4 py-12">
+          <FeaturedProducts />
+        </div> */}
+        <TrendingSection />
+        <LatestProductsSection />
+        <TopPriceChangesSection />
+        <RetailersSection />
       </div>
     </div>
   );
