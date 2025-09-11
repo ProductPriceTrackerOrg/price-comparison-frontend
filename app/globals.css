@@ -19,6 +19,53 @@ section {
   overflow-x: hidden;
 }
 
+/* Header dropdown menu item styles */
+.header-dropdown-item {
+  width: 100%;
+  border-radius: 0.375rem;
+  transition: all 0.15s;
+  position: relative;
+  overflow: hidden;
+}
+
+.header-dropdown-item::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 0;
+  height: 2px;
+  background: currentColor;
+  transition: all 0.2s;
+  opacity: 0;
+  transform: translateX(-50%);
+}
+
+.header-dropdown-item:hover::after {
+  width: 80%;
+  opacity: 0.5;
+}
+
+.header-dropdown-item.profile:hover {
+  background-color: rgba(59, 130, 246, 0.08);
+}
+
+.header-dropdown-item.tracked:hover {
+  background-color: rgba(244, 63, 94, 0.08);
+}
+
+.header-dropdown-item.settings:hover {
+  background-color: rgba(75, 85, 99, 0.08);
+}
+
+.header-dropdown-item.admin:hover {
+  background-color: rgba(249, 115, 22, 0.08);
+}
+
+.header-dropdown-item.signout:hover {
+  background-color: rgba(239, 68, 68, 0.08);
+}
+
 /* Fix for SVG elements to stay within bounds */
 svg {
   max-width: 100%;

@@ -3,13 +3,12 @@
 // New Arrival Product Response
 export interface NewArrivalResponse {
   variant_id: number;
-  canonical_product_id: number;
+  shop_product_id: number;
   product_title: string;
   brand: string;
   category_name: string;
   variant_title: string;
   shop_name: string;
-  shop_id: number;
   current_price: number;
   original_price?: number;
   image_url: string;
@@ -25,9 +24,18 @@ export interface NewArrivalResponse {
   description?: string;
 }
 
+// API response format for listings
+export interface NewArrivalsListResponse {
+  items: NewArrivalResponse[];
+  total: number;
+  page: number;
+  limit: number;
+  has_next: boolean;
+}
+
 // Filter options for the New Arrivals API
 export interface NewArrivalFilters {
-  timeRange: "1d" | "7d" | "30d" | "90d";
+  timeRange: "24h" | "7d" | "30d" | "3m";
   category?: string;
   retailer?: string;
   minPrice?: number;
@@ -45,16 +53,9 @@ export interface NewArrivalFilters {
 }
 
 // Statistics for the new arrivals page
-export interface NewArrivalStats {
-  totalArrivals: number;
-  avgPrice: number;
-  retailerCount: number;
-  categoryCount: number;
-  newestProduct: {
-    product_title: string;
-    arrival_date: string;
-    brand: string;
-  };
-  topCategory: string;
-  inStockCount: number;
+export interface NewArrivalsStats {
+  total_new_arrivals: number;
+  average_price: number;
+  in_stock_count: number;
+  category_count: number;
 }

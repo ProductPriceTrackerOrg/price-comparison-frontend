@@ -26,16 +26,17 @@ import {
   Package,
   Calendar,
 } from "lucide-react";
-import { Header } from "@/components/layout/header";
-import { NavigationBar } from "@/components/layout/navigation-bar";
-import { Footer } from "@/components/layout/footer";
+
+
+
 import { PageHeader } from "@/components/layout/page-header";
 import { ProductCard } from "@/components/product/product-card";
 import { NewArrivalFilters } from "@/components/new-arrivals/new-arrival-filters";
 import {
   NewArrivalResponse,
   NewArrivalFilters as FilterType,
-  NewArrivalStats,
+  NewArrivalsStats,
+  NewArrivalsListResponse,
 } from "@/lib/types/new-arrivals";
 import { Category, Retailer } from "@/lib/types/price-drops";
 
@@ -43,8 +44,14 @@ interface FilterState {
   category: string;
   retailer: string;
   priceRange: number[];
-  sortBy: FilterType["sortBy"];
-  timeRange: FilterType["timeRange"];
+  sortBy:
+    | "newest"
+    | "oldest"
+    | "price_asc"
+    | "price_desc"
+    | "name_asc"
+    | "name_desc";
+  timeRange: "24h" | "7d" | "30d" | "3m";
   inStockOnly: boolean;
 }
 
@@ -55,7 +62,7 @@ export default function NewArrivalsPage() {
   >([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [retailers, setRetailers] = useState<Retailer[]>([]);
-  const [stats, setStats] = useState<NewArrivalStats | null>(null);
+  const [stats, setStats] = useState<NewArrivalsStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filters, setFilters] = useState<FilterState>({
@@ -70,15 +77,15 @@ export default function NewArrivalsPage() {
   useEffect(() => {
     fetchNewArrivals();
     fetchFiltersData();
-  }, [filters.timeRange]);
+  }, [filters]);
 
-  useEffect(() => {
-    applyFilters();
-  }, [newArrivals, filters]);
+  // No need for a separate filter effect as we'll apply filters in the API
+  // No applyFilters function needed as we'll use API for filtering
 
   const fetchFiltersData = async () => {
     try {
-      // Mock data for now - would come from API
+      // For now, we'll still use mock data for categories and retailers
+      // In a production environment, these would come from separate API endpoints
       const mockCategories: Category[] = [
         { category_id: 1, category_name: "Smartphones" },
         { category_id: 2, category_name: "Laptops" },
@@ -111,138 +118,70 @@ export default function NewArrivalsPage() {
     setError(null);
 
     try {
-      // In real implementation:
-      // const params = new URLSearchParams({
-      //   timeRange: filters.timeRange,
-      //   limit: '50'
-      // })
-      // const response = await fetch(`/api/new-arrivals?${params}`)
-      // if (!response.ok) throw new Error('Failed to fetch new arrivals')
-      // const data = await response.json()
+      // Build query parameters
+      const queryParams = new URLSearchParams();
 
-      // Mock data based on your schema structure
-      const mockData: NewArrivalResponse[] = [
-        {
-          variant_id: 101,
-          canonical_product_id: 201,
-          product_title: "iPhone 16 Pro",
-          brand: "Apple",
-          category_name: "Smartphones",
-          variant_title: "iPhone 16 Pro 128GB Blue Titanium",
-          shop_name: "MobileWorld",
-          shop_id: 1,
-          current_price: 1199.99,
-          original_price: 1199.99,
-          image_url: "/placeholder.svg?height=200&width=200",
-          product_url: "https://example.com/product101",
-          is_available: true,
-          arrival_date: "2025-08-05",
-          days_since_arrival: 1,
-        },
-        {
-          variant_id: 102,
-          canonical_product_id: 202,
-          product_title: "MacBook Pro M4",
-          brand: "Apple",
-          category_name: "Laptops",
-          variant_title: "MacBook Pro 14-inch M4 Chip 512GB Space Black",
-          shop_name: "ComputerHub",
-          shop_id: 2,
-          current_price: 2199.99,
-          image_url: "/placeholder.svg?height=200&width=200",
-          product_url: "https://example.com/product102",
-          is_available: true,
-          arrival_date: "2025-08-04",
-          days_since_arrival: 2,
-        },
-        {
-          variant_id: 103,
-          canonical_product_id: 203,
-          product_title: "Samsung Galaxy Watch 7",
-          brand: "Samsung",
-          category_name: "Wearables",
-          variant_title: "Samsung Galaxy Watch 7 44mm Silver",
-          shop_name: "GadgetZone",
-          shop_id: 6,
-          current_price: 329.99,
-          image_url: "/placeholder.svg?height=200&width=200",
-          product_url: "https://example.com/product103",
-          is_available: true,
-          arrival_date: "2025-08-03",
-          days_since_arrival: 3,
-        },
-        {
-          variant_id: 104,
-          canonical_product_id: 204,
-          product_title: "Sony PlayStation 5 Pro",
-          brand: "Sony",
-          category_name: "Gaming",
-          variant_title: "Sony PlayStation 5 Pro 2TB Digital Edition",
-          shop_name: "ElectroShop",
-          shop_id: 5,
-          current_price: 699.99,
-          image_url: "/placeholder.svg?height=200&width=200",
-          product_url: "https://example.com/product104",
-          is_available: false,
-          arrival_date: "2025-08-02",
-          days_since_arrival: 4,
-        },
-        {
-          variant_id: 105,
-          canonical_product_id: 205,
-          product_title: "ASUS ROG Strix G18",
-          brand: "ASUS",
-          category_name: "Laptops",
-          variant_title: "ASUS ROG Strix G18 RTX 4080 32GB Gaming Laptop",
-          shop_name: "ComputerHub",
-          shop_id: 2,
-          current_price: 2899.99,
-          image_url: "/placeholder.svg?height=200&width=200",
-          product_url: "https://example.com/product105",
-          is_available: true,
-          arrival_date: "2025-08-01",
-          days_since_arrival: 5,
-        },
-        {
-          variant_id: 106,
-          canonical_product_id: 206,
-          product_title: "Meta Quest 4",
-          brand: "Meta",
-          category_name: "Gaming",
-          variant_title: "Meta Quest 4 256GB VR Headset",
-          shop_name: "TechMart",
-          shop_id: 4,
-          current_price: 499.99,
-          image_url: "/placeholder.svg?height=200&width=200",
-          product_url: "https://example.com/product106",
-          is_available: true,
-          arrival_date: "2025-07-31",
-          days_since_arrival: 6,
-        },
-      ];
+      // Map filter state to query parameters
+      if (filters.timeRange) queryParams.append("timeRange", filters.timeRange);
+      if (filters.category !== "all")
+        queryParams.append("category", filters.category);
+      if (filters.retailer !== "all")
+        queryParams.append("retailer", filters.retailer);
+      if (filters.priceRange[0] > 0)
+        queryParams.append("minPrice", filters.priceRange[0].toString());
+      if (filters.priceRange[1] < 2000)
+        queryParams.append("maxPrice", filters.priceRange[1].toString());
 
-      setNewArrivals(mockData);
-
-      // Calculate stats
-      const inStockProducts = mockData.filter(
-        (product) => product.is_available
-      );
-      const mockStats: NewArrivalStats = {
-        totalArrivals: mockData.length,
-        avgPrice:
-          mockData.reduce((sum, product) => sum + product.current_price, 0) /
-          mockData.length,
-        retailerCount: new Set(mockData.map((d) => d.shop_name)).size,
-        categoryCount: new Set(mockData.map((d) => d.category_name)).size,
-        newestProduct: mockData.reduce((newest, current) =>
-          current.days_since_arrival < newest.days_since_arrival
-            ? current
-            : newest
-        ),
-        topCategory: "Smartphones",
-        inStockCount: inStockProducts.length,
+      // Map the sortBy values to match the backend
+      const sortByMap: Record<string, string> = {
+        newest: "newest",
+        oldest: "oldest",
+        price_asc: "price_low",
+        price_desc: "price_high",
+        name_asc: "name_az",
+        name_desc: "name_za",
       };
-      setStats(mockStats);
+      queryParams.append("sortBy", sortByMap[filters.sortBy] || "newest");
+
+      // Only add inStockOnly if it's true, otherwise API expects it to be null
+      if (filters.inStockOnly) {
+        queryParams.append("inStockOnly", "true");
+      }
+
+      // Set page and limit
+      queryParams.append("limit", "20");
+      queryParams.append("page", "1"); // Implement pagination in the future
+
+      // API call to fetch data using our Next.js API routes
+      const apiUrl = `/api/v1/new-arrivals/new-arrivals?${queryParams}`;
+
+      console.log("Fetching new arrivals from:", apiUrl);
+
+      // Use fetch with our Next.js API route (which will call the backend)
+      const response = await fetch(apiUrl);
+
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      // Set new arrivals data
+      setNewArrivals(data.items);
+      setFilteredArrivals(data.items); // No need to filter locally
+
+      // Also fetch stats
+      const statsUrl = `/api/v1/new-arrivals/new-arrivals/stats?${queryParams}`;
+      const statsResponse = await fetch(statsUrl);
+
+      if (statsResponse.ok) {
+        const statsData = await statsResponse.json();
+
+        // Just use the API stats directly
+        const formattedStats = statsData;
+
+        setStats(formattedStats);
+      }
     } catch (error) {
       console.error("Error fetching new arrivals:", error);
       setError("Failed to load new arrivals. Please try again.");
@@ -251,63 +190,39 @@ export default function NewArrivalsPage() {
     }
   };
 
-  const applyFilters = () => {
-    let filtered = [...newArrivals];
-
-    // Category filter
-    if (filters.category !== "all") {
-      filtered = filtered.filter(
-        (product) => product.category_name === filters.category
-      );
-    }
-
-    // Retailer filter
-    if (filters.retailer !== "all") {
-      filtered = filtered.filter(
-        (product) => product.shop_name === filters.retailer
-      );
-    }
-
-    // Price range filter
-    filtered = filtered.filter(
-      (product) =>
-        product.current_price >= filters.priceRange[0] &&
-        product.current_price <= filters.priceRange[1]
-    );
-
-    // In stock filter
-    if (filters.inStockOnly) {
-      filtered = filtered.filter((product) => product.is_available);
-    }
+  // We're not using the applyFilters function anymore since filtering is done by the API
+  // But if we need to sort locally after getting API results, we can use this
+  const sortArrivals = (arrivals: NewArrivalResponse[]) => {
+    let sorted = [...arrivals];
 
     // Sort
     switch (filters.sortBy) {
       case "newest":
-        filtered.sort((a, b) => a.days_since_arrival - b.days_since_arrival);
+        sorted.sort((a, b) => a.days_since_arrival - b.days_since_arrival);
         break;
       case "oldest":
-        filtered.sort((a, b) => b.days_since_arrival - a.days_since_arrival);
+        sorted.sort((a, b) => b.days_since_arrival - a.days_since_arrival);
         break;
       case "price_asc":
-        filtered.sort((a, b) => a.current_price - b.current_price);
+        sorted.sort((a, b) => a.current_price - b.current_price);
         break;
       case "price_desc":
-        filtered.sort((a, b) => b.current_price - a.current_price);
+        sorted.sort((a, b) => b.current_price - a.current_price);
         break;
       case "name_asc":
-        filtered.sort((a, b) => a.product_title.localeCompare(b.product_title));
+        sorted.sort((a, b) => a.product_title.localeCompare(b.product_title));
         break;
       case "name_desc":
-        filtered.sort((a, b) => b.product_title.localeCompare(a.product_title));
+        sorted.sort((a, b) => b.product_title.localeCompare(a.product_title));
         break;
     }
 
-    setFilteredArrivals(filtered);
+    return sorted;
   };
 
   // Transform NewArrivalResponse to Product interface for ProductCard
   const transformToProduct = (arrival: NewArrivalResponse) => ({
-    id: arrival.variant_id,
+    id: arrival.shop_product_id, // Use shop_product_id instead of variant_id
     name: arrival.product_title,
     brand: arrival.brand,
     category: arrival.category_name,
@@ -318,12 +233,13 @@ export default function NewArrivalsPage() {
     image: arrival.image_url,
     isNew: true,
     launchDate: arrival.arrival_date,
+    variant_id: arrival.variant_id, // Keep variant_id as an additional property
   });
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header />
-      <NavigationBar />
+      
+      
       <main className="bg-gradient-to-br from-blue-50/30 via-white to-purple-50/30">
         <div className="container mx-auto px-4 py-8">
           {/* Page Header with Beautiful Blue Background */}
@@ -344,7 +260,7 @@ export default function NewArrivalsPage() {
                     <div>
                       <p className="text-sm text-gray-600">Total Arrivals</p>
                       <p className="text-2xl font-bold">
-                        {stats?.totalArrivals || filteredArrivals.length}
+                        {stats?.total_new_arrivals || filteredArrivals.length}
                       </p>
                     </div>
                   </div>
@@ -353,20 +269,22 @@ export default function NewArrivalsPage() {
               <Card>
                 <CardContent className="p-4">
                   <div className="flex items-center gap-2">
-                    <DollarSign className="h-5 w-5 text-blue-500" />
+                    <span className="h-5 w-5 text-blue-500 font-bold">₹</span>
                     <div>
                       <p className="text-sm text-gray-600">Avg Price</p>
                       <p className="text-2xl font-bold">
-                        $
-                        {stats?.avgPrice
-                          ? Math.round(stats.avgPrice)
+                        Rs{" "}
+                        {stats?.average_price
+                          ? Math.round(stats.average_price).toLocaleString(
+                              "en-US"
+                            )
                           : filteredArrivals.length > 0
                           ? Math.round(
                               filteredArrivals.reduce(
                                 (sum, product) => sum + product.current_price,
                                 0
                               ) / filteredArrivals.length
-                            )
+                            ).toLocaleString("en-US")
                           : 0}
                       </p>
                     </div>
@@ -380,7 +298,7 @@ export default function NewArrivalsPage() {
                     <div>
                       <p className="text-sm text-gray-600">In Stock</p>
                       <p className="text-2xl font-bold">
-                        {stats?.inStockCount ||
+                        {stats?.in_stock_count ||
                           filteredArrivals.filter((p) => p.is_available).length}
                       </p>
                     </div>
@@ -394,7 +312,7 @@ export default function NewArrivalsPage() {
                     <div>
                       <p className="text-sm text-gray-600">Categories</p>
                       <p className="text-2xl font-bold">
-                        {stats?.categoryCount ||
+                        {stats?.category_count ||
                           new Set(filteredArrivals.map((d) => d.category_name))
                             .size}
                       </p>
@@ -502,7 +420,7 @@ export default function NewArrivalsPage() {
           )}
         </div>
       </main>
-      <Footer />
+      
     </div>
   );
 }

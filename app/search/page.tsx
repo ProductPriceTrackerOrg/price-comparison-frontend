@@ -2,9 +2,9 @@
 
 import { useState, useEffect, Suspense, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
-import { Header } from "@/components/layout/header";
-import { NavigationBar } from "@/components/layout/navigation-bar";
-import { Footer } from "@/components/layout/footer";
+
+
+
 import { SearchFilters, FilterState } from "@/components/search/search-filters";
 import { ProductCard } from "@/components/product/product-card";
 import { Button } from "@/components/ui/button";
@@ -193,8 +193,8 @@ function SearchContent() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header />
-      <NavigationBar />
+      
+      
 
       <main className="container mx-auto px-4 py-8">
         {/* Search Bar */}
@@ -272,7 +272,7 @@ function SearchContent() {
         </div>
       </main>
 
-      <Footer />
+      
     </div>
   );
 }

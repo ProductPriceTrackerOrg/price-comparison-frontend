@@ -32,9 +32,9 @@ import {
   AlertTriangle,
   Home,
 } from "lucide-react";
-import { Header } from "@/components/layout/header";
-import { NavigationBar } from "@/components/layout/navigation-bar";
-import { Footer } from "@/components/layout/footer";
+
+
+
 import { ProductCard } from "@/components/product/product-card";
 import {
   PriceDropResponse,
@@ -85,22 +85,16 @@ export default function PriceDropsPage() {
       //   fetch('/api/retailers')
       // ])
 
-      // Mock data for now
+      // Mock data matching our new products
       const mockCategories: Category[] = [
-        { category_id: 1, category_name: "Smartphones" },
-        { category_id: 2, category_name: "Laptops" },
+        { category_id: 1, category_name: "Printers" },
+        { category_id: 2, category_name: "Tablets" },
         { category_id: 3, category_name: "Audio" },
-        { category_id: 4, category_name: "Monitors" },
-        { category_id: 5, category_name: "Tablets" },
-        { category_id: 6, category_name: "Accessories" },
+        { category_id: 4, category_name: "Accessories" },
       ];
 
       const mockRetailers: Retailer[] = [
-        { shop_id: 1, shop_name: "MobileWorld" },
-        { shop_id: 2, shop_name: "ComputerHub" },
-        { shop_id: 3, shop_name: "AudioStore" },
-        { shop_id: 4, shop_name: "TechMart" },
-        { shop_id: 5, shop_name: "ElectroShop" },
+        { shop_id: 1, shop_name: "lifemobile.lk" },
       ];
 
       setCategories(mockCategories);
@@ -124,159 +118,170 @@ export default function PriceDropsPage() {
       // if (!response.ok) throw new Error('Failed to fetch price drops')
       // const data = await response.json()
 
-      // Mock data based on your schema structure
+      // Use the provided real price changes data
       const mockData: PriceDropResponse[] = [
         {
-          variant_id: 1,
-          canonical_product_id: 101,
-          product_title: "iPhone 15 Pro Max",
-          brand: "Apple",
-          category_name: "Smartphones",
-          variant_title: "iPhone 15 Pro Max 256GB Natural Titanium",
-          shop_name: "MobileWorld",
+          variant_id: 3257986037,
+          canonical_product_id: 3257986037,
+          product_title: "UGREEN 90576 USB 3.2 Male to Male 3M Cable",
+          brand: "UGreen",
+          category_name: "Accessories",
+          variant_title: "UGREEN 90576 USB 3.2 Male to Male 3M Cable",
+          shop_name: "lifemobile.lk",
           shop_id: 1,
-          current_price: 1099.99,
-          previous_price: 1199.99,
-          price_change: -100.0,
-          percentage_change: -8.33,
-          drop_date: "2025-08-05",
-          image_url: "/placeholder.svg?height=200&width=200",
-          product_url: "https://example.com/product1",
+          current_price: 3028.57,
+          previous_price: 13142,
+          price_change: -10113.43,
+          percentage_change: -76.96,
+          drop_date: "2025-09-11",
+          image_url:
+            "https://lifemobile.lk/wp-content/uploads/2023/11/ugreen-1-600x600.jpg",
+          product_url: "https://lifemobile.lk/product/ugreen-90576",
           is_available: true,
-          days_since_drop: 1,
+          days_since_drop: 0,
         },
         {
-          variant_id: 2,
-          canonical_product_id: 102,
-          product_title: "Dell XPS 13",
-          brand: "Dell",
-          category_name: "Laptops",
-          variant_title: "Dell XPS 13 9320 Intel i7",
-          shop_name: "ComputerHub",
-          shop_id: 2,
-          current_price: 899.99,
-          previous_price: 1099.99,
-          price_change: -200.0,
-          percentage_change: -18.18,
-          drop_date: "2025-08-04",
-          image_url: "/placeholder.svg?height=200&width=200",
-          product_url: "https://example.com/product2",
-          is_available: true,
-          days_since_drop: 2,
-        },
-        {
-          variant_id: 3,
-          canonical_product_id: 103,
-          product_title: "AirPods Pro 2",
-          brand: "Apple",
-          category_name: "Audio",
-          variant_title: "AirPods Pro 2nd Generation with MagSafe",
-          shop_name: "AudioStore",
-          shop_id: 3,
-          current_price: 199.99,
-          previous_price: 249.99,
-          price_change: -50.0,
-          percentage_change: -20.0,
-          drop_date: "2025-08-03",
-          image_url: "/placeholder.svg?height=200&width=200",
-          product_url: "https://example.com/product3",
-          is_available: true,
-          days_since_drop: 3,
-        },
-        {
-          variant_id: 4,
-          canonical_product_id: 104,
-          product_title: "Samsung Galaxy S24 Ultra",
-          brand: "Samsung",
-          category_name: "Smartphones",
-          variant_title: "Samsung Galaxy S24 Ultra 512GB Titanium Black",
-          shop_name: "MobileWorld",
+          variant_id: 1098782875,
+          canonical_product_id: 1098782875,
+          product_title: "HP Laser MFP 1188W (715A3A) Printer",
+          brand: "HP",
+          category_name: "Printers",
+          variant_title: "HP Laser MFP 1188W (715A3A) Printer",
+          shop_name: "lifemobile.lk",
           shop_id: 1,
-          current_price: 1149.99,
-          previous_price: 1299.99,
-          price_change: -150.0,
-          percentage_change: -11.54,
-          drop_date: "2025-08-05",
-          image_url: "/placeholder.svg?height=200&width=200",
-          product_url: "https://example.com/product4",
+          current_price: 41090.51,
+          previous_price: 70845.71,
+          price_change: -29755.2,
+          percentage_change: -42,
+          drop_date: "2025-09-11",
+          image_url:
+            "https://lifemobile.lk/wp-content/uploads/2024/10/hp-2.jpg",
+          product_url: "https://lifemobile.lk/product/hp-laser-mfp-1188w",
           is_available: true,
-          days_since_drop: 1,
+          days_since_drop: 0,
         },
         {
-          variant_id: 5,
-          canonical_product_id: 105,
-          product_title: "MacBook Air M3",
-          brand: "Apple",
-          category_name: "Laptops",
-          variant_title: "MacBook Air 13-inch M3 Chip 256GB",
-          shop_name: "ComputerHub",
-          shop_id: 2,
-          current_price: 999.99,
-          previous_price: 1199.99,
-          price_change: -200.0,
-          percentage_change: -16.67,
-          drop_date: "2025-08-04",
-          image_url: "/placeholder.svg?height=200&width=200",
-          product_url: "https://example.com/product5",
+          variant_id: 511466660,
+          canonical_product_id: 511466660,
+          product_title: "HP Laser MFP 135a Printer",
+          brand: "HP",
+          category_name: "Printers",
+          variant_title: "HP Laser MFP 135a Printer",
+          shop_name: "lifemobile.lk",
+          shop_id: 1,
+          current_price: 21685.62,
+          previous_price: 37389,
+          price_change: -15703.38,
+          percentage_change: -42,
+          drop_date: "2025-09-11",
+          image_url:
+            "https://lifemobile.lk/wp-content/uploads/2021/05/HP-Laser-MFP-135a-Printer-600x600.jpg",
+          product_url: "https://lifemobile.lk/product/hp-laser-mfp-135a",
           is_available: true,
-          days_since_drop: 2,
+          days_since_drop: 0,
         },
         {
-          variant_id: 6,
-          canonical_product_id: 106,
-          product_title: "Sony WH-1000XM5",
-          brand: "Sony",
-          category_name: "Audio",
-          variant_title: "Sony WH-1000XM5 Wireless Noise Canceling Headphones",
-          shop_name: "AudioStore",
-          shop_id: 3,
-          current_price: 279.99,
-          previous_price: 399.99,
-          price_change: -120.0,
-          percentage_change: -30.01,
-          drop_date: "2025-08-03",
-          image_url: "/placeholder.svg?height=200&width=200",
-          product_url: "https://example.com/product6",
+          variant_id: 3634275927,
+          canonical_product_id: 3634275927,
+          product_title: "HP Laser MFP 135w Printer",
+          brand: "HP",
+          category_name: "Printers",
+          variant_title: "HP Laser MFP 135w Printer",
+          shop_name: "lifemobile.lk",
+          shop_id: 1,
+          current_price: 30512.86,
+          previous_price: 52608.38,
+          price_change: -22095.52,
+          percentage_change: -42,
+          drop_date: "2025-09-11",
+          image_url:
+            "https://lifemobile.lk/wp-content/uploads/2021/05/HP-Laser-MFP-135w-Printer-1-600x600.jpg",
+          product_url: "https://lifemobile.lk/product/hp-laser-mfp-135w",
           is_available: true,
-          days_since_drop: 3,
+          days_since_drop: 0,
         },
         {
-          variant_id: 7,
-          canonical_product_id: 107,
-          product_title: "iPad Pro 12.9-inch",
-          brand: "Apple",
+          variant_id: 2056994278,
+          canonical_product_id: 2056994278,
+          product_title: "HP DeskJet Ink Advantage 4175 All-in-One Printer",
+          brand: "HP",
+          category_name: "Printers",
+          variant_title: "HP DeskJet Ink Advantage 4175 All-in-One Printer",
+          shop_name: "lifemobile.lk",
+          shop_id: 1,
+          current_price: 21680.01,
+          previous_price: 37379.32,
+          price_change: -15699.31,
+          percentage_change: -42,
+          drop_date: "2025-09-11",
+          image_url:
+            "https://lifemobile.lk/wp-content/uploads/2021/04/HP-DeskJet-Ink-Advantage-4175-All-in-One-Printer-100x100.jpg",
+          product_url:
+            "https://lifemobile.lk/product/hp-deskjet-ink-advantage-4175",
+          is_available: true,
+          days_since_drop: 0,
+        },
+        {
+          variant_id: 3525602173,
+          canonical_product_id: 3525602173,
+          product_title:
+            "Microsoft Surface Book 3 SKY-00001 13.5″ Core i7 16GB 256GB Platinum",
+          brand: "Microsoft",
           category_name: "Tablets",
-          variant_title: "iPad Pro 12.9-inch M2 Chip 128GB WiFi",
-          shop_name: "TechMart",
-          shop_id: 4,
-          current_price: 899.99,
-          previous_price: 1099.99,
-          price_change: -200.0,
-          percentage_change: -18.18,
-          drop_date: "2025-08-02",
-          image_url: "/placeholder.svg?height=200&width=200",
-          product_url: "https://example.com/product7",
+          variant_title:
+            "Microsoft Surface Book 3 SKY-00001 13.5″ Core i7 16GB 256GB Platinum",
+          shop_name: "lifemobile.lk",
+          shop_id: 1,
+          current_price: 371351.1,
+          previous_price: 538190,
+          price_change: -166838.90000000002,
+          percentage_change: -31,
+          drop_date: "2025-09-11",
+          image_url:
+            "https://lifemobile.lk/wp-content/uploads/2020/09/Microsoft-Surface-Book-3-SKR-00001-13.5-Core-i5-8GB-256GB-Platinum-5-600x600.jpg",
+          product_url: "https://lifemobile.lk/product/microsoft-surface-pro-7",
           is_available: true,
-          days_since_drop: 4,
+          days_since_drop: 0,
         },
         {
-          variant_id: 8,
-          canonical_product_id: 108,
-          product_title: "LG 27 4K Monitor",
-          brand: "LG",
-          category_name: "Monitors",
-          variant_title: "LG 27UP850-W 27 Inch 4K UHD Monitor",
-          shop_name: "ElectroShop",
-          shop_id: 5,
-          current_price: 329.99,
-          previous_price: 449.99,
-          price_change: -120.0,
-          percentage_change: -26.67,
-          drop_date: "2025-08-01",
-          image_url: "/placeholder.svg?height=200&width=200",
-          product_url: "https://example.com/product8",
+          variant_id: 3314937326,
+          canonical_product_id: 3314937326,
+          product_title: "Remax RPL-20 Avenger Series 10000mAh Power bank",
+          brand: "Remax",
+          category_name: "Accessories",
+          variant_title: "Remax RPL-20 Avenger Series 10000mAh Power bank",
+          shop_name: "lifemobile.lk",
+          shop_id: 1,
+          current_price: 2056.2,
+          previous_price: 2980,
+          price_change: -923.8,
+          percentage_change: -31,
+          drop_date: "2025-09-11",
+          image_url:
+            "https://lifemobile.lk/wp-content/uploads/2020/08/Remax-RPL-20-Avenger-Series-10000mAh-Power-bank-Batman-600x600.jpg",
+          product_url: "https://lifemobile.lk/product/remax-rpl-20-power-bank",
           is_available: true,
-          days_since_drop: 5,
+          days_since_drop: 0,
+        },
+        {
+          variant_id: 3269743901,
+          canonical_product_id: 3269743901,
+          product_title: "Remax WK Design Y18 In-Ear Earphones",
+          brand: "WK",
+          category_name: "Audio",
+          variant_title: "Remax WK Design Y18 In-Ear Earphones",
+          shop_name: "lifemobile.lk",
+          shop_id: 1,
+          current_price: 1317.9,
+          previous_price: 1910,
+          price_change: -592.1,
+          percentage_change: -31,
+          drop_date: "2025-09-11",
+          image_url:
+            "https://lifemobile.lk/wp-content/uploads/2021/09/Remax-WK-Design-Y18-In-Ear-Earphones-600x600.jpg",
+          product_url: "https://lifemobile.lk/product/remax-wk-y18-earphones",
+          is_available: true,
+          days_since_drop: 0,
         },
       ];
 
@@ -371,15 +376,15 @@ export default function PriceDropsPage() {
     originalPrice: drop.previous_price,
     retailer: drop.shop_name,
     inStock: drop.is_available,
-    image: drop.image_url,
+    image: drop.image_url || "/placeholder.svg",
     discount: Math.abs(drop.percentage_change),
     priceChange: drop.price_change,
   });
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header />
-      <NavigationBar />
+      
+      
       <main className="bg-gradient-to-br from-blue-50/30 via-white to-purple-50/30">
         <div className="container mx-auto px-4 py-8">
           {/* Breadcrumb */}
@@ -403,47 +408,62 @@ export default function PriceDropsPage() {
           {/* Beautiful Header with blue background */}
           <div className="mb-10 overflow-hidden relative">
             {/* Background with gradient and glass effect */}
-            <div className="bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-700 rounded-2xl shadow-xl 
-                border border-white/10 backdrop-filter overflow-hidden">
+            <div
+              className="bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-700 rounded-2xl shadow-xl 
+                border border-white/10 backdrop-filter overflow-hidden"
+            >
               {/* Decorative patterns */}
               <div className="absolute inset-0 overflow-hidden">
                 {/* Animated light streaks */}
-                <div className="absolute top-0 left-0 w-full h-1/2 bg-gradient-to-r from-transparent via-white/10 to-transparent 
-                    transform -skew-y-12 -translate-x-full animate-[shimmer_3s_infinite]"></div>
-                
+                <div
+                  className="absolute top-0 left-0 w-full h-1/2 bg-gradient-to-r from-transparent via-white/10 to-transparent 
+                    transform -skew-y-12 -translate-x-full animate-[shimmer_3s_infinite]"
+                ></div>
+
                 {/* Dots pattern */}
                 <div className="absolute inset-0 opacity-15">
                   <svg width="100%" height="100%" className="opacity-20">
                     <defs>
-                      <pattern id="dotPattern" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+                      <pattern
+                        id="dotPattern"
+                        x="0"
+                        y="0"
+                        width="20"
+                        height="20"
+                        patternUnits="userSpaceOnUse"
+                      >
                         <circle cx="2" cy="2" r="1" fill="white" />
                       </pattern>
                     </defs>
                     <rect width="100%" height="100%" fill="url(#dotPattern)" />
                   </svg>
                 </div>
-                
+
                 {/* Circular decorations */}
                 <div className="absolute -top-16 -right-16 w-40 h-40 rounded-full bg-gradient-to-br from-blue-400/30 to-indigo-500/30 blur-md"></div>
                 <div className="absolute -bottom-20 -left-20 w-60 h-60 rounded-full bg-gradient-to-tr from-indigo-400/20 to-purple-500/20 blur-md"></div>
               </div>
-              
+
               {/* Content section with enhanced styling */}
               <div className="relative z-10 py-6 px-8 flex items-center justify-center">
                 <div className="flex items-center space-x-4">
                   {/* Icon with glow effect */}
                   <div className="relative">
                     <div className="absolute -inset-1 bg-white/30 rounded-full blur-sm"></div>
-                    <div className="relative bg-gradient-to-br from-blue-400 to-indigo-600 p-3 rounded-full 
-                        shadow-[0_0_15px_rgba(59,130,246,0.5)] animate-pulse border border-white/30">
+                    <div
+                      className="relative bg-gradient-to-br from-blue-400 to-indigo-600 p-3 rounded-full 
+                        shadow-[0_0_15px_rgba(59,130,246,0.5)] animate-pulse border border-white/30"
+                    >
                       <TrendingDown className="h-8 w-8 text-white drop-shadow-md" />
                     </div>
                   </div>
-                  
+
                   {/* Text with enhanced styling */}
                   <div>
-                    <h1 className="text-3xl md:text-4xl font-extrabold text-white tracking-tight drop-shadow-md 
-                        bg-gradient-to-r from-white to-blue-100 bg-clip-text">
+                    <h1
+                      className="text-3xl md:text-4xl font-extrabold text-white tracking-tight drop-shadow-md 
+                        bg-gradient-to-r from-white to-blue-100 bg-clip-text"
+                    >
                       <span className="relative inline-block">
                         Price Drops
                         <span className="absolute bottom-0 left-0 w-full h-1 bg-white/40 rounded"></span>
@@ -470,60 +490,59 @@ export default function PriceDropsPage() {
                 </div>
               </CardContent>
             </Card>
-              <Card>
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-2">
-                    <Percent className="h-5 w-5 text-green-500" />
-                    <div>
-                      <p className="text-sm text-gray-600">Avg Discount</p>
-                      <p className="text-2xl font-bold">
-                        {stats?.avgDiscount
-                          ? Math.round(stats.avgDiscount)
-                          : filteredDrops.length > 0
-                          ? Math.round(
-                              filteredDrops.reduce(
-                                (sum, drop) =>
-                                  sum + Math.abs(drop.percentage_change),
-                                0
-                              ) / filteredDrops.length
-                            )
-                          : 0}
-                        %
-                      </p>
-                    </div>
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center gap-2">
+                  <Percent className="h-5 w-5 text-green-500" />
+                  <div>
+                    <p className="text-sm text-gray-600">Avg Discount</p>
+                    <p className="text-2xl font-bold">
+                      {stats?.avgDiscount
+                        ? Math.round(stats.avgDiscount)
+                        : filteredDrops.length > 0
+                        ? Math.round(
+                            filteredDrops.reduce(
+                              (sum, drop) =>
+                                sum + Math.abs(drop.percentage_change),
+                              0
+                            ) / filteredDrops.length
+                          )
+                        : 0}
+                      %
+                    </p>
                   </div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-2">
-                    <Store className="h-5 w-5 text-blue-500" />
-                    <div>
-                      <p className="text-sm text-gray-600">Retailers</p>
-                      <p className="text-2xl font-bold">
-                        {stats?.retailerCount ||
-                          new Set(filteredDrops.map((d) => d.shop_name)).size}
-                      </p>
-                    </div>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center gap-2">
+                  <Store className="h-5 w-5 text-blue-500" />
+                  <div>
+                    <p className="text-sm text-gray-600">Retailers</p>
+                    <p className="text-2xl font-bold">
+                      {stats?.retailerCount ||
+                        new Set(filteredDrops.map((d) => d.shop_name)).size}
+                    </p>
                   </div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-2">
-                    <Tag className="h-5 w-5 text-purple-500" />
-                    <div>
-                      <p className="text-sm text-gray-600">Categories</p>
-                      <p className="text-2xl font-bold">
-                        {stats?.categoryCount ||
-                          new Set(filteredDrops.map((d) => d.category_name))
-                            .size}
-                      </p>
-                    </div>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center gap-2">
+                  <Tag className="h-5 w-5 text-purple-500" />
+                  <div>
+                    <p className="text-sm text-gray-600">Categories</p>
+                    <p className="text-2xl font-bold">
+                      {stats?.categoryCount ||
+                        new Set(filteredDrops.map((d) => d.category_name)).size}
+                    </p>
                   </div>
-                </CardContent>
-              </Card>
-            </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
 
           {/* Filters */}
           <Card className="mb-6">
@@ -652,10 +671,10 @@ export default function PriceDropsPage() {
                         Lowest % Discount
                       </SelectItem>
                       <SelectItem value="amount_desc">
-                        Highest $ Discount
+                        Highest Rs Discount
                       </SelectItem>
                       <SelectItem value="amount_asc">
-                        Lowest $ Discount
+                        Lowest Rs Discount
                       </SelectItem>
                       <SelectItem value="recent">Most Recent</SelectItem>
                     </SelectContent>
@@ -747,7 +766,7 @@ export default function PriceDropsPage() {
           )}
         </div>
       </main>
-      <Footer />
+      
     </div>
   );
 }

@@ -10,15 +10,67 @@ export function StatsSection() {
     users: 0,
     retailers: 0,
   });
-
-  const finalValues = {
+  const [loading, setLoading] = useState(true);
+  const [finalValues, setFinalValues] = useState({
     products: 2500000,
     categories: 150,
     users: 50000,
     retailers: 25,
+  });
+
+  // Fetch stats from the API
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/v1/home/stats`
+        );
+        if (!response.ok) {
+          throw new Error("Failed to fetch stats");
+        }
+
+        const data = await response.json();
+
+        // Convert string values to numbers for animation
+        const parsedValues = {
+          products: parseStatValue(data.total_products),
+          categories: parseStatValue(data.product_categories),
+          users: parseStatValue(data.total_users),
+          retailers: parseStatValue(data.total_suppliers),
+        };
+
+        setFinalValues(parsedValues);
+      } catch (error) {
+        console.error("Error fetching stats:", error);
+        // Keep default values in case of error
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStats();
+  }, []);
+
+  // Parse stat value from string format like "2.5M+" to number
+  const parseStatValue = (value: string): number => {
+    if (!value) return 0;
+
+    // Remove any '+' suffix
+    const cleanValue = value.replace(/\+$/, "");
+
+    if (cleanValue.includes("M")) {
+      return parseFloat(cleanValue.replace("M", "")) * 1000000;
+    }
+    if (cleanValue.includes("K")) {
+      return parseFloat(cleanValue.replace("K", "")) * 1000;
+    }
+    return parseInt(cleanValue, 10) || 0;
   };
 
+  // Animation effect for counters
   useEffect(() => {
+    if (loading) return;
+
     const duration = 2000; // 2 seconds
     const steps = 60;
     const stepDuration = duration / steps;
@@ -44,7 +96,7 @@ export function StatsSection() {
     }, duration);
 
     return () => intervals.forEach(clearInterval);
-  }, []);
+  }, [finalValues, loading]);
 
   const formatNumber = (num: number) => {
     if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M+`;
@@ -205,12 +257,14 @@ export function StatsSection() {
             ></path>
           </svg>
         </div>
-        
+
         {/* Transition element to the product grid */}
         <div className="mt-16 text-center">
           <div className="inline-flex items-center justify-center">
             <div className="h-0.5 w-12 bg-gradient-to-r from-transparent to-indigo-500"></div>
-            <span className="px-4 text-gray-500 text-sm font-medium">PRODUCT SHOWCASE</span>
+            <span className="px-4 text-gray-500 text-sm font-medium">
+              PRODUCT SHOWCASE
+            </span>
             <div className="h-0.5 w-12 bg-gradient-to-l from-transparent to-indigo-500"></div>
           </div>
         </div>

@@ -61,10 +61,10 @@ export function NewArrivalFilters({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="1d">Last 24 hours</SelectItem>
+                <SelectItem value="24h">Last 24 hours</SelectItem>
                 <SelectItem value="7d">Last 7 days</SelectItem>
                 <SelectItem value="30d">Last 30 days</SelectItem>
-                <SelectItem value="90d">Last 3 months</SelectItem>
+                <SelectItem value="3m">Last 3 months</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -118,16 +118,17 @@ export function NewArrivalFilters({
           {/* Price Range */}
           <div>
             <label className="text-sm font-medium mb-2 block">
-              Price Range: ${filters.priceRange[0]} - ${filters.priceRange[1]}
+              Price Range: Rs {filters.priceRange[0].toLocaleString("en-US")} -
+              Rs {filters.priceRange[1].toLocaleString("en-US")}
             </label>
             <Slider
               value={filters.priceRange}
               onValueChange={(value) =>
                 setFilters({ ...filters, priceRange: value })
               }
-              max={5000}
+              max={1000000}
               min={0}
-              step={50}
+              step={1000}
               className="mt-2"
             />
           </div>

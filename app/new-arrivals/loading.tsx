@@ -1,15 +1,15 @@
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Header } from "@/components/layout/header";
-import { NavigationBar } from "@/components/layout/navigation-bar";
-import { Footer } from "@/components/layout/footer";
+
+
+
 
 export default function Loading() {
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header />
-      <NavigationBar />
+      
+      
       <main className="bg-gradient-to-br from-green-50/30 via-white to-blue-50/30">
         <div className="container mx-auto px-4 py-8">
           {/* Breadcrumb Skeleton */}
@@ -96,7 +96,7 @@ export default function Loading() {
           </div>
         </div>
       </main>
-      <Footer />
+      
     </div>
   );
 }

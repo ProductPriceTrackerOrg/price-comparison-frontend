@@ -1,121 +1,76 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { ProductCard } from "@/components/product/product-card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { ExternalLink, Sparkles, Users, TrendingUp } from "lucide-react"
+import { useState, useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ProductCard } from "@/components/product/product-card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { ExternalLink, Sparkles, Users, TrendingUp } from "lucide-react";
+import { RecommendedProduct, audioProducts } from "@/lib/product-data";
 
 interface ProductRecommendationsProps {
-  productId: string
+  productId: string;
 }
 
-export function ProductRecommendations({ productId }: ProductRecommendationsProps) {
-  const [recommendations, setRecommendations] = useState([])
-
-  // Mock recommendation data with different types
-  const mockRecommendations = [
-    {
-      id: 6,
-      name: "Samsung Galaxy Buds Pro 2",
-      brand: "Samsung",
-      category: "Audio",
-      price: 199.99,
-      originalPrice: 229.99,
-      retailer: "AudioHub",
-      inStock: true,
-      image: "/placeholder.svg?height=200&width=200",
-      discount: 13,
-      recommendationType: "COMPLEMENTARY",
-      recommendationScore: 0.92,
-    },
-    {
-      id: 7,
-      name: "Samsung 45W Fast Charger",
-      brand: "Samsung",
-      category: "Accessories",
-      price: 49.99,
-      originalPrice: 59.99,
-      retailer: "TechStore",
-      inStock: true,
-      image: "/placeholder.svg?height=200&width=200",
-      discount: 17,
-      recommendationType: "COMPLEMENTARY",
-      recommendationScore: 0.88,
-    },
-    {
-      id: 8,
-      name: "iPhone 15 Pro Max",
-      brand: "Apple",
-      category: "Smartphones",
-      price: 1299.99,
-      originalPrice: 1399.99,
-      retailer: "AppleStore",
-      inStock: true,
-      image: "/placeholder.svg?height=200&width=200",
-      discount: 7,
-      recommendationType: "COLLABORATIVE",
-      recommendationScore: 0.85,
-    },
-    {
-      id: 9,
-      name: "Samsung Galaxy Watch 6 Classic",
-      brand: "Samsung",
-      category: "Smartwatches",
-      price: 379.99,
-      originalPrice: 429.99,
-      retailer: "WearableTech",
-      inStock: true,
-      image: "/placeholder.svg?height=200&width=200",
-      discount: 12,
-      recommendationType: "TRENDING",
-      recommendationScore: 0.79,
-    },
-  ]
+export function ProductRecommendations({
+  productId,
+}: ProductRecommendationsProps) {
+  const [recommendations, setRecommendations] = useState<RecommendedProduct[]>(
+    []
+  );
 
   useEffect(() => {
-    setRecommendations(mockRecommendations)
-  }, [productId])
+    // In a real implementation, this would call an API endpoint
+    // const fetchRecommendations = async () => {
+    //   const response = await fetch(`/api/products/${productId}/recommendations`);
+    //   const data = await response.json();
+    //   setRecommendations(data.recommendations);
+    // };
+    // fetchRecommendations();
+
+    // Using our centralized product data
+    // Limit to only 4 items by using slice
+    setRecommendations(audioProducts.slice(0, 4));
+  }, [productId]);
 
   const getRecommendationIcon = (type: string) => {
     switch (type) {
       case "COMPLEMENTARY":
-        return <Sparkles className="h-4 w-4" />
+        return <Sparkles className="h-4 w-4" />;
       case "COLLABORATIVE":
-        return <Users className="h-4 w-4" />
+        return <Users className="h-4 w-4" />;
       case "TRENDING":
-        return <TrendingUp className="h-4 w-4" />
+        return <TrendingUp className="h-4 w-4" />;
       default:
-        return <Sparkles className="h-4 w-4" />
+        return <Sparkles className="h-4 w-4" />;
     }
-  }
+  };
 
   const getRecommendationLabel = (type: string) => {
     switch (type) {
       case "COMPLEMENTARY":
-        return "Perfect Match"
+        return "Perfect Match";
       case "COLLABORATIVE":
-        return "Users Also Bought"
+        return "Users Also Bought";
       case "TRENDING":
-        return "Trending Now"
+        return "Trending Now";
       default:
-        return "Recommended"
+        return "Recommended";
     }
-  }
+  };
 
   const getRecommendationColor = (type: string) => {
     switch (type) {
       case "COMPLEMENTARY":
-        return "default"
+        return "default";
       case "COLLABORATIVE":
-        return "secondary"
+        return "secondary";
       case "TRENDING":
-        return "destructive"
+        return "destructive";
       default:
-        return "default"
+        return "default";
     }
-  }
+  };
 
   return (
     <Card>
@@ -162,18 +117,20 @@ export function ProductRecommendations({ productId }: ProductRecommendationsProp
           </h4>
           <div className="text-sm text-muted-foreground space-y-1">
             <p>
-              • <strong>Perfect Match:</strong> Accessories and complementary products that work great with your
-              selection
+              • <strong>Perfect Match:</strong> Accessories and complementary
+              products that work great with your selection
             </p>
             <p>
-              • <strong>Users Also Bought:</strong> Products frequently purchased together by other customers
+              • <strong>Users Also Bought:</strong> Products frequently
+              purchased together by other customers
             </p>
             <p>
-              • <strong>Trending Now:</strong> Popular products in the same category with great deals
+              • <strong>Trending Now:</strong> Popular products in the same
+              category with great deals
             </p>
           </div>
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }

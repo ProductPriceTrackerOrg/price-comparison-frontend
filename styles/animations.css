@@ -1,5 +1,14 @@
 /* Custom animations for the Product Price Tracker UI */
 
+@keyframes moveLight {
+  0% {
+    left: -10%;
+  }
+  100% {
+    left: 110%;
+  }
+}
+
 @keyframes float-slow {
   0% {
     transform: translateY(0) rotate(0);

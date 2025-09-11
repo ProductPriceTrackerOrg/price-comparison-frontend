@@ -1,9 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { Header } from "@/components/layout/header";
-import { NavigationBar } from "@/components/layout/navigation-bar";
-import { Footer } from "@/components/layout/footer";
+import { useState, useEffect } from "react";
+
 import { PageHeader } from "@/components/layout/page-header";
 import { ProductCard } from "@/components/product/product-card";
 import { Badge } from "@/components/ui/badge";
@@ -22,6 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Spinner } from "@/components/ui/spinner";
 import {
   TrendingUp,
   FlameIcon as Fire,
@@ -42,30 +41,22 @@ import {
   Home,
 } from "lucide-react";
 
+import { TrendingProduct, TrendingResponse } from "@/lib/types/trending";
+
 const timeRanges = [
-  { value: "24h", label: "Last 24 Hours" },
-  { value: "7d", label: "Last 7 Days" },
-  { value: "30d", label: "Last 30 Days" },
-  { value: "90d", label: "Last 3 Months" },
+  { value: "day", label: "Last 24 Hours" },
+  { value: "week", label: "Last 7 Days" },
+  { value: "month", label: "Last 30 Days" },
 ];
 
 const categories = [
   { value: "all", label: "All Categories" },
-  { value: "smartphones", label: "Smartphones" },
-  { value: "laptops", label: "Laptops" },
-  { value: "smartwatches", label: "Smartwatches" },
-  { value: "tablets", label: "Tablets" },
-  { value: "headphones", label: "Headphones" },
-];
-
-const retailers = [
-  { value: "all", label: "All Retailers" },
-  { value: "mobileworld", label: "MobileWorld" },
-  { value: "wearabletech", label: "WearableTech" },
-  { value: "techmart", label: "TechMart" },
-  { value: "computerstore", label: "ComputerStore" },
-  { value: "computerworld", label: "ComputerWorld" },
-  { value: "audiotech", label: "AudioTech" },
+  { value: "Smartphones", label: "Smartphones" },
+  { value: "Laptops", label: "Laptops" },
+  { value: "Smartwatches", label: "Smartwatches" },
+  { value: "Tablets", label: "Tablets" },
+  { value: "Headphones", label: "Headphones" },
+  { value: "Uncategorized", label: "Uncategorized" },
 ];
 
 const priceRanges = [
@@ -77,215 +68,226 @@ const priceRanges = [
   { value: "1500+", label: "Over $1,500" },
 ];
 
-const trendingStats = [
-  {
-    title: "Total Trending Items",
-    value: "2,847",
-    change: "+12.5%",
-    trend: "up",
-    icon: TrendingUp,
-    color: "text-blue-600",
-  },
-  {
-    title: "Most Viewed Today",
-    value: "45.2K",
-    change: "+8.3%",
-    trend: "up",
-    icon: Eye,
-    color: "text-green-600",
-  },
-  {
-    title: "New Trending",
-    value: "186",
-    change: "+23.1%",
-    trend: "up",
-    icon: Zap,
-    color: "text-orange-600",
-  },
-  {
-    title: "Categories Active",
-    value: "24",
-    change: "0%",
-    trend: "neutral",
-    icon: BarChart3,
-    color: "text-purple-600",
-  },
+const sortOptions = [
+  { value: "trend_score", label: "Trending Score" },
+  { value: "price_change", label: "Price Change" },
+  { value: "search_volume", label: "Search Volume" },
 ];
 
-const trendingProducts = [
-  {
-    id: 1,
-    name: "iPhone 15 Pro Max",
-    brand: "Apple",
-    category: "Smartphones",
-    price: 1199.99,
-    originalPrice: 1299.99,
-    retailer: "MobileWorld",
-    inStock: true,
-    image: "/placeholder.svg?height=200&width=200&text=iPhone+15+Pro",
-    discount: 8,
-    trendingScore: 98,
-    views: "12.5K",
-    favorites: "3.2K",
-    priceChange: -7.2,
-    trendingPosition: 1,
-    trendingChange: "up",
-    lastWeekPosition: 3,
-    daysInTrending: 5,
-  },
-  {
-    id: 2,
-    name: "Samsung Galaxy Watch 6",
-    brand: "Samsung",
-    category: "Smartwatches",
-    price: 329.99,
-    originalPrice: 399.99,
-    retailer: "WearableTech",
-    inStock: true,
-    image: "/placeholder.svg?height=200&width=200&text=Galaxy+Watch",
-    discount: 18,
-    trendingScore: 94,
-    views: "8.7K",
-    favorites: "2.1K",
-    priceChange: -12.5,
-    trendingPosition: 2,
-    trendingChange: "new",
-    lastWeekPosition: null,
-    daysInTrending: 2,
-  },
-  {
-    id: 3,
-    name: "Google Pixel 8 Pro",
-    brand: "Google",
-    category: "Smartphones",
-    price: 799.99,
-    originalPrice: 899.99,
-    retailer: "TechMart",
-    inStock: true,
-    image: "/placeholder.svg?height=200&width=200&text=Pixel+8+Pro",
-    discount: 11,
-    trendingScore: 89,
-    views: "6.3K",
-    favorites: "1.8K",
-    priceChange: 2.3,
-    trendingPosition: 3,
-    trendingChange: "down",
-    lastWeekPosition: 1,
-    daysInTrending: 12,
-  },
-  {
-    id: 4,
-    name: "Microsoft Surface Pro 9",
-    brand: "Microsoft",
-    category: "Tablets",
-    price: 999.99,
-    originalPrice: 1199.99,
-    retailer: "ComputerStore",
-    inStock: true,
-    image: "/placeholder.svg?height=200&width=200&text=Surface+Pro",
-    discount: 17,
-    trendingScore: 86,
-    views: "5.9K",
-    favorites: "1.5K",
-    priceChange: -15.2,
-    trendingPosition: 4,
-    trendingChange: "up",
-    lastWeekPosition: 7,
-    daysInTrending: 8,
-  },
-  {
-    id: 5,
-    name: "MacBook Air M3",
-    brand: "Apple",
-    category: "Laptops",
-    price: 1299.99,
-    originalPrice: 1399.99,
-    retailer: "ComputerWorld",
-    inStock: true,
-    image: "/placeholder.svg?height=200&width=200&text=MacBook+Air",
-    discount: 7,
-    trendingScore: 83,
-    views: "9.1K",
-    favorites: "2.7K",
-    priceChange: 1.8,
-    trendingPosition: 5,
-    trendingChange: "up",
-    lastWeekPosition: 8,
-    daysInTrending: 15,
-  },
-  {
-    id: 6,
-    name: "Sony WH-1000XM5",
-    brand: "Sony",
-    category: "Headphones",
-    price: 349.99,
-    originalPrice: 399.99,
-    retailer: "AudioTech",
-    inStock: true,
-    image: "/placeholder.svg?height=200&width=200&text=Sony+WH1000XM5",
-    discount: 13,
-    trendingScore: 79,
-    views: "4.2K",
-    favorites: "1.1K",
-    priceChange: -8.7,
-    trendingPosition: 6,
-    trendingChange: "new",
-    lastWeekPosition: null,
-    daysInTrending: 1,
-  },
-];
+// Function to generate placeholder views and favorites data
+const generatePlaceholderStats = (score: number) => {
+  // Generate some placeholder data based on the trend score
+  const baseViews = Math.floor(score * 100 + Math.random() * 2000);
+  const baseFavorites = Math.floor(baseViews * (0.2 + Math.random() * 0.1));
+
+  const formatNumber = (num: number): string => {
+    if (num >= 1000) {
+      return `${(num / 1000).toFixed(1)}K`;
+    }
+    return num.toString();
+  };
+
+  return {
+    views: formatNumber(baseViews),
+    favorites: formatNumber(baseFavorites),
+    daysInTrending: Math.max(1, Math.floor(Math.random() * 20)),
+    trendingPosition: 0, // Will be set based on the array index
+    trendingChange:
+      Math.random() > 0.6 ? "up" : Math.random() > 0.3 ? "down" : "new",
+    lastWeekPosition:
+      Math.random() > 0.2 ? Math.floor(Math.random() * 10) + 1 : null,
+  };
+};
 
 export default function TrendingPage() {
-  const [timeRange, setTimeRange] = useState("7d");
+  const [timeRange, setTimeRange] = useState("week");
   const [selectedCategory, setSelectedCategory] = useState("all");
-  const [selectedRetailer, setSelectedRetailer] = useState("all");
   const [selectedPriceRange, setSelectedPriceRange] = useState("all");
+  const [sortBy, setSortBy] = useState("price_change"); // Always default to price_change
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [trendingData, setTrendingData] = useState<TrendingResponse | null>(
+    null
+  );
+  const [retailers, setRetailers] = useState<
+    { value: string; label: string }[]
+  >([{ value: "all", label: "All Retailers" }]);
+  const [selectedRetailer, setSelectedRetailer] = useState("all");
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(20);
 
-  // Filter products based on selected filters
-  const filteredProducts = trendingProducts.filter((product) => {
-    // Category filter
-    if (
-      selectedCategory !== "all" &&
-      product.category.toLowerCase() !== selectedCategory
-    ) {
-      return false;
-    }
+  // Define stats based on API data or defaults
+  const trendingStats = [
+    {
+      title: "Total Trending Items",
+      value: trendingData?.products?.length || "0",
+      change: "+12.5%",
+      trend: "up",
+      icon: TrendingUp,
+      color: "text-blue-600",
+    },
+    {
+      title: "Most Viewed Today",
+      value: "2.5K+",
+      change: "+8.3%",
+      trend: "up",
+      icon: Eye,
+      color: "text-green-600",
+    },
+    {
+      title: "Tracking Accuracy",
+      value: trendingData?.stats?.accuracy_rate || "95%",
+      change: "+2.1%",
+      trend: "up",
+      icon: Zap,
+      color: "text-orange-600",
+    },
+    {
+      title: "Update Frequency",
+      value: trendingData?.stats?.update_frequency || "Real-time",
+      change: "0%",
+      trend: "neutral",
+      icon: BarChart3,
+      color: "text-purple-600",
+    },
+  ];
 
-    // Retailer filter - normalize both values for comparison
-    if (selectedRetailer !== "all") {
-      const productRetailer = product.retailer
-        .toLowerCase()
-        .replace(/\s+/g, "");
-      const selectedRetailerNormalized = selectedRetailer.toLowerCase();
-      if (productRetailer !== selectedRetailerNormalized) {
-        return false;
+  // Fetch trending products from the API
+  useEffect(() => {
+    const fetchTrendingProducts = async () => {
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        // Build the API URL with query parameters
+        const apiUrl = new URL(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/v1/trending`
+        );
+
+        // Always set these parameters
+        apiUrl.searchParams.set("sort", sortBy);
+        apiUrl.searchParams.set("type", "trends"); // Always set to trends
+        apiUrl.searchParams.set("period", timeRange);
+        apiUrl.searchParams.set("limit", limit.toString());
+
+        // Only add category if it's not "all"
+        if (selectedCategory !== "all") {
+          apiUrl.searchParams.set("category", selectedCategory);
+        }
+
+        // Fetch data from API
+        const response = await fetch(apiUrl.toString());
+
+        if (!response.ok) {
+          throw new Error(`API error: ${response.status}`);
+        }
+
+        const data: TrendingResponse = await response.json();
+        setTrendingData(data);
+
+        // Extract unique retailers from the data
+        if (data.products.length > 0) {
+          const uniqueRetailers = [{ value: "all", label: "All Retailers" }];
+
+          // Create a Set to track unique retailer IDs
+          const retailerIds = new Set();
+
+          data.products.forEach((product) => {
+            if (!retailerIds.has(product.retailer_id)) {
+              retailerIds.add(product.retailer_id);
+              uniqueRetailers.push({
+                value: product.retailer_id.toString(),
+                label: product.retailer,
+              });
+            }
+          });
+
+          setRetailers(uniqueRetailers);
+        }
+      } catch (err) {
+        console.error("Failed to fetch trending products:", err);
+        setError("Failed to load trending products. Please try again later.");
+      } finally {
+        setIsLoading(false);
       }
-    }
+    };
 
-    // Price range filter
-    if (selectedPriceRange !== "all") {
-      const price = product.price;
-      switch (selectedPriceRange) {
-        case "0-300":
-          if (price >= 300) return false;
-          break;
-        case "300-600":
-          if (price < 300 || price >= 600) return false;
-          break;
-        case "600-1000":
-          if (price < 600 || price >= 1000) return false;
-          break;
-        case "1000-1500":
-          if (price < 1000 || price >= 1500) return false;
-          break;
-        case "1500+":
-          if (price < 1500) return false;
-          break;
-      }
-    }
+    fetchTrendingProducts();
+  }, [timeRange, selectedCategory, sortBy, limit]);
 
-    return true;
-  });
+  // Filter products based on selected filters (client-side filtering for price and retailer)
+  const filteredProducts = trendingData?.products
+    ? trendingData.products
+        .filter((product) => {
+          // Retailer filter
+          if (
+            selectedRetailer !== "all" &&
+            product.retailer_id.toString() !== selectedRetailer
+          ) {
+            return false;
+          }
+
+          // Price range filter (client-side)
+          if (selectedPriceRange !== "all") {
+            const price = product.price;
+            switch (selectedPriceRange) {
+              case "0-300":
+                if (price >= 300) return false;
+                break;
+              case "300-600":
+                if (price < 300 || price >= 600) return false;
+                break;
+              case "600-1000":
+                if (price < 600 || price >= 1000) return false;
+                break;
+              case "1000-1500":
+                if (price < 1000 || price >= 1500) return false;
+                break;
+              case "1500+":
+                if (price < 1500) return false;
+                break;
+            }
+          }
+
+          return true;
+        })
+        // Map products to include UI-specific properties
+        .map((product, index) => {
+          // Generate placeholder metrics for the UI
+          const placeholderStats = generatePlaceholderStats(
+            product.trend_score || 50
+          );
+
+          // Format the product to match the ProductCard component interface
+          return {
+            id: product.id,
+            name: product.name,
+            brand: product.brand || "Unknown Brand", // Ensure brand is never undefined
+            category: product.category || "Uncategorized",
+            price: product.price,
+            originalPrice: product.original_price,
+            retailer: product.retailer,
+            inStock: product.in_stock,
+            image: product.image || "/placeholder.svg",
+            discount: product.discount,
+            trendScore: product.trend_score || 0,
+            searchVolume: placeholderStats.views,
+            priceChange: product.price_change,
+            // Additional UI-specific properties for the trending page
+            trendingPosition: index + 1,
+            favorites: placeholderStats.favorites,
+            trendingChange:
+              product.price_change && product.price_change < 0
+                ? "down"
+                : product.price_change && product.price_change > 0
+                ? "up"
+                : "neutral",
+            lastWeekPosition: placeholderStats.lastWeekPosition,
+            daysInTrending: placeholderStats.daysInTrending,
+            isNew: index === 0 || Math.random() > 0.7,
+          };
+        })
+    : [];
 
   const getTrendingIcon = (change: string) => {
     switch (change) {
@@ -311,12 +313,16 @@ export default function TrendingPage() {
     }
   };
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50">
-      <Header />
-      <NavigationBar />
+  // Handle load more functionality
+  const handleLoadMore = () => {
+    setLimit((prevLimit) => prevLimit + 10);
+  };
 
-      <main className="bg-gradient-to-br from-blue-50/30 via-white to-purple-50/30">
+  return (
+    <div className="bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50">
+      
+
+      <div className="bg-gradient-to-br from-blue-50/30 via-white to-purple-50/30">
         <div className="container mx-auto px-4 py-8">
           {/* Page Header with Beautiful Blue Background */}
           <PageHeader
@@ -328,51 +334,68 @@ export default function TrendingPage() {
           {/* Content Section */}
           <div className="mb-8"></div>
 
-          {/* Filter Results Summary */}
-          {(selectedCategory !== "all" ||
-            selectedRetailer !== "all" ||
-            selectedPriceRange !== "all") && (
-            <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg max-w-2xl">
-              <p className="text-sm text-blue-800">
-                <span className="font-medium">Filtered Results:</span> Showing{" "}
-                {filteredProducts.length} products
-                {selectedCategory !== "all" && (
-                  <span>
-                    {" "}
-                    in{" "}
-                    {
-                      categories.find((c) => c.value === selectedCategory)
-                        ?.label
-                    }
-                  </span>
-                )}
-                {selectedRetailer !== "all" && (
-                  <span>
-                    {" "}
-                    from{" "}
-                    {retailers.find((r) => r.value === selectedRetailer)?.label}
-                  </span>
-                )}
-                {selectedPriceRange !== "all" && (
-                  <span>
-                    {" "}
-                    priced{" "}
-                    {
-                      priceRanges.find((p) => p.value === selectedPriceRange)
-                        ?.label
-                    }
-                  </span>
-                )}
-              </p>
+          {/* Error message */}
+          {error && (
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-sm text-red-800">{error}</p>
             </div>
           )}
+
+          {/* Filter Results Summary */}
+          {!isLoading &&
+            !error &&
+            (selectedCategory !== "all" ||
+              selectedRetailer !== "all" ||
+              selectedPriceRange !== "all") && (
+              <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg max-w-2xl">
+                <p className="text-sm text-blue-800">
+                  <span className="font-medium">Filtered Results:</span> Showing{" "}
+                  {filteredProducts.length} products
+                  {selectedCategory !== "all" && (
+                    <span>
+                      {" "}
+                      in{" "}
+                      {
+                        categories.find((c) => c.value === selectedCategory)
+                          ?.label
+                      }
+                    </span>
+                  )}
+                  {selectedRetailer !== "all" && (
+                    <span>
+                      {" "}
+                      from{" "}
+                      {
+                        retailers.find((r) => r.value === selectedRetailer)
+                          ?.label
+                      }
+                    </span>
+                  )}
+                  {selectedPriceRange !== "all" && (
+                    <span>
+                      {" "}
+                      priced{" "}
+                      {
+                        priceRanges.find((p) => p.value === selectedPriceRange)
+                          ?.label
+                      }
+                    </span>
+                  )}
+                </p>
+              </div>
+            )}
 
           {/* Filters Section */}
           <div className="mb-8">
             <div className="flex flex-col sm:flex-row gap-4 justify-start items-start flex-wrap">
+              {/* Time Range Filter */}
               <div className="flex items-center gap-2">
                 <Clock className="h-4 w-4 text-gray-500" />
-                <Select value={timeRange} onValueChange={setTimeRange}>
+                <Select
+                  value={timeRange}
+                  onValueChange={setTimeRange}
+                  disabled={isLoading}
+                >
                   <SelectTrigger className="w-40">
                     <SelectValue />
                   </SelectTrigger>
@@ -386,11 +409,13 @@ export default function TrendingPage() {
                 </Select>
               </div>
 
+              {/* Category Filter */}
               <div className="flex items-center gap-2">
                 <Filter className="h-4 w-4 text-gray-500" />
                 <Select
                   value={selectedCategory}
                   onValueChange={setSelectedCategory}
+                  disabled={isLoading}
                 >
                   <SelectTrigger className="w-48">
                     <SelectValue />
@@ -405,11 +430,34 @@ export default function TrendingPage() {
                 </Select>
               </div>
 
+              {/* Sort By */}
+              <div className="flex items-center gap-2">
+                <BarChart3 className="h-4 w-4 text-gray-500" />
+                <Select
+                  value={sortBy}
+                  onValueChange={setSortBy}
+                  disabled={isLoading}
+                >
+                  <SelectTrigger className="w-48">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {sortOptions.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Retailer Filter */}
               <div className="flex items-center gap-2">
                 <ShoppingCart className="h-4 w-4 text-gray-500" />
                 <Select
                   value={selectedRetailer}
                   onValueChange={setSelectedRetailer}
+                  disabled={isLoading}
                 >
                   <SelectTrigger className="w-48">
                     <SelectValue />
@@ -424,11 +472,13 @@ export default function TrendingPage() {
                 </Select>
               </div>
 
+              {/* Price Range Filter */}
               <div className="flex items-center gap-2">
                 <span className="text-sm font-medium text-gray-500">$</span>
                 <Select
                   value={selectedPriceRange}
                   onValueChange={setSelectedPriceRange}
+                  disabled={isLoading}
                 >
                   <SelectTrigger className="w-40">
                     <SelectValue />
@@ -445,152 +495,172 @@ export default function TrendingPage() {
             </div>
           </div>
 
-          {/* Statistics Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            {trendingStats.map((stat, index) => (
-              <Card key={index} className="hover:shadow-lg transition-shadow">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-gray-600 mb-1">{stat.title}</p>
-                      <p className="text-2xl font-bold text-gray-900">
-                        {stat.value}
-                      </p>
-                      <div
-                        className={`flex items-center gap-1 text-sm ${getChangeColor(
-                          stat.trend
-                        )}`}
-                      >
-                        {stat.trend === "up" && (
-                          <ArrowUpRight className="h-3 w-3" />
-                        )}
-                        {stat.trend === "down" && (
-                          <ArrowDownRight className="h-3 w-3" />
-                        )}
-                        <span>{stat.change}</span>
-                      </div>
-                    </div>
-                    <div
-                      className={`p-3 rounded-full bg-gray-100 ${stat.color}`}
-                    >
-                      <stat.icon className="h-6 w-6" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-
-          {/* Trending Products Section */}
-          <div className="space-y-6">
-            <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-              <Fire className="h-6 w-6 text-red-500" />
-              Trending Now
-            </h2>
-
-            {/* Products Grid - 4 columns on desktop */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {filteredProducts.slice(0, 4).map((product) => (
-                <div key={product.id} className="relative group">
-                  <Card
-                    className="overflow-hidden hover:shadow-xl transition-all duration-300 group-hover:scale-[1.02]"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    {/* Trending Badge */}
-                    <div className="absolute top-3 left-3 z-20 flex gap-2 pointer-events-none">
-                      <Badge className="bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white font-bold shadow-lg flex items-center gap-1">
-                        <Fire className="h-3 w-3" />#{product.trendingPosition}
-                      </Badge>
-                      {product.trendingChange === "new" && (
-                        <Badge className="bg-gradient-to-r from-green-500 to-emerald-500 text-white font-bold">
-                          NEW
-                        </Badge>
-                      )}
-                    </div>
-
-                    {/* Trending Change Indicator - added pointer-events-none */}
-                    <div className="absolute top-3 right-3 z-20 pointer-events-none">
-                      <div className="bg-white/90 backdrop-blur-sm rounded-full p-1.5 shadow-md">
-                        {getTrendingIcon(product.trendingChange)}
-                      </div>
-                    </div>
-
-                    {/* Product Card Content */}
-                    <ProductCard product={product} />
-
-                    {/* Trending Metrics Overlay - added pointer-events-none to prevent blocking clicks */}
-                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-4 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
-                      <div className="grid grid-cols-3 gap-3 text-xs">
-                        <div className="flex items-center gap-1">
-                          <Eye className="h-3 w-3" />
-                          <span>{product.views}</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Heart className="h-3 w-3" />
-                          <span>{product.favorites}</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <BarChart3 className="h-3 w-3" />
-                          <span>{product.trendingScore}%</span>
-                        </div>
-                      </div>
-                      <div className="mt-2 text-xs opacity-80">
-                        Trending for {product.daysInTrending} days
-                        {product.lastWeekPosition && (
-                          <span>
-                            {" "}
-                            • Was #{product.lastWeekPosition} last week
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </Card>
-                </div>
-              ))}
+          {/* Loading state */}
+          {isLoading && (
+            <div className="flex flex-col items-center justify-center py-20">
+              <Spinner size="lg" className="border-blue-500" />
+              <p className="mt-4 text-gray-600">Loading trending products...</p>
             </div>
+          )}
 
-            {/* Show message when no products match filters */}
-            {filteredProducts.length === 0 && (
-              <div className="text-center py-12">
-                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Filter className="h-8 w-8 text-gray-400" />
+          {/* Content when data is loaded */}
+          {!isLoading && !error && trendingData && (
+            <>
+              {/* Statistics Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                {trendingStats.map((stat, index) => (
+                  <Card
+                    key={index}
+                    className="hover:shadow-lg transition-shadow"
+                  >
+                    <CardContent className="p-6">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm text-gray-600 mb-1">
+                            {stat.title}
+                          </p>
+                          <p className="text-2xl font-bold text-gray-900">
+                            {stat.value}
+                          </p>
+                          <div
+                            className={`flex items-center gap-1 text-sm ${getChangeColor(
+                              stat.trend
+                            )}`}
+                          >
+                            {stat.trend === "up" && (
+                              <ArrowUpRight className="h-3 w-3" />
+                            )}
+                            {stat.trend === "down" && (
+                              <ArrowDownRight className="h-3 w-3" />
+                            )}
+                            <span>{stat.change}</span>
+                          </div>
+                        </div>
+                        <div
+                          className={`p-3 rounded-full bg-gray-100 ${stat.color}`}
+                        >
+                          <stat.icon className="h-6 w-6" />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+
+              {/* Trending Products Section */}
+              <div className="space-y-6">
+                <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                  <Fire className="h-6 w-6 text-red-500" />
+                  Trending Now
+                </h2>
+
+                {/* Products Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                  {filteredProducts.map((product) => (
+                    <div key={product.id} className="relative group">
+                      <Card
+                        className="overflow-hidden hover:shadow-xl transition-all duration-300 group-hover:scale-[1.02]"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {/* Trending Badge */}
+                        <div className="absolute top-3 left-3 z-20 flex gap-2 pointer-events-none">
+                          <Badge className="bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white font-bold shadow-lg flex items-center gap-1">
+                            <Fire className="h-3 w-3" />#
+                            {product.trendingPosition}
+                          </Badge>
+                          {product.trendingChange === "new" && (
+                            <Badge className="bg-gradient-to-r from-green-500 to-emerald-500 text-white font-bold">
+                              NEW
+                            </Badge>
+                          )}
+                        </div>
+
+                        {/* Trending Change Indicator */}
+                        <div className="absolute top-3 right-3 z-20 pointer-events-none">
+                          <div className="bg-white/90 backdrop-blur-sm rounded-full p-1.5 shadow-md">
+                            {getTrendingIcon(product.trendingChange)}
+                          </div>
+                        </div>
+
+                        {/* Product Card Content */}
+                        <ProductCard product={product} />
+
+                        {/* Trending Metrics Overlay */}
+                        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-4 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+                          <div className="grid grid-cols-3 gap-3 text-xs">
+                            <div className="flex items-center gap-1">
+                              <Eye className="h-3 w-3" />
+                              <span>{product.searchVolume}</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <Heart className="h-3 w-3" />
+                              <span>{product.favorites}</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <BarChart3 className="h-3 w-3" />
+                              <span>{product.trendScore}%</span>
+                            </div>
+                          </div>
+                          <div className="mt-2 text-xs opacity-80">
+                            Trending for {product.daysInTrending} days
+                            {product.lastWeekPosition && (
+                              <span>
+                                {" "}
+                                • Was #{product.lastWeekPosition} last week
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </Card>
+                    </div>
+                  ))}
                 </div>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">
-                  No products found
-                </h3>
-                <p className="text-gray-600 mb-4">
-                  Try adjusting your filters to see more trending products.
-                </p>
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setSelectedCategory("all");
-                    setSelectedRetailer("all");
-                    setSelectedPriceRange("all");
-                  }}
-                >
-                  Clear all filters
-                </Button>
-              </div>
-            )}
 
-            {/* Load More Button - only show if there are products */}
-            {filteredProducts.length > 0 && (
-              <div className="text-center">
-                <Button
-                  size="lg"
-                  className="bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600"
-                >
-                  <Fire className="h-4 w-4 mr-2" />
-                  Load More Trending Products
-                </Button>
+                {/* Show message when no products match filters */}
+                {filteredProducts.length === 0 && (
+                  <div className="text-center py-12">
+                    <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <Filter className="h-8 w-8 text-gray-400" />
+                    </div>
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">
+                      No products found
+                    </h3>
+                    <p className="text-gray-600 mb-4">
+                      Try adjusting your filters to see more trending products.
+                    </p>
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setSelectedCategory("all");
+                        setSelectedRetailer("all");
+                        setSelectedPriceRange("all");
+                      }}
+                    >
+                      Clear all filters
+                    </Button>
+                  </div>
+                )}
+
+                {/* Load More Button - only show if there are products */}
+                {filteredProducts.length > 0 &&
+                  filteredProducts.length >= limit && (
+                    <div className="text-center">
+                      <Button
+                        size="lg"
+                        className="bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600"
+                        onClick={handleLoadMore}
+                        disabled={isLoading}
+                      >
+                        <Fire className="h-4 w-4 mr-2" />
+                        Load More Trending Products
+                      </Button>
+                    </div>
+                  )}
               </div>
-            )}
-          </div>
+            </>
+          )}
         </div>
-      </main>
-
-      <Footer />
+      </div>
     </div>
   );
 }
