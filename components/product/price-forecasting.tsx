@@ -106,40 +106,14 @@ export function PriceForecasting({ productId }: PriceForecastingProps) {
   ];
 
   useEffect(() => {
-    const fetchForecastData = async () => {
-      try {
-        const response = await fetch(
-          `/api/v1/products/${productId}/price-forecast?days=30`
-        );
+    // Use mock data directly instead of attempting to connect to backend API
+    // Backend endpoint is not yet implemented
+    setForecastData(mockForecastData);
 
-        if (response.ok) {
-          const data = await response.json();
-
-          // Transform API data to our ForecastDataPoint format
-          const transformed = data.forecast.map((point: any) => ({
-            date: point.date,
-            predicted: point.predicted_price,
-            upper: point.upper_bound || point.predicted_price * 1.05, // Add 5% if not provided
-            lower: point.lower_bound || point.predicted_price * 0.95, // Subtract 5% if not provided
-            isActual: point.is_actual || false,
-          }));
-
-          setForecastData(transformed);
-        } else {
-          // If API fails or returns 404, use mock data
-          console.log("Using mock forecast data");
-          setForecastData(mockForecastData);
-        }
-      } catch (error) {
-        console.error("Error fetching price forecast:", error);
-        // Fallback to mock data
-        setForecastData(mockForecastData);
-      }
-    };
-
-    if (productId) {
-      fetchForecastData();
-    }
+    // Add a log message for development purposes
+    console.log(
+      "Using mock forecast data - backend endpoint not implemented yet"
+    );
   }, [productId]);
 
   const currentPrice = 1199.99;

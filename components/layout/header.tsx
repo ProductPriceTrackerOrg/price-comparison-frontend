@@ -166,7 +166,7 @@ export function Header() {
                   <DropdownMenuTrigger asChild>
                     <Button
                       variant="ghost"
-                      className="relative h-10 w-10 rounded-full p-0 overflow-hidden border-2 border-transparent hover:border-blue-500 transition-all duration-200"
+                      className="relative h-10 w-10 rounded-full p-0 overflow-hidden border-2 border-transparent hover:border-blue-500 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                     >
                       <Avatar className="h-full w-full">
                         <AvatarImage
@@ -179,7 +179,20 @@ export function Header() {
                       </Avatar>
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-64 p-2" align="end">
+                  <DropdownMenuContent
+                    sideOffset={6}
+                    className="w-64 p-2"
+                    align="end"
+                    style={
+                      {
+                        "--hover-bg-profile": "#EBF5FF",
+                        "--hover-bg-tracked": "#FEF2F2",
+                        "--hover-bg-settings": "#F9FAFB",
+                        "--hover-bg-admin": "#FFF7ED",
+                        "--hover-bg-signout": "#FEF2F2",
+                      } as React.CSSProperties
+                    }
+                  >
                     <div className="flex items-center justify-start gap-3 p-2 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg mb-1">
                       <Avatar className="h-12 w-12 border-2 border-white shadow-sm">
                         <AvatarImage
@@ -210,11 +223,12 @@ export function Header() {
                     <DropdownMenuSeparator className="my-1" />
                     <DropdownMenuItem
                       asChild
-                      className="p-0 focus:bg-transparent"
+                      className="p-0 focus:bg-transparent focus:text-black"
                     >
                       <Link
                         href="/profile"
-                        className="flex items-center w-full py-2 px-2 rounded-md hover:bg-blue-50 transition-colors duration-150"
+                        className="header-dropdown-item profile flex items-center w-full py-2 px-2 rounded-md transition-colors duration-150 cursor-pointer"
+                        onClick={() => document.body.click()} // Force close dropdown when clicked
                       >
                         <div className="p-1.5 bg-blue-100 rounded-md mr-2">
                           <User className="h-4 w-4 text-blue-600" />
@@ -224,11 +238,12 @@ export function Header() {
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       asChild
-                      className="p-0 focus:bg-transparent"
+                      className="p-0 focus:bg-transparent focus:text-black"
                     >
                       <Link
                         href="/favorites"
-                        className="flex items-center w-full py-2 px-2 rounded-md hover:bg-rose-50 transition-colors duration-150"
+                        className="header-dropdown-item tracked flex items-center w-full py-2 px-2 rounded-md transition-colors duration-150 cursor-pointer"
+                        onClick={() => document.body.click()} // Force close dropdown when clicked
                       >
                         <div className="p-1.5 bg-rose-100 rounded-md mr-2">
                           <Heart className="h-4 w-4 text-rose-600" />
@@ -238,11 +253,12 @@ export function Header() {
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       asChild
-                      className="p-0 focus:bg-transparent"
+                      className="p-0 focus:bg-transparent focus:text-black"
                     >
                       <Link
                         href="/settings"
-                        className="flex items-center w-full py-2 px-2 rounded-md hover:bg-gray-50 transition-colors duration-150"
+                        className="header-dropdown-item settings flex items-center w-full py-2 px-2 rounded-md transition-colors duration-150 cursor-pointer"
+                        onClick={() => document.body.click()} // Force close dropdown when clicked
                       >
                         <div className="p-1.5 bg-gray-100 rounded-md mr-2">
                           <Settings className="h-4 w-4 text-gray-600" />
@@ -257,11 +273,12 @@ export function Header() {
                         <DropdownMenuSeparator className="my-1" />
                         <DropdownMenuItem
                           asChild
-                          className="p-0 focus:bg-transparent"
+                          className="p-0 focus:bg-transparent focus:text-black"
                         >
                           <Link
                             href="/admin"
-                            className="flex items-center w-full py-2 px-2 rounded-md hover:bg-orange-50 transition-colors duration-150"
+                            className="header-dropdown-item admin flex items-center w-full py-2 px-2 rounded-md transition-colors duration-150 cursor-pointer"
+                            onClick={() => document.body.click()} // Force close dropdown when clicked
                           >
                             <div className="p-1.5 bg-orange-100 rounded-md mr-2">
                               <Users className="h-4 w-4 text-orange-600" />
@@ -276,10 +293,13 @@ export function Header() {
 
                     <DropdownMenuSeparator className="my-1" />
                     <DropdownMenuItem
-                      onClick={logout}
-                      className="p-0 focus:bg-transparent"
+                      onClick={() => {
+                        document.body.click(); // Force close dropdown first
+                        setTimeout(() => logout(), 10); // Then logout with small delay
+                      }}
+                      className="p-0 focus:bg-transparent focus:text-red-600"
                     >
-                      <div className="flex items-center w-full py-2 px-2 rounded-md hover:bg-red-50 transition-colors duration-150 cursor-pointer">
+                      <div className="header-dropdown-item signout flex items-center w-full py-2 px-2 rounded-md transition-colors duration-150 cursor-pointer">
                         <div className="p-1.5 bg-red-100 rounded-md mr-2">
                           <LogOut className="h-4 w-4 text-red-600" />
                         </div>
