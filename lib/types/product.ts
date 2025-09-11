@@ -21,6 +21,7 @@ export interface ProductDetails {
   retailer: string;
   retailer_phone?: string;
   retailer_whatsapp?: string;
+  product_url?: string;
   variants: ProductVariant[];
   is_favorited: boolean;
 }

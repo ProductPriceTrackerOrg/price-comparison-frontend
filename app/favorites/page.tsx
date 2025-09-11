@@ -11,77 +11,120 @@ import {
   ShoppingCart,
   RefreshCw,
   Home,
+  AlertCircle,
+  CheckCircle,
+  XCircle,
 } from "lucide-react";
-import { supabase } from "@/lib/supabase";
 import Link from "next/link";
+import {
+  getUserFavorites,
+  removeFromFavorites,
+  FavoriteProduct,
+} from "@/lib/favorites-api";
+import { useToast } from "@/hooks/use-toast";
 
 export default function FavoritesPage() {
   const { user, isLoggedIn } = useAuth();
+  const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
-  const [favorites, setFavorites] = useState<any[]>([]);
+  const [isRemoving, setIsRemoving] = useState<number | null>(null);
+  const [favorites, setFavorites] = useState<FavoriteProduct[]>([]);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchFavorites = async () => {
+    if (!isLoggedIn || !user) return;
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      // Fetch favorites using our API
+      const response = await getUserFavorites();
+      setFavorites(response.favorites);
+
+      // Show success message on manual refresh
+      if (!isLoading) {
+        toast({
+          title: "Products refreshed",
+          description: (
+            <div className="flex items-center">
+              <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
+              <span>Your tracked products have been refreshed.</span>
+            </div>
+          ),
+        });
+      }
+    } catch (error: any) {
+      console.error("Error fetching favorites:", error);
+      setError(
+        error.message ||
+          "Failed to load your favorite products. Please try again."
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Handle removing a favorite
+  const handleRemoveFavorite = async (productId: number) => {
+    if (!isLoggedIn || !user) return;
+
+    setIsRemoving(productId);
+    setError(null);
+
+    try {
+      // Get product name before removing it
+      const productToRemove = favorites.find((p) => p.id === productId);
+      const productName = productToRemove?.name || "Product";
+
+      // Remove from favorites using our API
+      await removeFromFavorites(productId);
+
+      // Update the favorites list
+      setFavorites((prevFavorites) =>
+        prevFavorites.filter((favorite) => favorite.id !== productId)
+      );
+
+      // Show success toast
+      toast({
+        title: "Product removed from tracked items",
+        description: (
+          <div className="flex items-center">
+            <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
+            <span>{`${productName.substring(0, 30)}${
+              productName.length > 30 ? "..." : ""
+            } has been removed from your tracked products.`}</span>
+          </div>
+        ),
+      });
+    } catch (error: any) {
+      console.error("Error removing favorite:", error);
+      setError(
+        error.message ||
+          "Failed to remove product from favorites. Please try again."
+      );
+
+      // Show error toast
+      toast({
+        title: "Failed to remove product",
+        description: (
+          <div className="flex items-center">
+            <XCircle className="h-4 w-4 text-red-500 mr-2" />
+            <span>
+              {error.message ||
+                "There was an error removing this product from your tracked items."}
+            </span>
+          </div>
+        ),
+        variant: "destructive",
+      });
+    } finally {
+      setIsRemoving(null);
+    }
+  };
 
   // Fetch user favorites
   useEffect(() => {
-    if (!isLoggedIn || !user) return;
-
-    const fetchFavorites = async () => {
-      setIsLoading(true);
-      try {
-        // Fetch favorites from the UserFavorites table
-        const { data, error } = await supabase
-          .from("UserFavorites")
-          .select(
-            `
-            favorite_id,
-            variant_id
-          `
-          )
-          .eq("user_id", user.id);
-
-        if (error) {
-          throw error;
-        }
-
-        // For now, use mock data since we don't have product details
-        const mockProducts = [
-          {
-            id: 1,
-            name: "Samsung Galaxy S25 Ultra",
-            image: "/placeholder.svg?height=128&width=128",
-            price: 1199.99,
-            oldPrice: 1299.99,
-            store: "Samsung Official Store",
-            inStock: true,
-          },
-          {
-            id: 2,
-            name: "Apple MacBook Pro M3 Pro (16-inch)",
-            image: "/placeholder.svg?height=128&width=128",
-            price: 2499.99,
-            oldPrice: 2699.99,
-            store: "Apple Store",
-            inStock: true,
-          },
-          {
-            id: 3,
-            name: "Sony WH-1000XM5 Wireless Headphones",
-            image: "/placeholder.svg?height=128&width=128",
-            price: 349.99,
-            oldPrice: 399.99,
-            store: "Best Buy",
-            inStock: false,
-          },
-        ];
-
-        // In the future, fetch actual product details based on variant_id
-        setFavorites(mockProducts);
-      } catch (error) {
-        console.error("Error fetching favorites:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     fetchFavorites();
   }, [isLoggedIn, user]);
 
@@ -123,7 +166,7 @@ export default function FavoritesPage() {
   return (
     <div className="mx-2 md:mx-4 lg:mx-8 xl:mx-12">
       <div className="container max-w-5xl py-6">
-        {/* <div className="flex items-center gap-2 text-sm text-gray-500 mb-4 pl-1">
+        <div className="flex items-center gap-2 text-sm text-gray-500 mb-4 pl-1">
           <Link
             href="/"
             className="flex items-center hover:text-rose-600 transition-colors"
@@ -132,10 +175,10 @@ export default function FavoritesPage() {
             <span>Home</span>
           </Link>
           <span>/</span>
-          <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-800">
+          <span className="bg-clip-text text-transparent bg-gradient-to-r from-rose-600 via-rose-500 to-indigo-600">
             Tracked Products
           </span>
-        </div> */}
+        </div>
         <div className="flex justify-between items-center mb-5">
           <div>
             <h1 className="text-3xl font-bold flex items-center bg-clip-text text-transparent bg-gradient-to-r from-rose-500 to-indigo-600">
@@ -150,6 +193,7 @@ export default function FavoritesPage() {
             variant="outline"
             className="gap-2 bg-gradient-to-r from-rose-50 to-indigo-50 border-rose-200 text-rose-700 hover:bg-rose-100"
             disabled={isLoading}
+            onClick={fetchFavorites}
           >
             <RefreshCw
               className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`}
@@ -157,6 +201,15 @@ export default function FavoritesPage() {
             Refresh
           </Button>
         </div>
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+            <div className="flex items-center">
+              <AlertCircle className="h-5 w-5 text-red-500 mr-2" />
+              <p className="text-red-800">{error}</p>
+            </div>
+          </div>
+        )}
+
         {isLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[1, 2, 3].map((i) => (
@@ -165,17 +218,21 @@ export default function FavoritesPage() {
                 className="animate-pulse overflow-hidden border border-rose-100 shadow-md"
               >
                 <CardContent className="p-0">
-                  <div className="flex border-b border-rose-50">
-                    <div className="w-1/3 bg-rose-50/30 p-6 flex items-center justify-center">
-                      <div className="bg-gray-200 rounded-md w-20 h-20"></div>
+                  <div className="flex border-b border-rose-100">
+                    <div className="w-1/3 bg-gradient-to-br from-rose-50 to-indigo-50 p-4 flex items-center justify-center">
+                      <div className="bg-gray-200/50 rounded-md w-20 h-20"></div>
                     </div>
-                    <div className="w-2/3 p-4 space-y-2">
-                      <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                      <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-                      <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+                    <div className="w-2/3 p-4 space-y-3">
+                      <div className="h-5 bg-gray-200/70 rounded w-3/4"></div>
+                      <div className="h-4 bg-gray-200/70 rounded w-1/2"></div>
+                      <div className="h-3 bg-gray-200/70 rounded w-2/3"></div>
                     </div>
                   </div>
-                  <div className="h-10 bg-gray-50"></div>
+                  <div className="flex border-t border-rose-100 h-12">
+                    <div className="flex-1 border-r border-rose-100"></div>
+                    <div className="flex-1 border-r border-rose-100"></div>
+                    <div className="flex-1"></div>
+                  </div>
                 </CardContent>
               </Card>
             ))}
@@ -193,7 +250,10 @@ export default function FavoritesPage() {
                       <div className="relative group-hover:scale-105 transition-transform duration-300">
                         <div className="absolute -inset-1 bg-gradient-to-r from-rose-200 to-indigo-200 rounded-full blur-sm opacity-30 group-hover:opacity-70 transition-opacity duration-300"></div>
                         <img
-                          src={product.image}
+                          src={
+                            product.image ||
+                            "/placeholder.svg?height=128&width=128"
+                          }
                           alt={product.name}
                           className="h-20 w-auto object-contain relative"
                         />
@@ -207,55 +267,100 @@ export default function FavoritesPage() {
                         <span className="text-lg font-bold text-rose-600">
                           Rs {product.price.toLocaleString()}
                         </span>
-                        {product.oldPrice && (
-                          <span className="text-sm text-gray-400 line-through">
-                            Rs {product.oldPrice.toLocaleString()}
-                          </span>
-                        )}
-                        {product.oldPrice && (
+                        {product.original_price &&
+                          product.original_price > product.price && (
+                            <span className="text-sm text-gray-400 line-through">
+                              Rs {product.original_price.toLocaleString()}
+                            </span>
+                          )}
+                        {product.discount && product.discount > 0 && (
                           <span className="text-xs font-medium text-green-600 bg-green-50 px-1.5 py-0.5 rounded">
-                            Save{" "}
-                            {Math.round(
-                              ((product.oldPrice - product.price) /
-                                product.oldPrice) *
-                                100
-                            )}
-                            %
+                            Save {product.discount}%
                           </span>
                         )}
                       </div>
                       <p className="text-xs text-gray-600 mt-2 flex items-center">
-                        {product.inStock ? (
+                        {product.is_available ? (
                           <span className="inline-block w-2 h-2 rounded-full bg-green-500 mr-1"></span>
                         ) : (
                           <span className="inline-block w-2 h-2 rounded-full bg-red-500 mr-1"></span>
                         )}
-                        {product.store} •{" "}
-                        {product.inStock ? "In Stock" : "Out of Stock"}
+                        {product.retailer} •{" "}
+                        {product.is_available ? "In Stock" : "Out of Stock"}
                       </p>
                     </div>
-                  </div>
-
+                  </div>{" "}
                   <div className="flex border-t border-rose-100">
-                    <button className="flex-1 py-3 px-2 text-indigo-600 hover:bg-indigo-50 font-medium text-sm transition-all duration-200 flex items-center justify-center gap-2 group">
+                    <button
+                      onClick={() => {
+                        toast({
+                          title: "Price Alert Feature",
+                          description: (
+                            <div className="flex items-center">
+                              <Star className="h-4 w-4 text-amber-500 mr-2" />
+                              <span>
+                                Price alert functionality will be available
+                                soon!
+                              </span>
+                            </div>
+                          ),
+                        });
+                      }}
+                      className="flex-1 py-3 px-2 text-indigo-600 hover:bg-indigo-50 font-medium text-sm transition-all duration-200 flex items-center justify-center gap-2 group"
+                    >
                       <Star className="h-4 w-4 group-hover:scale-110 transition-transform duration-200" />
                       <span className="group-hover:underline underline-offset-2">
                         Price Alert
                       </span>
                     </button>
                     <div className="w-px bg-rose-100"></div>
-                    <button className="flex-1 py-3 px-2 text-green-600 hover:bg-green-50 font-medium text-sm transition-all duration-200 flex items-center justify-center gap-2 group">
+                    <Link
+                      href={`/product/${product.id}`}
+                      className="flex-1 py-3 px-2 text-green-600 hover:bg-green-50 font-medium text-sm transition-all duration-200 flex items-center justify-center gap-2 group"
+                    >
                       <ShoppingCart className="h-4 w-4 group-hover:scale-110 transition-transform duration-200" />
                       <span className="group-hover:underline underline-offset-2">
-                        Buy Now
+                        View
                       </span>
-                    </button>
+                    </Link>
                     <div className="w-px bg-rose-100"></div>
-                    <button className="flex-1 py-3 px-2 text-rose-600 hover:bg-rose-50 font-medium text-sm transition-all duration-200 flex items-center justify-center gap-2 group">
-                      <Trash2 className="h-4 w-4 group-hover:scale-110 transition-transform duration-200" />
-                      <span className="group-hover:underline underline-offset-2">
-                        Remove
-                      </span>
+                    <button
+                      onClick={() => handleRemoveFavorite(product.id)}
+                      disabled={isRemoving === product.id}
+                      className="flex-1 py-3 px-2 text-rose-600 hover:bg-rose-50 font-medium text-sm transition-all duration-200 flex items-center justify-center gap-2 group"
+                    >
+                      {isRemoving === product.id ? (
+                        <span className="flex items-center">
+                          <svg
+                            className="animate-spin -ml-1 mr-1 h-4 w-4"
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                          >
+                            <circle
+                              className="opacity-25"
+                              cx="12"
+                              cy="12"
+                              r="10"
+                              stroke="currentColor"
+                              strokeWidth="4"
+                            ></circle>
+                            <path
+                              className="opacity-75"
+                              fill="currentColor"
+                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                            ></path>
+                          </svg>
+                          Removing...
+                        </span>
+                      ) : (
+                        <>
+                          <Trash2 className="h-4 w-4 group-hover:scale-110 transition-transform duration-200" />
+                          <span className="group-hover:underline underline-offset-2">
+                            Remove
+                          </span>
+                        </>
+                      )}
                     </button>
                   </div>
                 </CardContent>
@@ -280,9 +385,11 @@ export default function FavoritesPage() {
                 prices across different retailers. We'll notify you when prices
                 change.
               </p>
-              <Button className="mt-8 bg-gradient-to-r from-rose-500 to-indigo-600 hover:from-rose-600 hover:to-indigo-700 text-white px-6 py-2 rounded-full shadow-md hover:shadow-lg transition-all duration-300">
-                Browse Products
-              </Button>
+              <Link href="/trending">
+                <Button className="mt-8 bg-gradient-to-r from-rose-500 to-indigo-600 hover:from-rose-600 hover:to-indigo-700 text-white px-6 py-2 rounded-full shadow-md hover:shadow-lg transition-all duration-300">
+                  Browse Products
+                </Button>
+              </Link>
             </CardContent>
           </Card>
         )}

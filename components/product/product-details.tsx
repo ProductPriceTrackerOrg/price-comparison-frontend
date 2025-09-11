@@ -16,12 +16,35 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { ProductChat } from "@/components/product/product-chat";
 import { useAuth } from "@/contexts/auth-context";
-import { toggleProductFavorite, isProductFavorited, getUserFavorites } from "@/lib/favorites-service";
+import {
+  toggleProductFavorite,
+  isProductFavorited,
+  getUserFavorites,
+} from "@/lib/favorites-service";
 import { useRouter } from "next/navigation";
 import { SignInDialog } from "@/components/auth/sign-in-dialog";
 
 interface ProductDetailsProps {
-  product: any;
+  product: {
+    id: number;
+    name: string;
+    brand?: string;
+    category?: string;
+    price: number;
+    originalPrice?: number;
+    retailer?: string;
+    retailerPhone?: string;
+    retailerWhatsapp?: string;
+    productUrl?: string; // New field for product URL
+    inStock: boolean;
+    image?: string;
+    description?: string;
+    discount?: number;
+    isFavorited?: boolean;
+    variants?: any[];
+    images?: string[];
+    specifications?: Record<string, string>;
+  };
 }
 
 export function ProductDetails({ product }: ProductDetailsProps) {
@@ -66,16 +89,18 @@ export function ProductDetails({ product }: ProductDetailsProps) {
 
     try {
       const result = await toggleProductFavorite(product.id, user.id);
-      
+
       setIsFavorited(result.isFavorited);
-      
+
       toast({
-        title: result.isFavorited ? "Added to tracking" : "Removed from tracking",
+        title: result.isFavorited
+          ? "Added to tracking"
+          : "Removed from tracking",
         description: result.isFavorited
           ? `${product.name} added to your tracked products`
           : `${product.name} removed from your tracked products`,
       });
-      
+
       if (result.error) {
         throw result.error;
       }
@@ -193,7 +218,11 @@ export function ProductDetails({ product }: ProductDetailsProps) {
                 <span className="font-semibold">{product.retailer}</span>
               </div>
               <Button variant="outline" size="sm" asChild>
-                <a href="#" target="_blank" rel="noopener noreferrer">
+                <a
+                  href={product.productUrl || "#"}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
                   <ExternalLink className="mr-2 h-4 w-4" />
                   Visit Store
                 </a>
@@ -223,16 +252,34 @@ export function ProductDetails({ product }: ProductDetailsProps) {
           >
             {isLoading || isCheckingStatus ? (
               <span className="flex items-center">
-                <svg className="animate-spin -ml-1 mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                <svg
+                  className="animate-spin -ml-1 mr-2 h-4 w-4"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
                 </svg>
                 {isCheckingStatus ? "Checking..." : "Processing..."}
               </span>
             ) : (
               <>
                 <Heart
-                  className={`mr-2 h-4 w-4 ${isFavorited ? "fill-current" : ""}`}
+                  className={`mr-2 h-4 w-4 ${
+                    isFavorited ? "fill-current" : ""
+                  }`}
                 />
                 {isFavorited ? "Tracking" : "Track Price"}
               </>
@@ -243,7 +290,13 @@ export function ProductDetails({ product }: ProductDetailsProps) {
             Share
           </Button>
           <Button variant="outline" asChild>
-            <a href="#" target="_blank" rel="noopener noreferrer">
+            <a
+              href={`https://www.google.com/search?q=${encodeURIComponent(
+                product.name
+              )}`}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
               <Eye className="mr-2 h-4 w-4" />
               View on Google
             </a>
@@ -268,10 +321,10 @@ export function ProductDetails({ product }: ProductDetailsProps) {
           </div>
         )}
       </div>
-      
+
       {/* Sign In Dialog */}
-      <SignInDialog 
-        isOpen={showAuthDialog} 
+      <SignInDialog
+        isOpen={showAuthDialog}
         setIsOpen={setShowAuthDialog}
         title="Sign in to track prices"
         message="You need to be signed in to track product prices and get notifications on price changes."

@@ -5,8 +5,6 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import { AlertTriangle } from "lucide-react";
 
-
-
 import { Button } from "@/components/ui/button";
 import { ProductDetails } from "@/components/product/product-details";
 import { PriceHistory } from "@/components/product/price-history";
@@ -52,6 +50,7 @@ export default function ProductPage() {
           retailer: data.product.retailer,
           retailerPhone: data.product.retailer_phone,
           retailerWhatsapp: data.product.retailer_whatsapp,
+          productUrl: data.product.product_url,
           inStock: mainVariant?.is_available || false,
           image:
             data.product.image || data.product.images[0] || "/placeholder.svg",
@@ -84,8 +83,6 @@ export default function ProductPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-background">
-        
-        
         <main className="container mx-auto px-4 py-8">
           {/* Breadcrumb Navigation */}
           <div className="flex items-center text-sm text-muted-foreground mb-4">
@@ -107,7 +104,6 @@ export default function ProductPage() {
             </div>
           </div>
         </main>
-        
       </div>
     );
   }
@@ -115,8 +111,6 @@ export default function ProductPage() {
   if (error || !product) {
     return (
       <div className="min-h-screen bg-background">
-        
-        
         <main className="container mx-auto px-4 py-8">
           {/* Breadcrumb Navigation */}
           <div className="flex items-center text-sm text-muted-foreground mb-4">
@@ -148,16 +142,12 @@ export default function ProductPage() {
             </div>
           </div>
         </main>
-        
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-background">
-      
-      
-
       <main className="container mx-auto px-4 py-8 space-y-12">
         {/* Breadcrumb Navigation */}
         <div className="flex items-center text-sm text-muted-foreground mb-4">
@@ -175,8 +165,6 @@ export default function ProductPage() {
         <SimilarProducts productId={productId} />
         <ProductRecommendations productId={productId} />
       </main>
-
-      
     </div>
   );
 }
