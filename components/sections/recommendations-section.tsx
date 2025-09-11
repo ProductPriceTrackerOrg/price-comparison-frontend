@@ -8,82 +8,166 @@ import { Sparkles, TrendingUp, Users, Heart } from "lucide-react";
 export function RecommendationsSection() {
   const { isLoggedIn } = useAuth();
 
-  // Mock recommendation data
+  // Using real product data
   const recommendations = {
     forYou: [
       {
-        id: 1,
-        name: "Samsung Galaxy S24 Ultra",
-        brand: "Samsung",
-        category: "Smartphones",
-        price: 1199.99,
-        originalPrice: 1299.99,
-        retailer: "TechStore",
+        id: 3568948440,
+        name: "UGREEN 3.5mm Male to 3.5mm Male Braided Cable 1m",
+        brand: "SimplyTek",
+        category: "Accessories",
+        price: 999,
+        originalPrice: 1499,
+        retailer: "simplytek",
         inStock: true,
-        image: "/placeholder.svg?height=200&width=200",
-        discount: 8,
+        image:
+          "https://cdn.shopify.com/s/files/1/0822/2058/1183/files/UGREEN3.5mmMaleto3.5mmMaleCableGoldPlatedMetalCasewithBraid1m_Black_50361_SimplyTek_Srilanka.webp?v=1697530979",
+        discount: 33.36,
       },
       {
-        id: 2,
-        name: "MacBook Air M3",
-        brand: "Apple",
-        category: "Laptops",
-        price: 1099.99,
-        originalPrice: 1199.99,
-        retailer: "AppleStore",
+        id: 2752769646,
+        name: "Aspor A907 Car Charger",
+        brand: "SimplyTek",
+        category: "Car Accessories",
+        price: 999,
+        originalPrice: 1499,
+        retailer: "simplytek",
         inStock: true,
-        image: "/placeholder.svg?height=200&width=200",
-        discount: 8,
+        image:
+          "https://cdn.shopify.com/s/files/1/0822/2058/1183/files/buy-aspor-a907-power-delivery-fast-car-charger-20w-white-simplytek-lk.png?v=1694426768",
+        discount: 33.36,
+      },
+      {
+        id: 1237805095,
+        name: "Ugreen 10625 3.5mm Male To 6.35 Male Stereo Audio Cable",
+        brand: "Ugreen",
+        category: "Accessories",
+        price: 2340.43,
+        originalPrice: 3500,
+        retailer: "appleme",
+        inStock: true,
+        image:
+          "https://appleme.lk/wp-content/uploads/2024/02/Ugreen-10625-3.5mm-Male-To-6.35-Male-Stereo-Audio-Cable-1M-by-otc.lk-in-Sri-Lanka.jpg",
+        discount: 33.13,
+      },
+      {
+        id: 1062839221,
+        name: "Phone Mount for Car CZ019-30",
+        brand: "Phone",
+        category: "Car Accessories",
+        price: 895,
+        originalPrice: 1341,
+        retailer: "appleme",
+        inStock: true,
+        image:
+          "https://appleme.lk/wp-content/uploads/2023/07/Phone-Mount-for-Car-CZ019-30-by-otc.lk-in-Sri-Lanka8.jpg",
+        discount: 33.26,
       },
     ],
     trending: [
       {
-        id: 3,
-        name: "Sony WH-1000XM5",
-        brand: "Sony",
-        category: "Headphones",
-        price: 349.99,
-        originalPrice: 399.99,
-        retailer: "AudioHub",
+        id: 2479411966,
+        name: "Addlink micro SD 64GB XC (Class U3) 100MB/s",
+        brand: "SimplyTek",
+        category: "Memory Cards",
+        price: 2999,
+        originalPrice: 4499,
+        retailer: "simplytek",
         inStock: true,
-        image: "/placeholder.svg?height=200&width=200",
-        discount: 13,
+        image:
+          "https://cdn.shopify.com/s/files/1/0822/2058/1183/files/addlink-64gb-micro-sd-card-sri-lanka.jpg?v=1694424386",
+        discount: 33.34,
       },
       {
-        id: 4,
-        name: "iPad Pro 12.9",
-        brand: "Apple",
-        category: "Tablets",
-        price: 1099.99,
-        retailer: "TechMart",
+        id: 3705271816,
+        name: "Noise Pop Buds Truly Wireless Earbuds",
+        brand: "SimplyTek",
+        category: "Audio",
+        price: 3999,
+        originalPrice: 5999,
+        retailer: "simplytek",
         inStock: true,
-        image: "/placeholder.svg?height=200&width=200",
+        image:
+          "https://cdn.shopify.com/s/files/1/0822/2058/1183/files/noise-pop-buds-black-simplytek-sri-lanka.png?v=1729670098",
+        discount: 33.34,
+      },
+      {
+        id: 3470575700,
+        name: "SanDisk Ultra 64GB SDXC 140MB/s UHS-I Memory Card",
+        brand: "SanDisk",
+        category: "Memory Cards",
+        price: 4361.7,
+        originalPrice: 6490,
+        retailer: "appleme",
+        inStock: true,
+        image: "https://appleme.lk/wp-content/uploads/2023/08/1-110.jpg",
+        discount: 32.79,
+      },
+      {
+        id: 3909295080,
+        name: "Anker 633 Magnetic Battery 10000mah Powerbank",
+        brand: "SimplyTek",
+        category: "Power Banks",
+        price: 19999,
+        originalPrice: 29999,
+        retailer: "simplytek",
+        inStock: true,
+        image:
+          "https://cdn.shopify.com/s/files/1/0822/2058/1183/files/Anker-633-Magnetic-Battery-MagGo-SIMPLYTEK-LK-2.jpg?v=1694426744",
+        discount: 33.33,
       },
     ],
     collaborative: [
       {
-        id: 5,
-        name: "Dell XPS 13",
-        brand: "Dell",
-        category: "Laptops",
-        price: 899.99,
-        originalPrice: 1099.99,
-        retailer: "ComputerHub",
+        id: 838075928,
+        name: "Xiaomi Haylou RT LS05S Smart Watch",
+        brand: "Xiaomi",
+        category: "Wearables",
+        price: 12756,
+        originalPrice: 18990,
+        retailer: "appleme",
         inStock: true,
-        image: "/placeholder.svg?height=200&width=200",
-        discount: 18,
+        image:
+          "https://appleme.lk/wp-content/uploads/2021/08/Xiaomi-Haylou-RT-LS05S-Smart-Watch.jpg",
+        discount: 32.83,
       },
       {
-        id: 6,
-        name: "AirPods Pro 2",
-        brand: "Apple",
-        category: "Audio",
-        price: 199.99,
-        originalPrice: 249.99,
-        retailer: "AudioStore",
+        id: 240898780,
+        name: "HK10 Pro Max plus Gen7 Series 10 Smart Watch",
+        brand: "HK10",
+        category: "Wearables",
+        price: 9042.55,
+        originalPrice: 13500,
+        retailer: "appleme",
         inStock: true,
-        image: "/placeholder.svg?height=200&width=200",
-        discount: 20,
+        image:
+          "https://appleme.lk/wp-content/uploads/2025/03/HK10-Pro-Max-Gen7-Series-10-Smart-Watch-2025-by-appleme.lk-01.webp",
+        discount: 33.02,
+      },
+      {
+        id: 107067607,
+        name: "MTB Camera Lens Protector for iPhone 14 Pro Max",
+        brand: "MTB",
+        category: "Phone Accessories",
+        price: 2330,
+        originalPrice: 3490,
+        retailer: "appleme",
+        inStock: true,
+        image: "https://appleme.lk/wp-content/uploads/2022/09/NNEEE-12.jpg",
+        discount: 33.24,
+      },
+      {
+        id: 2602987338,
+        name: "Mtb Ultra Thin Camera Lens for Galaxy S23 Ultra",
+        brand: "Mtb",
+        category: "Phone Accessories",
+        price: 2011,
+        originalPrice: 2990,
+        retailer: "appleme",
+        inStock: true,
+        image:
+          "https://appleme.lk/wp-content/uploads/2023/03/s23-ultra-lens.png",
+        discount: 32.74,
       },
     ],
   };
@@ -139,7 +223,7 @@ export function RecommendationsSection() {
                   Recommended for You
                 </h3>
                 <p className="text-gray-600 text-sm mt-1">
-                  Tailored to your interests
+                  Essential cables and chargers for your devices
                 </p>
               </div>
             </div>
@@ -174,7 +258,9 @@ export function RecommendationsSection() {
                 <h3 className="text-2xl font-bold text-gray-900">
                   Trending Products
                 </h3>
-                <p className="text-gray-600 text-sm mt-1">Popular right now</p>
+                <p className="text-gray-600 text-sm mt-1">
+                  Top storage, audio, and power solutions
+                </p>
               </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -209,7 +295,9 @@ export function RecommendationsSection() {
                 <h3 className="text-2xl font-bold text-gray-900">
                   Users Also Bought
                 </h3>
-                <p className="text-gray-600 text-sm mt-1">Customer favorites</p>
+                <p className="text-gray-600 text-sm mt-1">
+                  Smart watches and camera protection
+                </p>
               </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

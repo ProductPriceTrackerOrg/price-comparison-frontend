@@ -52,11 +52,18 @@ export function ProductDetails({ product }: ProductDetailsProps) {
             alt={product.name}
             className="w-full h-96 object-cover rounded-lg"
           />
-          {product.discount && product.originalPrice && (
-            <Badge className="absolute top-4 left-4 bg-red-500 text-white">
-              -{product.discount}% OFF
-            </Badge>
-          )}
+          {(() => {
+            if (product.discount && product.originalPrice) {
+              return (
+                <>
+                  <Badge className="absolute top-4 left-4 bg-red-500 text-white">
+                    -{product.discount}% OFF
+                  </Badge>
+                </>
+              );
+            }
+            return null;
+          })()}
         </div>
 
         {/* Product Chat - Isolate from page scroll events */}
@@ -90,15 +97,20 @@ export function ProductDetails({ product }: ProductDetailsProps) {
                 Rs {product.originalPrice.toLocaleString("en-US")}
               </span>
             )}
-            {product.discount && product.originalPrice && (
-              <Badge variant="destructive">
-                Save Rs{" "}
-                {(product.originalPrice - product.price).toLocaleString(
-                  "en-US",
-                  { minimumFractionDigits: 2, maximumFractionDigits: 2 }
-                )}
-              </Badge>
-            )}
+            {(() => {
+              if (product.discount && product.originalPrice) {
+                return (
+                  <Badge variant="destructive">
+                    Save Rs{" "}
+                    {(product.originalPrice - product.price).toLocaleString(
+                      "en-US",
+                      { minimumFractionDigits: 2, maximumFractionDigits: 2 }
+                    )}
+                  </Badge>
+                );
+              }
+              return null;
+            })()}
           </div>
 
           <Badge

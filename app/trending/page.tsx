@@ -81,21 +81,23 @@ const generatePlaceholderStats = (score: number) => {
   // Generate some placeholder data based on the trend score
   const baseViews = Math.floor(score * 100 + Math.random() * 2000);
   const baseFavorites = Math.floor(baseViews * (0.2 + Math.random() * 0.1));
-  
+
   const formatNumber = (num: number): string => {
     if (num >= 1000) {
       return `${(num / 1000).toFixed(1)}K`;
     }
     return num.toString();
   };
-  
+
   return {
     views: formatNumber(baseViews),
     favorites: formatNumber(baseFavorites),
     daysInTrending: Math.max(1, Math.floor(Math.random() * 20)),
     trendingPosition: 0, // Will be set based on the array index
-    trendingChange: Math.random() > 0.6 ? "up" : Math.random() > 0.3 ? "down" : "new",
-    lastWeekPosition: Math.random() > 0.2 ? Math.floor(Math.random() * 10) + 1 : null,
+    trendingChange:
+      Math.random() > 0.6 ? "up" : Math.random() > 0.3 ? "down" : "new",
+    lastWeekPosition:
+      Math.random() > 0.2 ? Math.floor(Math.random() * 10) + 1 : null,
   };
 };
 
@@ -106,10 +108,12 @@ export default function TrendingPage() {
   const [sortBy, setSortBy] = useState("price_change"); // Always default to price_change
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [trendingData, setTrendingData] = useState<TrendingResponse | null>(null);
-  const [retailers, setRetailers] = useState<{value: string, label: string}[]>([
-    { value: "all", label: "All Retailers" }
-  ]);
+  const [trendingData, setTrendingData] = useState<TrendingResponse | null>(
+    null
+  );
+  const [retailers, setRetailers] = useState<
+    { value: string; label: string }[]
+  >([{ value: "all", label: "All Retailers" }]);
   const [selectedRetailer, setSelectedRetailer] = useState("all");
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(20);
@@ -155,17 +159,19 @@ export default function TrendingPage() {
     const fetchTrendingProducts = async () => {
       setIsLoading(true);
       setError(null);
-      
+
       try {
         // Build the API URL with query parameters
-        const apiUrl = new URL(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/trending`);
-        
+        const apiUrl = new URL(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/v1/trending`
+        );
+
         // Always set these parameters
         apiUrl.searchParams.set("sort", sortBy);
         apiUrl.searchParams.set("type", "trends"); // Always set to trends
         apiUrl.searchParams.set("period", timeRange);
         apiUrl.searchParams.set("limit", limit.toString());
-        
+
         // Only add category if it's not "all"
         if (selectedCategory !== "all") {
           apiUrl.searchParams.set("category", selectedCategory);
@@ -173,31 +179,31 @@ export default function TrendingPage() {
 
         // Fetch data from API
         const response = await fetch(apiUrl.toString());
-        
+
         if (!response.ok) {
           throw new Error(`API error: ${response.status}`);
         }
-        
+
         const data: TrendingResponse = await response.json();
         setTrendingData(data);
-        
+
         // Extract unique retailers from the data
         if (data.products.length > 0) {
           const uniqueRetailers = [{ value: "all", label: "All Retailers" }];
-          
+
           // Create a Set to track unique retailer IDs
           const retailerIds = new Set();
-          
-          data.products.forEach(product => {
+
+          data.products.forEach((product) => {
             if (!retailerIds.has(product.retailer_id)) {
               retailerIds.add(product.retailer_id);
               uniqueRetailers.push({
                 value: product.retailer_id.toString(),
-                label: product.retailer
+                label: product.retailer,
               });
             }
           });
-          
+
           setRetailers(uniqueRetailers);
         }
       } catch (err) {
@@ -207,7 +213,7 @@ export default function TrendingPage() {
         setIsLoading(false);
       }
     };
-    
+
     fetchTrendingProducts();
   }, [timeRange, selectedCategory, sortBy, limit]);
 
@@ -216,7 +222,10 @@ export default function TrendingPage() {
     ? trendingData.products
         .filter((product) => {
           // Retailer filter
-          if (selectedRetailer !== "all" && product.retailer_id.toString() !== selectedRetailer) {
+          if (
+            selectedRetailer !== "all" &&
+            product.retailer_id.toString() !== selectedRetailer
+          ) {
             return false;
           }
 
@@ -247,8 +256,10 @@ export default function TrendingPage() {
         // Map products to include UI-specific properties
         .map((product, index) => {
           // Generate placeholder metrics for the UI
-          const placeholderStats = generatePlaceholderStats(product.trend_score || 50);
-          
+          const placeholderStats = generatePlaceholderStats(
+            product.trend_score || 50
+          );
+
           // Format the product to match the ProductCard component interface
           return {
             id: product.id,
@@ -267,15 +278,15 @@ export default function TrendingPage() {
             // Additional UI-specific properties for the trending page
             trendingPosition: index + 1,
             favorites: placeholderStats.favorites,
-            trendingChange: 
-              product.price_change && product.price_change < 0 
-                ? "down" 
-                : product.price_change && product.price_change > 0 
-                  ? "up" 
-                  : "neutral",
+            trendingChange:
+              product.price_change && product.price_change < 0
+                ? "down"
+                : product.price_change && product.price_change > 0
+                ? "up"
+                : "neutral",
             lastWeekPosition: placeholderStats.lastWeekPosition,
             daysInTrending: placeholderStats.daysInTrending,
-            isNew: index === 0 || Math.random() > 0.7
+            isNew: index === 0 || Math.random() > 0.7,
           };
         })
     : [];
@@ -303,10 +314,10 @@ export default function TrendingPage() {
         return "text-gray-600";
     }
   };
-  
+
   // Handle load more functionality
   const handleLoadMore = () => {
-    setLimit(prevLimit => prevLimit + 10);
+    setLimit((prevLimit) => prevLimit + 10);
   };
 
   return (
@@ -334,43 +345,48 @@ export default function TrendingPage() {
           )}
 
           {/* Filter Results Summary */}
-          {!isLoading && !error && (selectedCategory !== "all" ||
-            selectedRetailer !== "all" ||
-            selectedPriceRange !== "all") && (
-            <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg max-w-2xl">
-              <p className="text-sm text-blue-800">
-                <span className="font-medium">Filtered Results:</span> Showing{" "}
-                {filteredProducts.length} products
-                {selectedCategory !== "all" && (
-                  <span>
-                    {" "}
-                    in{" "}
-                    {
-                      categories.find((c) => c.value === selectedCategory)
-                        ?.label
-                    }
-                  </span>
-                )}
-                {selectedRetailer !== "all" && (
-                  <span>
-                    {" "}
-                    from{" "}
-                    {retailers.find((r) => r.value === selectedRetailer)?.label}
-                  </span>
-                )}
-                {selectedPriceRange !== "all" && (
-                  <span>
-                    {" "}
-                    priced{" "}
-                    {
-                      priceRanges.find((p) => p.value === selectedPriceRange)
-                        ?.label
-                    }
-                  </span>
-                )}
-              </p>
-            </div>
-          )}
+          {!isLoading &&
+            !error &&
+            (selectedCategory !== "all" ||
+              selectedRetailer !== "all" ||
+              selectedPriceRange !== "all") && (
+              <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg max-w-2xl">
+                <p className="text-sm text-blue-800">
+                  <span className="font-medium">Filtered Results:</span> Showing{" "}
+                  {filteredProducts.length} products
+                  {selectedCategory !== "all" && (
+                    <span>
+                      {" "}
+                      in{" "}
+                      {
+                        categories.find((c) => c.value === selectedCategory)
+                          ?.label
+                      }
+                    </span>
+                  )}
+                  {selectedRetailer !== "all" && (
+                    <span>
+                      {" "}
+                      from{" "}
+                      {
+                        retailers.find((r) => r.value === selectedRetailer)
+                          ?.label
+                      }
+                    </span>
+                  )}
+                  {selectedPriceRange !== "all" && (
+                    <span>
+                      {" "}
+                      priced{" "}
+                      {
+                        priceRanges.find((p) => p.value === selectedPriceRange)
+                          ?.label
+                      }
+                    </span>
+                  )}
+                </p>
+              </div>
+            )}
 
           {/* Filters Section */}
           <div className="mb-8">
@@ -378,7 +394,11 @@ export default function TrendingPage() {
               {/* Time Range Filter */}
               <div className="flex items-center gap-2">
                 <Clock className="h-4 w-4 text-gray-500" />
-                <Select value={timeRange} onValueChange={setTimeRange} disabled={isLoading}>
+                <Select
+                  value={timeRange}
+                  onValueChange={setTimeRange}
+                  disabled={isLoading}
+                >
                   <SelectTrigger className="w-40">
                     <SelectValue />
                   </SelectTrigger>
@@ -477,7 +497,7 @@ export default function TrendingPage() {
               </div>
             </div>
           </div>
-          
+
           {/* Loading state */}
           {isLoading && (
             <div className="flex flex-col items-center justify-center py-20">
@@ -492,11 +512,16 @@ export default function TrendingPage() {
               {/* Statistics Cards */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                 {trendingStats.map((stat, index) => (
-                  <Card key={index} className="hover:shadow-lg transition-shadow">
+                  <Card
+                    key={index}
+                    className="hover:shadow-lg transition-shadow"
+                  >
                     <CardContent className="p-6">
                       <div className="flex items-center justify-between">
                         <div>
-                          <p className="text-sm text-gray-600 mb-1">{stat.title}</p>
+                          <p className="text-sm text-gray-600 mb-1">
+                            {stat.title}
+                          </p>
                           <p className="text-2xl font-bold text-gray-900">
                             {stat.value}
                           </p>
@@ -543,7 +568,8 @@ export default function TrendingPage() {
                         {/* Trending Badge */}
                         <div className="absolute top-3 left-3 z-20 flex gap-2 pointer-events-none">
                           <Badge className="bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white font-bold shadow-lg flex items-center gap-1">
-                            <Fire className="h-3 w-3" />#{product.trendingPosition}
+                            <Fire className="h-3 w-3" />#
+                            {product.trendingPosition}
                           </Badge>
                           {product.trendingChange === "new" && (
                             <Badge className="bg-gradient-to-r from-green-500 to-emerald-500 text-white font-bold">
@@ -619,19 +645,20 @@ export default function TrendingPage() {
                 )}
 
                 {/* Load More Button - only show if there are products */}
-                {filteredProducts.length > 0 && filteredProducts.length >= limit && (
-                  <div className="text-center">
-                    <Button
-                      size="lg"
-                      className="bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600"
-                      onClick={handleLoadMore}
-                      disabled={isLoading}
-                    >
-                      <Fire className="h-4 w-4 mr-2" />
-                      Load More Trending Products
-                    </Button>
-                  </div>
-                )}
+                {filteredProducts.length > 0 &&
+                  filteredProducts.length >= limit && (
+                    <div className="text-center">
+                      <Button
+                        size="lg"
+                        className="bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600"
+                        onClick={handleLoadMore}
+                        disabled={isLoading}
+                      >
+                        <Fire className="h-4 w-4 mr-2" />
+                        Load More Trending Products
+                      </Button>
+                    </div>
+                  )}
               </div>
             </>
           )}

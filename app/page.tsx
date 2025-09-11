@@ -10,6 +10,7 @@ import { LatestProductsSection } from "@/components/sections/latest-products-sec
 import { TopPriceChangesSection } from "@/components/sections/top-price-changes-section";
 import { RetailersSection } from "@/components/sections/retailers-section";
 import { TrendingSection } from "@/components/sections/trending-section";
+import { FeaturedProducts } from "@/components/sections/featured-products";
 import { Footer } from "@/components/layout/footer";
 
 export default function HomePage() {
@@ -25,6 +26,9 @@ export default function HomePage() {
           <FeatureHighlightsSection />
           <CategoriesSection />
           <RecommendationsSection />
+          {/* <div className="container mx-auto px-4 py-12">
+            <FeaturedProducts />
+          </div> */}
           <TrendingSection />
           <LatestProductsSection />
           <TopPriceChangesSection />
