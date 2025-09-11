@@ -27,7 +27,9 @@ import {
   Save,
   RefreshCw,
   AlertTriangle,
+  Home,
 } from "lucide-react";
+import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { format } from "date-fns";
 
@@ -206,9 +208,21 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="mx-4 md:mx-8 lg:mx-16 xl:mx-24">
-      <div className="container max-w-5xl pb-10">
-        <div className="flex justify-between items-center mb-6">
+    <div className="mx-2 md:mx-4 lg:mx-8 xl:mx-12">
+      <div className="container max-w-5xl pb-10 pt-6">
+        {/* <div className="flex items-center gap-2 text-sm text-gray-500 mb-3 pl-1">
+          <Link
+            href="/"
+            className="flex items-center hover:text-blue-600 transition-colors"
+          >
+            <Home className="h-3.5 w-3.5 mr-1" />
+            <span>Home</span>
+          </Link>
+          <span>/</span>
+          <span className="text-gray-900">Profile</span>
+        </div> */}
+
+        <div className="flex justify-between items-center mb-5">
           <div>
             <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-800">
               My Profile
@@ -217,193 +231,244 @@ export default function ProfilePage() {
               View and manage your personal information
             </p>
           </div>
-        {isAdmin && (
-          <div className="flex items-center space-x-1 bg-orange-100 rounded-full px-3 py-1">
-            <Shield className="h-4 w-4 text-orange-600" />
-            <span className="text-sm text-orange-700 font-bold">
-              Administrator
-            </span>
+          {isAdmin && (
+            <div className="flex items-center space-x-1 bg-orange-100 rounded-full px-3 py-1">
+              <Shield className="h-4 w-4 text-orange-600" />
+              <span className="text-sm text-orange-700 font-bold">
+                Administrator
+              </span>
+            </div>
+          )}
+        </div>
+
+        {loadError && (
+          <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-lg mb-6 relative">
+            <button
+              className="absolute top-2 right-2 text-red-500 hover:text-red-700"
+              onClick={() => setLoadError(false)}
+            >
+              ✕
+            </button>
+            <div className="flex items-center">
+              <AlertTriangle className="h-5 w-5 mr-2 text-red-500" />
+              <div>
+                <h4 className="font-medium">Failed to load profile data</h4>
+                <p className="text-sm text-red-600 mt-1">
+                  Using available information. Some details may be incomplete.
+                </p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="mt-2 text-red-600 border-red-200 bg-white hover:bg-red-50"
+                  onClick={() => window.location.reload()}
+                >
+                  <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
+                  Try Again
+                </Button>
+              </div>
+            </div>
           </div>
         )}
-      </div>
 
-      {loadError && (
-        <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-lg mb-6 relative">
-          <button
-            className="absolute top-2 right-2 text-red-500 hover:text-red-700"
-            onClick={() => setLoadError(false)}
-          >
-            ✕
-          </button>
-          <div className="flex items-center">
-            <AlertTriangle className="h-5 w-5 mr-2 text-red-500" />
-            <div>
-              <h4 className="font-medium">Failed to load profile data</h4>
-              <p className="text-sm text-red-600 mt-1">
-                Using available information. Some details may be incomplete.
-              </p>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+          <Card className="md:col-span-1 bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-100 shadow-md hover:shadow-lg transition-shadow duration-300">
+            <CardContent className="p-6 flex flex-col items-center text-center">
+              <div className="w-28 h-28 relative mb-4">
+                <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-400 to-indigo-500 animate-pulse opacity-50"></div>
+                <div className="absolute inset-0.5 rounded-full bg-white flex items-center justify-center">
+                  {user?.user_metadata?.avatar_url ? (
+                    <img
+                      src={user.user_metadata.avatar_url}
+                      alt="Profile"
+                      className="w-full h-full rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-4xl font-bold">
+                      {profileData?.full_name?.charAt(0) ||
+                        user?.user_metadata?.full_name?.charAt(0) ||
+                        user?.email?.charAt(0) ||
+                        "U"}
+                    </div>
+                  )}
+                </div>
+              </div>
+              <h3 className="font-bold text-xl text-blue-900">
+                {profileData?.full_name ||
+                  user?.user_metadata?.full_name ||
+                  "User"}
+              </h3>
+              <p className="text-sm text-blue-700 mb-3">{user?.email}</p>
+
+              {isAdmin && (
+                <div className="inline-flex items-center space-x-1 bg-orange-100 rounded-full px-3 py-1 my-2">
+                  <Shield className="h-3 w-3 text-orange-600" />
+                  <span className="text-xs text-orange-700 font-bold">
+                    Administrator
+                  </span>
+                </div>
+              )}
+
+              <div className="w-full mt-4 pt-4 border-t border-blue-100">
+                <div className="flex justify-between text-sm mb-2">
+                  <span className="text-blue-700">Status:</span>
+                  <span className="font-medium text-blue-900">
+                    {profileData?.is_active ? "Active" : "Inactive"}
+                  </span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-blue-700">Member since:</span>
+                  <span className="font-medium text-blue-900">
+                    {profileData?.created_at
+                      ? format(new Date(profileData.created_at), "MMM d, yyyy")
+                      : "—"}
+                  </span>
+                </div>
+              </div>
+
               <Button
                 variant="outline"
-                size="sm"
-                className="mt-2 text-red-600 border-red-200 bg-white hover:bg-red-50"
-                onClick={() => window.location.reload()}
+                className="mt-4 w-full bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200 text-blue-700 hover:bg-blue-100 hover:text-blue-800"
+                onClick={() => setIsEditing(!isEditing)}
               >
-                <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
-                Try Again
+                {isEditing ? "Cancel Edit" : "Edit Profile"}
               </Button>
-            </div>
-          </div>
-        </div>
-      )}
+            </CardContent>
+          </Card>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-        <Card className="md:col-span-1 bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-100 shadow-md hover:shadow-lg transition-shadow duration-300">
-          <CardContent className="p-6 flex flex-col items-center text-center">
-            <div className="w-28 h-28 relative mb-4">
-              <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-400 to-indigo-500 animate-pulse opacity-50"></div>
-              <div className="absolute inset-0.5 rounded-full bg-white flex items-center justify-center">
-                {user?.user_metadata?.avatar_url ? (
-                  <img
-                    src={user.user_metadata.avatar_url}
-                    alt="Profile"
-                    className="w-full h-full rounded-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-4xl font-bold">
-                    {profileData?.full_name?.charAt(0) ||
-                      user?.user_metadata?.full_name?.charAt(0) ||
-                      user?.email?.charAt(0) ||
-                      "U"}
-                  </div>
-                )}
-              </div>
-            </div>
-            <h3 className="font-bold text-xl text-blue-900">
-              {profileData?.full_name ||
-                user?.user_metadata?.full_name ||
-                "User"}
-            </h3>
-            <p className="text-sm text-blue-700 mb-3">{user?.email}</p>
+          <div className="md:col-span-3">
+            <Tabs defaultValue="personal" className="space-y-6">
+              <TabsList className="bg-gradient-to-r from-blue-100/50 to-indigo-100/50 p-1">
+                <TabsTrigger
+                  value="personal"
+                  className="data-[state=active]:bg-white data-[state=active]:text-blue-700"
+                >
+                  Personal Information
+                </TabsTrigger>
+                <TabsTrigger
+                  value="account"
+                  className="data-[state=active]:bg-white data-[state=active]:text-blue-700"
+                >
+                  Account Settings
+                </TabsTrigger>
+              </TabsList>
 
-            {isAdmin && (
-              <div className="inline-flex items-center space-x-1 bg-orange-100 rounded-full px-3 py-1 my-2">
-                <Shield className="h-3 w-3 text-orange-600" />
-                <span className="text-xs text-orange-700 font-bold">
-                  Administrator
-                </span>
-              </div>
-            )}
+              <TabsContent value="personal">
+                <Card className="shadow-md border-blue-100">
+                  <CardHeader className="bg-gradient-to-r from-blue-50/50 to-indigo-50/50 border-b border-blue-100">
+                    <CardTitle className="flex items-center text-blue-800">
+                      <User className="h-5 w-5 mr-2 text-blue-600" />
+                      Personal Information
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-6">
+                    {isLoading ? (
+                      <div className="flex items-center justify-center h-48">
+                        <RefreshCw className="h-6 w-6 animate-spin text-blue-600" />
+                      </div>
+                    ) : isEditing ? (
+                      <Form {...form}>
+                        <form
+                          onSubmit={form.handleSubmit(onSubmit)}
+                          className="space-y-6"
+                        >
+                          <FormField
+                            control={form.control}
+                            name="fullName"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Full Name</FormLabel>
+                                <FormControl>
+                                  <Input
+                                    placeholder="Enter your full name"
+                                    {...field}
+                                    className="border-blue-200 focus:border-blue-400"
+                                  />
+                                </FormControl>
+                                <FormDescription>
+                                  This is the name that will be displayed on
+                                  your profile.
+                                </FormDescription>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
 
-            <div className="w-full mt-4 pt-4 border-t border-blue-100">
-              <div className="flex justify-between text-sm mb-2">
-                <span className="text-blue-700">Status:</span>
-                <span className="font-medium text-blue-900">
-                  {profileData?.is_active ? "Active" : "Inactive"}
-                </span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-blue-700">Member since:</span>
-                <span className="font-medium text-blue-900">
-                  {profileData?.created_at
-                    ? format(new Date(profileData.created_at), "MMM d, yyyy")
-                    : "—"}
-                </span>
-              </div>
-            </div>
+                          <FormField
+                            control={form.control}
+                            name="email"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Email</FormLabel>
+                                <FormControl>
+                                  <Input
+                                    placeholder="Enter your email"
+                                    {...field}
+                                    className="border-blue-200 focus:border-blue-400"
+                                  />
+                                </FormControl>
+                                <FormDescription>
+                                  Your email address for notifications and
+                                  account recovery.
+                                </FormDescription>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
 
-            <Button
-              variant="outline"
-              className="mt-4 w-full bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200 text-blue-700 hover:bg-blue-100 hover:text-blue-800"
-              onClick={() => setIsEditing(!isEditing)}
-            >
-              {isEditing ? "Cancel Edit" : "Edit Profile"}
-            </Button>
-          </CardContent>
-        </Card>
+                          <Separator className="my-6" />
 
-        <div className="md:col-span-3">
-          <Tabs defaultValue="personal" className="space-y-6">
-            <TabsList className="bg-gradient-to-r from-blue-100/50 to-indigo-100/50 p-1">
-              <TabsTrigger
-                value="personal"
-                className="data-[state=active]:bg-white data-[state=active]:text-blue-700"
-              >
-                Personal Information
-              </TabsTrigger>
-              <TabsTrigger
-                value="account"
-                className="data-[state=active]:bg-white data-[state=active]:text-blue-700"
-              >
-                Account Settings
-              </TabsTrigger>
-            </TabsList>
+                          <div className="flex justify-between items-center">
+                            <div className="flex items-center text-sm text-muted-foreground">
+                              <Calendar className="h-4 w-4 mr-2" />
+                              Account created:{" "}
+                              {profileData?.created_at
+                                ? format(
+                                    new Date(profileData.created_at),
+                                    "PPP"
+                                  )
+                                : "—"}
+                            </div>
+                            <Button
+                              type="submit"
+                              disabled={isLoading}
+                              className="space-x-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+                              onClick={() => {
+                                // Will call onSubmit and then disable editing mode
+                                setTimeout(() => setIsEditing(false), 100);
+                              }}
+                            >
+                              <Save className="h-4 w-4" />
+                              <span>Save Changes</span>
+                            </Button>
+                          </div>
+                        </form>
+                      </Form>
+                    ) : (
+                      <div className="space-y-6">
+                        <div className="p-4 bg-blue-50/50 rounded-lg border border-blue-100">
+                          <div className="mb-4">
+                            <h3 className="text-sm font-semibold text-gray-500 mb-1">
+                              Full Name
+                            </h3>
+                            <p className="text-lg font-medium text-gray-800">
+                              {profileData?.full_name ||
+                                user?.user_metadata?.full_name ||
+                                "Not set"}
+                            </p>
+                          </div>
+                          <div>
+                            <h3 className="text-sm font-semibold text-gray-500 mb-1">
+                              Email Address
+                            </h3>
+                            <p className="text-lg font-medium text-gray-800">
+                              {profileData?.email ||
+                                user?.email ||
+                                "Not available"}
+                            </p>
+                          </div>
+                        </div>
 
-            <TabsContent value="personal">
-              <Card className="shadow-md border-blue-100">
-                <CardHeader className="bg-gradient-to-r from-blue-50/50 to-indigo-50/50 border-b border-blue-100">
-                  <CardTitle className="flex items-center text-blue-800">
-                    <User className="h-5 w-5 mr-2 text-blue-600" />
-                    Personal Information
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-6">
-                  {isLoading ? (
-                    <div className="flex items-center justify-center h-48">
-                      <RefreshCw className="h-6 w-6 animate-spin text-blue-600" />
-                    </div>
-                  ) : isEditing ? (
-                    <Form {...form}>
-                      <form
-                        onSubmit={form.handleSubmit(onSubmit)}
-                        className="space-y-6"
-                      >
-                        <FormField
-                          control={form.control}
-                          name="fullName"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Full Name</FormLabel>
-                              <FormControl>
-                                <Input
-                                  placeholder="Enter your full name"
-                                  {...field}
-                                  className="border-blue-200 focus:border-blue-400"
-                                />
-                              </FormControl>
-                              <FormDescription>
-                                This is the name that will be displayed on your
-                                profile.
-                              </FormDescription>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        <FormField
-                          control={form.control}
-                          name="email"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Email</FormLabel>
-                              <FormControl>
-                                <Input
-                                  placeholder="Enter your email"
-                                  {...field}
-                                  className="border-blue-200 focus:border-blue-400"
-                                />
-                              </FormControl>
-                              <FormDescription>
-                                Your email address for notifications and account
-                                recovery.
-                              </FormDescription>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        <Separator className="my-6" />
-
-                        <div className="flex justify-between items-center">
+                        <div className="flex justify-between items-center px-4">
                           <div className="flex items-center text-sm text-muted-foreground">
                             <Calendar className="h-4 w-4 mr-2" />
                             Account created:{" "}
@@ -412,135 +477,89 @@ export default function ProfilePage() {
                               : "—"}
                           </div>
                           <Button
-                            type="submit"
-                            disabled={isLoading}
-                            className="space-x-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
-                            onClick={() => {
-                              // Will call onSubmit and then disable editing mode
-                              setTimeout(() => setIsEditing(false), 100);
-                            }}
+                            variant="outline"
+                            className="space-x-2 bg-white border-blue-200 text-blue-700 hover:bg-blue-50"
+                            onClick={() => setIsEditing(true)}
                           >
-                            <Save className="h-4 w-4" />
-                            <span>Save Changes</span>
+                            <User className="h-4 w-4" />
+                            <span>Edit Profile</span>
                           </Button>
                         </div>
-                      </form>
-                    </Form>
-                  ) : (
-                    <div className="space-y-6">
-                      <div className="p-4 bg-blue-50/50 rounded-lg border border-blue-100">
-                        <div className="mb-4">
-                          <h3 className="text-sm font-semibold text-gray-500 mb-1">
-                            Full Name
-                          </h3>
-                          <p className="text-lg font-medium text-gray-800">
-                            {profileData?.full_name ||
-                              user?.user_metadata?.full_name ||
-                              "Not set"}
-                          </p>
-                        </div>
-                        <div>
-                          <h3 className="text-sm font-semibold text-gray-500 mb-1">
-                            Email Address
-                          </h3>
-                          <p className="text-lg font-medium text-gray-800">
-                            {profileData?.email ||
-                              user?.email ||
-                              "Not available"}
-                          </p>
-                        </div>
                       </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
 
-                      <div className="flex justify-between items-center px-4">
-                        <div className="flex items-center text-sm text-muted-foreground">
-                          <Calendar className="h-4 w-4 mr-2" />
-                          Account created:{" "}
-                          {profileData?.created_at
-                            ? format(new Date(profileData.created_at), "PPP")
-                            : "—"}
+              <TabsContent value="account">
+                <Card className="shadow-md border-blue-100">
+                  <CardHeader className="bg-gradient-to-r from-blue-50/50 to-indigo-50/50 border-b border-blue-100">
+                    <CardTitle className="flex items-center text-blue-800">
+                      <Shield className="h-5 w-5 mr-2 text-blue-600" />
+                      Account Settings
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-6">
+                    <div className="space-y-6">
+                      <div className="flex justify-between items-start border border-gray-200 p-4 rounded-lg bg-white shadow-sm hover:shadow-md transition-shadow">
+                        <div>
+                          <h3 className="font-medium text-gray-800">
+                            Email Notifications
+                          </h3>
+                          <p className="text-sm text-gray-500">
+                            Configure your notification preferences for alerts
+                            and updates
+                          </p>
                         </div>
                         <Button
                           variant="outline"
-                          className="space-x-2 bg-white border-blue-200 text-blue-700 hover:bg-blue-50"
-                          onClick={() => setIsEditing(true)}
+                          className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200 text-blue-700 hover:bg-blue-100"
                         >
-                          <User className="h-4 w-4" />
-                          <span>Edit Profile</span>
+                          Manage Notifications
+                        </Button>
+                      </div>
+
+                      <div className="flex justify-between items-start border border-gray-200 p-4 rounded-lg bg-white shadow-sm hover:shadow-md transition-shadow">
+                        <div>
+                          <h3 className="font-medium text-gray-800">
+                            Password
+                          </h3>
+                          <p className="text-sm text-gray-500">
+                            Change your password or update security settings
+                          </p>
+                        </div>
+                        <Button
+                          variant="outline"
+                          className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200 text-blue-700 hover:bg-blue-100"
+                        >
+                          Reset Password
+                        </Button>
+                      </div>
+
+                      <div className="flex justify-between items-start border border-red-200 p-4 rounded-lg bg-red-50/70 shadow-sm hover:shadow-md transition-shadow">
+                        <div>
+                          <h3 className="font-medium text-red-700">
+                            Delete Account
+                          </h3>
+                          <p className="text-sm text-red-600">
+                            Permanently delete your account and all your data
+                          </p>
+                        </div>
+                        <Button
+                          variant="destructive"
+                          className="bg-red-600 hover:bg-red-700"
+                        >
+                          Delete Account
                         </Button>
                       </div>
                     </div>
-                  )}
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="account">
-              <Card className="shadow-md border-blue-100">
-                <CardHeader className="bg-gradient-to-r from-blue-50/50 to-indigo-50/50 border-b border-blue-100">
-                  <CardTitle className="flex items-center text-blue-800">
-                    <Shield className="h-5 w-5 mr-2 text-blue-600" />
-                    Account Settings
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-6">
-                  <div className="space-y-6">
-                    <div className="flex justify-between items-start border border-gray-200 p-4 rounded-lg bg-white shadow-sm hover:shadow-md transition-shadow">
-                      <div>
-                        <h3 className="font-medium text-gray-800">
-                          Email Notifications
-                        </h3>
-                        <p className="text-sm text-gray-500">
-                          Configure your notification preferences for alerts and
-                          updates
-                        </p>
-                      </div>
-                      <Button
-                        variant="outline"
-                        className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200 text-blue-700 hover:bg-blue-100"
-                      >
-                        Manage Notifications
-                      </Button>
-                    </div>
-
-                    <div className="flex justify-between items-start border border-gray-200 p-4 rounded-lg bg-white shadow-sm hover:shadow-md transition-shadow">
-                      <div>
-                        <h3 className="font-medium text-gray-800">Password</h3>
-                        <p className="text-sm text-gray-500">
-                          Change your password or update security settings
-                        </p>
-                      </div>
-                      <Button
-                        variant="outline"
-                        className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200 text-blue-700 hover:bg-blue-100"
-                      >
-                        Reset Password
-                      </Button>
-                    </div>
-
-                    <div className="flex justify-between items-start border border-red-200 p-4 rounded-lg bg-red-50/70 shadow-sm hover:shadow-md transition-shadow">
-                      <div>
-                        <h3 className="font-medium text-red-700">
-                          Delete Account
-                        </h3>
-                        <p className="text-sm text-red-600">
-                          Permanently delete your account and all your data
-                        </p>
-                      </div>
-                      <Button
-                        variant="destructive"
-                        className="bg-red-600 hover:bg-red-700"
-                      >
-                        Delete Account
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </Tabs>
+          </div>
         </div>
       </div>
-    </div>
     </div>
   );
 }

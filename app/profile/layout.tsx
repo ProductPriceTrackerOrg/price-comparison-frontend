@@ -16,7 +16,7 @@ export default function ProfileLayout({
 }) {
   return (
     <section>
-      <div className="container max-w-5xl py-6">
+      <div className="container max-w-5xl p-6 mx-1 md:mx-2 lg:mx-4 xl:mx-6">
         <Breadcrumb className="mb-6">
           <BreadcrumbList>
             <BreadcrumbItem>
