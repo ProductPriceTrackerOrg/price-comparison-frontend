@@ -209,8 +209,8 @@ export default function ProfilePage() {
 
   return (
     <div className="mx-2 md:mx-4 lg:mx-8 xl:mx-12">
-      <div className="container max-w-5xl pb-10 pt-6">
-        {/* <div className="flex items-center gap-2 text-sm text-gray-500 mb-3 pl-1">
+      <div className="container max-w-5xl pb-10">
+        {/* <div className="flex items-center gap-2 text-sm text-gray-500 mb-4 pl-1">
           <Link
             href="/"
             className="flex items-center hover:text-blue-600 transition-colors"
@@ -222,7 +222,7 @@ export default function ProfilePage() {
           <span className="text-gray-900">Profile</span>
         </div> */}
 
-        <div className="flex justify-between items-center mb-5">
+        <div className="flex justify-between items-center mb-6">
           <div>
             <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-800">
               My Profile

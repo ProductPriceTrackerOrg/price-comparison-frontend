@@ -1,14 +1,5 @@
 /* Custom animations for the Product Price Tracker UI */
 
-@keyframes moveLight {
-  0% {
-    left: -10%;
-  }
-  100% {
-    left: 110%;
-  }
-}
-
 @keyframes float-slow {
   0% {
     transform: translateY(0) rotate(0);
@@ -109,7 +100,8 @@
 }
 
 .animate-header-slide-down {
-  animation: header-slide-down 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  animation: header-slide-down 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)
+    forwards;
 }
 
 .animate-header-slide-up {
