@@ -143,7 +143,7 @@ export default function CategoryProductPage() {
   // Filter states
   const [selectedRetailer, setSelectedRetailer] = useState<string>("all");
   const [selectedBrand, setSelectedBrand] = useState<string>("all");
-  const [sortBy, setSortBy] = useState<SortBy>("price_asc");
+  const [sortBy, setSortBy] = useState<SortBy>("price_desc");
   const [inStockOnly, setInStockOnly] = useState(false);
   const [minPrice, setMinPrice] = useState<number | null>(null);
   const [maxPrice, setMaxPrice] = useState<number | null>(null);
@@ -723,7 +723,7 @@ export default function CategoryProductPage() {
                   <Button
                     onClick={() => {
                       setSelectedRetailer("all");
-                      setSortBy("price_asc");
+                      setSortBy("price_desc");
                       setInStockOnly(false);
                     }}
                     variant="outline"

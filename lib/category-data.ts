@@ -27,7 +27,7 @@ export const categoriesData: Category[] = [
     parent_category_id: null,
     subcategories: [],
     trending_score: 0,
-    icon: "cases_&_screen_protectors",
+    icon: "cases_screen_protectors",
     color: "blue",
   },
   {
@@ -38,7 +38,7 @@ export const categoriesData: Category[] = [
     parent_category_id: null,
     subcategories: [],
     trending_score: 0,
-    icon: "chargers_&_power_banks",
+    icon: "chargers_and_power_banks",
     color: "blue",
   },
   {
@@ -60,7 +60,7 @@ export const categoriesData: Category[] = [
     parent_category_id: null,
     subcategories: [],
     trending_score: 0,
-    icon: "cables_&_adapters",
+    icon: "cables_adapters",
     color: "blue",
   },
   {
@@ -71,18 +71,18 @@ export const categoriesData: Category[] = [
     parent_category_id: null,
     subcategories: [],
     trending_score: 0,
-    icon: "headphones_&_earbuds",
+    icon: "headphones_earbuds",
     color: "blue",
   },
   {
     category_id: 23,
-    name: "Smart Watches & Accessories",
+    name: "Smart Watches",
     description: "Smart Watches & Accessories and accessories",
     product_count: 1183,
     parent_category_id: null,
     subcategories: [],
     trending_score: 0,
-    icon: "smart_watches_&_accessories",
+    icon: "smart_watches_accessories",
     color: "blue",
   },
   {

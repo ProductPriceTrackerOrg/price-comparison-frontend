@@ -131,8 +131,8 @@ export default function FavoritesPage() {
   // If user is not logged in, show a message
   if (!isLoggedIn) {
     return (
-      <div className="mx-2 md:mx-4 lg:mx-8 xl:mx-12">
-        <div className="container max-w-7xl py-6">
+      <div className="mx-4 md:mx-8 lg:mx-16 xl:mx-24">
+        <div className="container max-w-5xl py-10">
           <div className="flex items-center gap-2 text-sm text-gray-500 mb-3 pl-1">
             <Link
               href="/"
@@ -165,8 +165,8 @@ export default function FavoritesPage() {
 
   return (
     <div className="mx-2 md:mx-4 lg:mx-8 xl:mx-12">
-      <div className="container max-w-5xl py-6">
-        <div className="flex items-center gap-2 text-sm text-gray-500 mb-4 pl-1">
+      <div className="container max-w-5xl pb-10">
+        {/* <div className="flex items-center gap-2 text-sm text-gray-500 mb-4 pl-1">
           <Link
             href="/"
             className="flex items-center hover:text-rose-600 transition-colors"
@@ -178,7 +178,7 @@ export default function FavoritesPage() {
           <span className="bg-clip-text text-transparent bg-gradient-to-r from-rose-600 via-rose-500 to-indigo-600">
             Tracked Products
           </span>
-        </div>
+        </div> */}
         <div className="flex justify-between items-center mb-5">
           <div>
             <h1 className="text-3xl font-bold flex items-center bg-clip-text text-transparent bg-gradient-to-r from-rose-500 to-indigo-600">
