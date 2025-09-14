@@ -35,7 +35,13 @@ import {
 } from "lucide-react";
 
 import { ProductCard } from "@/components/product/product-card";
-import { useParams } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
+import {
+  findCategoryBySlug,
+  findCategoryById,
+  categoryNameToSlug,
+} from "@/lib/category-data";
+import { getCategoryProducts } from "@/lib/categories-api";
 
 interface CategoryProduct {
   id: number;
@@ -45,10 +51,38 @@ interface CategoryProduct {
   price: number;
   originalPrice?: number;
   retailer: string;
+  retailer_id?: number;
   inStock: boolean;
   image: string;
   rating?: number;
   discount?: number;
+}
+
+interface CategoryResponse {
+  category: {
+    category_id: number;
+    name: string;
+    description: string;
+    icon: string;
+    color: string;
+    parent_category_id: number | null;
+    product_count: number;
+  };
+  products: CategoryProduct[];
+  pagination: {
+    current_page: number;
+    total_pages: number;
+    total_items: number;
+    items_per_page: number;
+  };
+  filters: {
+    brands: BrandFilter[];
+  };
+}
+
+interface BrandFilter {
+  name: string;
+  count: number;
 }
 
 interface CategoryStats {
@@ -69,7 +103,30 @@ type SortBy = "price_asc" | "price_desc" | "name_asc" | "name_desc";
 
 export default function CategoryProductPage() {
   const params = useParams();
+  const router = useRouter();
   const categorySlug = params.slug as string;
+
+  // Get the category ID from the URL query params if available
+  const searchParams = useSearchParams();
+  const [categoryId, setCategoryId] = useState<number | undefined>();
+
+  useEffect(() => {
+    // Check if we have an ID in the URL query
+    const idParam = searchParams.get("id");
+
+    if (idParam && !isNaN(parseInt(idParam, 10))) {
+      setCategoryId(parseInt(idParam, 10));
+    } else {
+      // Fallback to finding by slug
+      const foundCategory = findCategoryBySlug(categorySlug);
+      setCategoryId(foundCategory?.category_id);
+    }
+  }, [categorySlug, searchParams]);
+
+  // Get category details for display
+  const category = categoryId
+    ? findCategoryById(categoryId)
+    : findCategoryBySlug(categorySlug);
 
   const [products, setProducts] = useState<CategoryProduct[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<CategoryProduct[]>(
@@ -81,11 +138,16 @@ export default function CategoryProductPage() {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [categoryName, setCategoryName] = useState("");
+  const [totalItems, setTotalItems] = useState(0);
 
   // Filter states
   const [selectedRetailer, setSelectedRetailer] = useState<string>("all");
+  const [selectedBrand, setSelectedBrand] = useState<string>("all");
   const [sortBy, setSortBy] = useState<SortBy>("price_asc");
   const [inStockOnly, setInStockOnly] = useState(false);
+  const [minPrice, setMinPrice] = useState<number | null>(null);
+  const [maxPrice, setMaxPrice] = useState<number | null>(null);
+  const [brands, setBrands] = useState<BrandFilter[]>([]);
 
   const retailers: Retailer[] = [
     { id: 1, name: "simplytek" },
@@ -96,59 +158,95 @@ export default function CategoryProductPage() {
   ];
 
   useEffect(() => {
+    if (!categoryId && categorySlug) {
+      // If category not found by slug, handle error
+      setError("Category not found");
+      setLoading(false);
+      return;
+    }
+
+    // Reset state on category change
+    setProducts([]);
+    setPage(1);
+    setHasMore(true);
+
     fetchCategoryProducts();
-  }, [categorySlug]);
+  }, [categorySlug, categoryId]);
 
   useEffect(() => {
     applyFilters();
-  }, [products, selectedRetailer, sortBy, inStockOnly]);
+  }, [
+    products,
+    selectedRetailer,
+    selectedBrand,
+    sortBy,
+    inStockOnly,
+    minPrice,
+    maxPrice,
+  ]);
 
   const fetchCategoryProducts = async () => {
+    if (!categoryId) return;
+
     setLoading(true);
     setError(null);
 
     try {
-      // In a real implementation:
-      // const response = await fetch(`/api/v1/categories/${categorySlug}/products?page=${page}&limit=20`);
-      // if (!response.ok) throw new Error('Failed to fetch category products');
-      // const data = await response.json();
+      // Convert our sortBy to API expected format
+      const apiSortBy = sortBy === "name_desc" ? "name_asc" : sortBy;
 
-      // Mock data for demonstration
-      const mockProducts: CategoryProduct[] = Array.from(
-        { length: 20 },
-        (_, index) => ({
-          id: index + 1,
-          name: `${categoryName} Product ${index + 1}`,
-          brand: ["Apple", "Samsung", "Sony", "LG", "Dell", "HP"][
-            Math.floor(Math.random() * 6)
-          ],
-          category: categoryName || getCategoryNameFromSlug(categorySlug),
-          price: Math.floor(Math.random() * 100000) + 5000,
-          originalPrice: Math.floor(Math.random() * 150000) + 20000,
-          retailer:
-            retailers[Math.floor(Math.random() * retailers.length)].name,
-          inStock: Math.random() > 0.3,
-          image: "/placeholder.svg",
-          rating: Math.floor(Math.random() * 5) + 1,
-          discount: Math.floor(Math.random() * 30) + 5,
-        })
-      );
-
-      setProducts((prevProducts) => [...prevProducts, ...mockProducts]);
-      setCategoryName(getCategoryNameFromSlug(categorySlug));
-
-      // Mock statistics
-      const mockStats: CategoryStats = {
-        totalProducts: 243,
-        avgPrice: 35750,
-        inStockCount: 187,
-        minPrice: 5000,
-        maxPrice: 150000,
-        retailerCount: retailers.length,
+      // Prepare options for the API call
+      const options = {
+        page: page,
+        limit: 20,
+        sortBy: apiSortBy as "price_asc" | "price_desc" | "name_asc",
+        brand: selectedBrand !== "all" ? selectedBrand : undefined,
+        minPrice: minPrice !== null ? minPrice : undefined,
+        maxPrice: maxPrice !== null ? maxPrice : undefined,
       };
 
-      setStats(mockStats);
-      setHasMore(page < 3); // For demonstration: only 3 pages of products
+      // Call our API client function
+      const data = await getCategoryProducts(categoryId, options);
+
+      // Update state with API response
+      setProducts((prevProducts) => {
+        // If it's the first page, replace products, otherwise append
+        return page === 1 ? data.products : [...prevProducts, ...data.products];
+      });
+
+      setCategoryName(data.category.name);
+      setBrands(data.filters.brands || []);
+      setTotalItems(data.pagination.total_items);
+
+      // Update stats
+      const statsData: CategoryStats = {
+        totalProducts: data.pagination.total_items,
+        avgPrice:
+          data.products.length > 0
+            ? data.products.reduce(
+                (sum: number, p: CategoryProduct) => sum + p.price,
+                0
+              ) / data.products.length
+            : 0,
+        inStockCount: data.products.filter((p: CategoryProduct) => p.inStock)
+          .length,
+        minPrice:
+          data.products.length > 0
+            ? Math.min(...data.products.map((p: CategoryProduct) => p.price))
+            : 0,
+        maxPrice:
+          data.products.length > 0
+            ? Math.max(...data.products.map((p: CategoryProduct) => p.price))
+            : 0,
+        retailerCount:
+          data.products.length > 0
+            ? new Set(data.products.map((p: CategoryProduct) => p.retailer))
+                .size
+            : 0,
+      };
+
+      setStats(statsData);
+      setHasMore(data.pagination.current_page < data.pagination.total_pages);
     } catch (error) {
       console.error("Error fetching category products:", error);
       setError("Failed to load products. Please try again.");
@@ -173,9 +271,23 @@ export default function CategoryProductPage() {
       );
     }
 
+    // Brand filter
+    if (selectedBrand !== "all") {
+      filtered = filtered.filter((product) => product.brand === selectedBrand);
+    }
+
     // In stock only filter
     if (inStockOnly) {
       filtered = filtered.filter((product) => product.inStock);
+    }
+
+    // Price range filter (client-side for immediate feedback)
+    if (minPrice !== null) {
+      filtered = filtered.filter((product) => product.price >= minPrice);
+    }
+
+    if (maxPrice !== null) {
+      filtered = filtered.filter((product) => product.price <= maxPrice);
     }
 
     // Sort
@@ -197,12 +309,45 @@ export default function CategoryProductPage() {
     setFilteredProducts(filtered);
   };
 
-  const getCategoryNameFromSlug = (slug: string): string => {
-    // Transform slug like "gaming-peripherals" to "Gaming Peripherals"
-    return slug
-      .split("-")
-      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(" ");
+  // Handle filter changes with API refresh
+  const handleFilterChange = (type: string, value: any) => {
+    // Reset to page 1 when filters change
+    setPage(1);
+
+    switch (type) {
+      case "retailer":
+        setSelectedRetailer(value);
+        break;
+      case "brand":
+        setSelectedBrand(value);
+        break;
+      case "sortBy":
+        setSortBy(value as SortBy);
+        break;
+      case "inStock":
+        setInStockOnly(value);
+        break;
+      case "minPrice":
+        setMinPrice(value);
+        break;
+      case "maxPrice":
+        setMaxPrice(value);
+        break;
+    }
+
+    // Fetch with new filters
+    fetchCategoryProducts();
+  };
+
+  // Function to get price range for filters
+  const getPriceRange = () => {
+    if (!products || products.length === 0) return { min: 0, max: 100000 };
+
+    const prices = products.map((p) => p.price);
+    return {
+      min: Math.floor(Math.min(...prices) / 1000) * 1000, // Round down to nearest thousand
+      max: Math.ceil(Math.max(...prices) / 1000) * 1000, // Round up to nearest thousand
+    };
   };
 
   return (
@@ -381,7 +526,7 @@ export default function CategoryProductPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {/* Retailer Filter */}
                 <div>
                   <label className="text-sm font-medium mb-2 block">
@@ -389,7 +534,9 @@ export default function CategoryProductPage() {
                   </label>
                   <Select
                     value={selectedRetailer}
-                    onValueChange={setSelectedRetailer}
+                    onValueChange={(value) =>
+                      handleFilterChange("retailer", value)
+                    }
                   >
                     <SelectTrigger>
                       <SelectValue />
@@ -405,6 +552,31 @@ export default function CategoryProductPage() {
                   </Select>
                 </div>
 
+                {/* Brand Filter */}
+                <div>
+                  <label className="text-sm font-medium mb-2 block">
+                    Brand
+                  </label>
+                  <Select
+                    value={selectedBrand}
+                    onValueChange={(value) =>
+                      handleFilterChange("brand", value)
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Brands</SelectItem>
+                      {brands.map((brand) => (
+                        <SelectItem key={brand.name} value={brand.name}>
+                          {brand.name} ({brand.count})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
                 {/* Sort By */}
                 <div>
                   <label className="text-sm font-medium mb-2 block">
@@ -412,16 +584,18 @@ export default function CategoryProductPage() {
                   </label>
                   <Select
                     value={sortBy}
-                    onValueChange={(value: SortBy) => setSortBy(value)}
+                    onValueChange={(value: SortBy) =>
+                      handleFilterChange("sortBy", value)
+                    }
                   >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="price_low">
+                      <SelectItem value="price_asc">
                         Price: Low to High
                       </SelectItem>
-                      <SelectItem value="price_high">
+                      <SelectItem value="price_desc">
                         Price: High to Low
                       </SelectItem>
                       <SelectItem value="name_asc">Name: A-Z</SelectItem>
@@ -430,12 +604,48 @@ export default function CategoryProductPage() {
                   </Select>
                 </div>
 
+                {/* Price Range Controls */}
+                <div>
+                  <label className="text-sm font-medium mb-2 block">
+                    Price Range
+                  </label>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="number"
+                      placeholder="Min"
+                      value={minPrice || ""}
+                      onChange={(e) =>
+                        handleFilterChange(
+                          "minPrice",
+                          e.target.value ? Number(e.target.value) : null
+                        )
+                      }
+                      className="w-full p-2 border border-gray-300 rounded-md"
+                    />
+                    <span>to</span>
+                    <input
+                      type="number"
+                      placeholder="Max"
+                      value={maxPrice || ""}
+                      onChange={(e) =>
+                        handleFilterChange(
+                          "maxPrice",
+                          e.target.value ? Number(e.target.value) : null
+                        )
+                      }
+                      className="w-full p-2 border border-gray-300 rounded-md"
+                    />
+                  </div>
+                </div>
+
                 {/* In Stock Only */}
                 <div className="flex items-center space-x-2 pt-6">
                   <Checkbox
                     id="inStock"
                     checked={inStockOnly}
-                    onCheckedChange={(checked) => setInStockOnly(!!checked)}
+                    onCheckedChange={(checked) =>
+                      handleFilterChange("inStock", !!checked)
+                    }
                   />
                   <label
                     htmlFor="inStock"

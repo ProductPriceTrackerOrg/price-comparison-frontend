@@ -10,96 +10,96 @@ import {
   Gamepad2,
   Tablet,
   Monitor,
-  Tv,
   Speaker,
   Mouse,
   Keyboard,
   ArrowRight,
   Sparkles,
   ChevronRight,
+  PlugZap,
+  Cable,
+  Briefcase,
+  ShieldCheck,
+  BatteryCharging,
+  Cpu,
+  CircuitBoard,
+  HardDrive,
+  Printer,
+  Wifi,
+  HeartPulse,
+  Power,
+  Home as HomeIcon,
+  VideoIcon,
+  Mic,
 } from "lucide-react";
 import { useEffect } from "react";
+import { getTopCategories, categoryNameToSlug } from "@/lib/category-data";
 
 // Define animation CSS class names we'll use
 const ANIMATION_FLOAT_SLOW = "animate-float-slow";
 const ANIMATION_FLOAT_REVERSE = "animate-float-reverse";
 const ANIMATION_FADE_IN_UP = "animate-fade-in-up";
 
+// Map category names to Lucide icons
+const getCategoryIcon = (iconName: string) => {
+  const iconMap: Record<string, any> = {
+    mobile_phones: Smartphone,
+    laptops: Laptop,
+    smart_watches_accessories: Watch,
+    headphones_earbuds: Headphones,
+    cameras_drones: Camera,
+    gaming_peripherals: Gamepad2,
+    tablets: Tablet,
+    monitors: Monitor,
+    speakers: Speaker,
+    mice: Mouse,
+    keyboards: Keyboard,
+    cables_adapters: Cable,
+    bags_sleeves_backpacks: Briefcase,
+    cases_screen_protectors: ShieldCheck,
+    chargers_power_banks: BatteryCharging,
+    cpus: Cpu,
+    graphic_cards: CircuitBoard,
+    memory: CircuitBoard,
+    storage: HardDrive,
+    printers_scanners: Printer,
+    networking: Wifi,
+    health_personal_care_electronics: HeartPulse,
+    power_supplies_pc_cooling: Power,
+    smart_home_office_accessories: HomeIcon,
+    motherboards: CircuitBoard,
+    car_accessories: PlugZap,
+    camera_accessories: VideoIcon,
+    webcams_microphones: Mic,
+    // Handle ampersand cases by providing alternative keys
+    cases_and_screen_protectors: ShieldCheck,
+    chargers_and_power_banks: BatteryCharging,
+    cables_and_adapters: Cable,
+    bags_and_sleeves_and_backpacks: Briefcase,
+    power_supplies_and_pc_cooling: Power,
+    smart_home_and_office_accessories: HomeIcon,
+  };
+
+  return iconMap[iconName] || Smartphone;
+};
+
 export function CategoriesSection() {
-  const categories = [
-    {
-      name: "Smartphones",
-      icon: Smartphone,
-      count: "450K+",
-      href: "/category/smartphones",
+  // Get top 8 categories by product count
+  const topCategories = getTopCategories(8).map((category) => {
+    const Icon = getCategoryIcon(category.icon);
+    const slug = categoryNameToSlug(category.name);
+
+    return {
+      name: category.name,
+      icon: Icon,
+      count: category.product_count.toLocaleString(),
+      href: `/category/${slug}`,
       color: "text-blue-500",
       bgColor: "bg-blue-50",
       hoverBg: "group-hover:bg-blue-100",
-    },
-    {
-      name: "Laptops",
-      icon: Laptop,
-      count: "125K+",
-      href: "/category/laptops",
-      color: "text-green-500",
-      bgColor: "bg-green-50",
-      hoverBg: "group-hover:bg-green-100",
-    },
-    {
-      name: "Smart Watches",
-      icon: Watch,
-      count: "85K+",
-      href: "/category/smartwatches",
-      color: "text-purple-500",
-      bgColor: "bg-purple-50",
-      hoverBg: "group-hover:bg-purple-100",
-    },
-    {
-      name: "Headphones",
-      icon: Headphones,
-      count: "200K+",
-      href: "/category/headphones",
-      color: "text-orange-500",
-      bgColor: "bg-orange-50",
-      hoverBg: "group-hover:bg-orange-100",
-    },
-    {
-      name: "Cameras",
-      icon: Camera,
-      count: "75K+",
-      href: "/category/cameras",
-      color: "text-cyan-500",
-      bgColor: "bg-cyan-50",
-      hoverBg: "group-hover:bg-cyan-100",
-    },
-    {
-      name: "Gaming",
-      icon: Gamepad2,
-      count: "150K+",
-      href: "/category/gaming",
-      color: "text-pink-500",
-      bgColor: "bg-pink-50",
-      hoverBg: "group-hover:bg-pink-100",
-    },
-    {
-      name: "Tablets",
-      icon: Tablet,
-      count: "95K+",
-      href: "/category/tablets",
-      color: "text-indigo-500",
-      bgColor: "bg-indigo-50",
-      hoverBg: "group-hover:bg-indigo-100",
-    },
-    {
-      name: "Monitors",
-      icon: Monitor,
-      count: "110K+",
-      href: "/category/monitors",
-      color: "text-red-500",
-      bgColor: "bg-red-50",
-      hoverBg: "group-hover:bg-red-100",
-    },
-  ];
+      category_id: category.category_id,
+    };
+  });
 
   return (
     <section className="py-20 relative overflow-hidden">
@@ -153,7 +153,7 @@ export function CategoriesSection() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8 max-w-7xl mx-auto px-4">
-          {categories.map((category, index) => (
+          {topCategories.map((category, index) => (
             <Link
               key={category.name}
               href={category.href}
