@@ -122,17 +122,24 @@ export function ProductCard({ product }: ProductCardProps) {
 
           {/* Top Badges - Enhanced positioning */}
           <div className="absolute top-3 left-3 flex flex-col gap-2 z-20">
-            {product.discount && (
-              <Badge className="bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white font-bold shadow-xl animate-pulse">
-                -{product.discount}% OFF
-              </Badge>
-            )}
-            {product.isNew && (
-              <Badge className="bg-gradient-to-r from-green-500 to-emerald-500 text-white font-bold shadow-xl">
-                <Zap className="h-3 w-3 mr-1" />
-                NEW
-              </Badge>
-            )}
+            {(() => {
+              if (product.discount) {
+                return (
+                  <Badge className="bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white font-bold shadow-xl animate-pulse">
+                    -{product.discount}% OFF
+                  </Badge>
+                );
+              } else if (product.isNew) {
+                return (
+                  <Badge className="bg-gradient-to-r from-green-500 to-emerald-500 text-white font-bold shadow-xl">
+                    <Zap className="h-3 w-3 mr-1" />
+                    NEW
+                  </Badge>
+                );
+              } else {
+                return null;
+              }
+            })()}
           </div>
 
           {/* Stock Status - Enhanced */}

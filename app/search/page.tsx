@@ -2,11 +2,18 @@
 
 import { useState, useEffect, Suspense, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { SearchFilters, FilterState } from "@/components/search/search-filters";
 import { ProductCard } from "@/components/product/product-card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Filter, AlertTriangle } from "lucide-react";
+import {
+  Search,
+  Filter,
+  AlertTriangle,
+  ChevronRight,
+  Home,
+} from "lucide-react";
 import { SearchSuggestions } from "@/components/search/search-suggestions";
 import api from "@/lib/api";
 import { toast } from "@/hooks/use-toast";
@@ -207,6 +214,27 @@ function SearchContent() {
   return (
     <div className="min-h-screen bg-background">
       <main className="container mx-auto px-4 py-8">
+        {/* Breadcrumb Navigation */}
+        <div className="flex items-center text-sm text-gray-500 mb-6 bg-gray-50 px-4 py-2 rounded-lg border border-gray-100 shadow-sm">
+          <Link
+            href="/"
+            className="flex items-center hover:text-blue-600 transition-colors"
+          >
+            <Home className="h-4 w-4 mr-1" />
+            <span className="font-medium">Home</span>
+          </Link>
+          <ChevronRight className="h-4 w-4 mx-2 text-gray-400" />
+          <span className="text-gray-700 font-medium">Search</span>
+          {query && (
+            <>
+              <ChevronRight className="h-4 w-4 mx-2 text-gray-400" />
+              <span className="text-gray-900 font-medium truncate max-w-[300px] md:max-w-none">
+                "{query}"
+              </span>
+            </>
+          )}
+        </div>
+
         {/* Search Bar */}
         <div className="mb-8">
           <div className="flex space-x-4 mb-4">

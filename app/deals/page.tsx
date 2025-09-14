@@ -143,9 +143,8 @@ export default function DealsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      
       {/* Compact Navigation Bar instead of full Navigation Bar */}
-      <CompactNavigationBar />
+      {/* <CompactNavigationBar /> */}
 
       <main className="bg-gradient-to-br from-blue-50/30 via-white to-purple-50/30">
         <div className="container mx-auto px-4 py-8">
@@ -320,8 +319,6 @@ export default function DealsPage() {
           </div>
         </div>
       </main>
-
-      
     </div>
   );
 }
