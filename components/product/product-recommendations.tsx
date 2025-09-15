@@ -78,7 +78,7 @@ export function ProductRecommendations({
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center space-x-2">
             <Sparkles className="h-5 w-5" />
-            <span>AI Recommendations</span>
+            <span>Recommendations For You</span>
           </CardTitle>
           <Button variant="outline" size="sm">
             <ExternalLink className="mr-2 h-4 w-4" />

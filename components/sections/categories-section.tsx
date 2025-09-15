@@ -10,96 +10,216 @@ import {
   Gamepad2,
   Tablet,
   Monitor,
-  Tv,
   Speaker,
   Mouse,
   Keyboard,
   ArrowRight,
   Sparkles,
   ChevronRight,
+  PlugZap,
+  Cable,
+  Briefcase,
+  ShieldCheck,
+  BatteryCharging,
+  Cpu,
+  CircuitBoard,
+  HardDrive,
+  Printer,
+  Wifi,
+  HeartPulse,
+  Power,
+  Home as HomeIcon,
+  VideoIcon,
+  Mic,
 } from "lucide-react";
 import { useEffect } from "react";
+import { getTopCategories, categoryNameToSlug } from "@/lib/category-data";
 
 // Define animation CSS class names we'll use
 const ANIMATION_FLOAT_SLOW = "animate-float-slow";
 const ANIMATION_FLOAT_REVERSE = "animate-float-reverse";
 const ANIMATION_FADE_IN_UP = "animate-fade-in-up";
 
+// Map category names to Lucide icons
+const getCategoryIcon = (iconName: string) => {
+  const iconMap: Record<string, any> = {
+    mobile_phones: Smartphone,
+    laptops: Laptop,
+    smart_watches_accessories: Watch,
+    headphones_earbuds: Headphones,
+    cameras_drones: Camera,
+    gaming_peripherals: Gamepad2,
+    tablets: Tablet,
+    monitors: Monitor,
+    speakers: Speaker,
+    mice: Mouse,
+    keyboards: Keyboard,
+    cables_adapters: Cable,
+    bags_sleeves_backpacks: Briefcase,
+    cases_screen_protectors: ShieldCheck,
+    chargers_power_banks: BatteryCharging,
+    cpus: Cpu,
+    graphic_cards: CircuitBoard,
+    memory: CircuitBoard,
+    storage: HardDrive,
+    printers_scanners: Printer,
+    networking: Wifi,
+    health_personal_care_electronics: HeartPulse,
+    power_supplies_pc_cooling: Power,
+    smart_home_office_accessories: HomeIcon,
+    motherboards: CircuitBoard,
+    car_accessories: PlugZap,
+    camera_accessories: VideoIcon,
+    webcams_microphones: Mic,
+    // Handle ampersand cases by providing alternative keys
+    cases_and_screen_protectors: ShieldCheck,
+    chargers_and_power_banks: BatteryCharging,
+    cables_and_adapters: Cable,
+    bags_and_sleeves_and_backpacks: Briefcase,
+    power_supplies_and_pc_cooling: Power,
+    smart_home_and_office_accessories: HomeIcon,
+  };
+
+  return iconMap[iconName] || Smartphone;
+};
+
+// Define color scheme type
+interface ColorScheme {
+  color: string;
+  bgColor: string;
+  hoverColor: string;
+}
+
 export function CategoriesSection() {
-  const categories = [
-    {
-      name: "Smartphones",
-      icon: Smartphone,
-      count: "450K+",
-      href: "/category/smartphones",
+  // Define category colors - map from category name to color scheme
+  const categoryColors: Record<string, ColorScheme> = {
+    "Mobile Phones": {
       color: "text-blue-500",
       bgColor: "bg-blue-50",
-      hoverBg: "group-hover:bg-blue-100",
+      hoverColor: "group-hover:text-blue-500",
     },
-    {
-      name: "Laptops",
-      icon: Laptop,
-      count: "125K+",
-      href: "/category/laptops",
+    Laptops: {
       color: "text-green-500",
       bgColor: "bg-green-50",
-      hoverBg: "group-hover:bg-green-100",
+      hoverColor: "group-hover:text-green-500",
     },
-    {
-      name: "Smart Watches",
-      icon: Watch,
-      count: "85K+",
-      href: "/category/smartwatches",
+    "Smart Watches & Accessories": {
       color: "text-purple-500",
       bgColor: "bg-purple-50",
-      hoverBg: "group-hover:bg-purple-100",
+      hoverColor: "group-hover:text-purple-500",
     },
-    {
-      name: "Headphones",
-      icon: Headphones,
-      count: "200K+",
-      href: "/category/headphones",
+    "Headphones & Earbuds": {
       color: "text-orange-500",
       bgColor: "bg-orange-50",
-      hoverBg: "group-hover:bg-orange-100",
+      hoverColor: "group-hover:text-orange-500",
     },
-    {
-      name: "Cameras",
-      icon: Camera,
-      count: "75K+",
-      href: "/category/cameras",
+    "Cameras & Drones": {
       color: "text-cyan-500",
       bgColor: "bg-cyan-50",
-      hoverBg: "group-hover:bg-cyan-100",
+      hoverColor: "group-hover:text-cyan-500",
     },
-    {
-      name: "Gaming",
-      icon: Gamepad2,
-      count: "150K+",
-      href: "/category/gaming",
+    "Gaming Peripherals": {
       color: "text-pink-500",
       bgColor: "bg-pink-50",
-      hoverBg: "group-hover:bg-pink-100",
+      hoverColor: "group-hover:text-pink-500",
     },
-    {
-      name: "Tablets",
-      icon: Tablet,
-      count: "95K+",
-      href: "/category/tablets",
+    Tablets: {
       color: "text-indigo-500",
       bgColor: "bg-indigo-50",
-      hoverBg: "group-hover:bg-indigo-100",
+      hoverColor: "group-hover:text-indigo-500",
     },
-    {
-      name: "Monitors",
-      icon: Monitor,
-      count: "110K+",
-      href: "/category/monitors",
+    Monitors: {
       color: "text-red-500",
       bgColor: "bg-red-50",
-      hoverBg: "group-hover:bg-red-100",
+      hoverColor: "group-hover:text-red-500",
+    },
+    Speakers: {
+      color: "text-amber-500",
+      bgColor: "bg-amber-50",
+      hoverColor: "group-hover:text-amber-500",
+    },
+    Mice: {
+      color: "text-lime-500",
+      bgColor: "bg-lime-50",
+      hoverColor: "group-hover:text-lime-500",
+    },
+    Keyboards: {
+      color: "text-teal-500",
+      bgColor: "bg-teal-50",
+      hoverColor: "group-hover:text-teal-500",
+    },
+    "Cables & Adapters": {
+      color: "text-violet-500",
+      bgColor: "bg-violet-50",
+      hoverColor: "group-hover:text-violet-500",
+    },
+  };
+
+  // Default color scheme for categories not in the map
+  const defaultColorSchemes = [
+    {
+      color: "text-blue-500",
+      bgColor: "bg-blue-50",
+      hoverColor: "group-hover:text-blue-500",
+    },
+    {
+      color: "text-green-500",
+      bgColor: "bg-green-50",
+      hoverColor: "group-hover:text-green-500",
+    },
+    {
+      color: "text-purple-500",
+      bgColor: "bg-purple-50",
+      hoverColor: "group-hover:text-purple-500",
+    },
+    {
+      color: "text-orange-500",
+      bgColor: "bg-orange-50",
+      hoverColor: "group-hover:text-orange-500",
+    },
+    {
+      color: "text-cyan-500",
+      bgColor: "bg-cyan-50",
+      hoverColor: "group-hover:text-cyan-500",
+    },
+    {
+      color: "text-pink-500",
+      bgColor: "bg-pink-50",
+      hoverColor: "group-hover:text-pink-500",
+    },
+    {
+      color: "text-indigo-500",
+      bgColor: "bg-indigo-50",
+      hoverColor: "group-hover:text-indigo-500",
+    },
+    {
+      color: "text-red-500",
+      bgColor: "bg-red-50",
+      hoverColor: "group-hover:text-red-500",
     },
   ];
+
+  // Get top 8 categories by product count
+  const topCategories = getTopCategories(8).map((category, index) => {
+    const Icon = getCategoryIcon(category.icon);
+    const slug = categoryNameToSlug(category.name);
+
+    // Get color scheme for this category (either from map or fallback to default)
+    const colorScheme =
+      categoryColors[category.name] ||
+      defaultColorSchemes[index % defaultColorSchemes.length];
+
+    return {
+      name: category.name,
+      icon: Icon,
+      count: category.product_count.toLocaleString(),
+      href: `/category/${slug}`,
+      color: colorScheme.color,
+      bgColor: colorScheme.bgColor,
+      hoverColor: colorScheme.hoverColor,
+      category_id: category.category_id,
+    };
+  });
 
   return (
     <section className="py-20 relative overflow-hidden">
@@ -153,7 +273,7 @@ export function CategoriesSection() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8 max-w-7xl mx-auto px-4">
-          {categories.map((category, index) => (
+          {topCategories.map((category, index) => (
             <Link
               key={category.name}
               href={category.href}
@@ -176,21 +296,31 @@ export function CategoriesSection() {
                         className={`absolute inset-0 rounded-full blur-lg opacity-50 group-hover:opacity-70 transition-opacity duration-300`}
                         style={{
                           background: `radial-gradient(circle, ${
-                            category.name === "Smartphones"
+                            category.color.includes("blue")
                               ? "rgba(59, 130, 246, 0.5)"
-                              : category.name === "Laptops"
+                              : category.color.includes("green")
                               ? "rgba(34, 197, 94, 0.5)"
-                              : category.name === "Smart Watches"
+                              : category.color.includes("purple")
                               ? "rgba(168, 85, 247, 0.5)"
-                              : category.name === "Headphones"
+                              : category.color.includes("orange")
                               ? "rgba(249, 115, 22, 0.5)"
-                              : category.name === "Cameras"
+                              : category.color.includes("cyan")
                               ? "rgba(6, 182, 212, 0.5)"
-                              : category.name === "Gaming"
+                              : category.color.includes("pink")
                               ? "rgba(236, 72, 153, 0.5)"
-                              : category.name === "Tablets"
+                              : category.color.includes("indigo")
                               ? "rgba(99, 102, 241, 0.5)"
-                              : "rgba(239, 68, 68, 0.5)"
+                              : category.color.includes("red")
+                              ? "rgba(239, 68, 68, 0.5)"
+                              : category.color.includes("amber")
+                              ? "rgba(245, 158, 11, 0.5)"
+                              : category.color.includes("lime")
+                              ? "rgba(132, 204, 22, 0.5)"
+                              : category.color.includes("teal")
+                              ? "rgba(20, 184, 166, 0.5)"
+                              : category.color.includes("violet")
+                              ? "rgba(124, 58, 237, 0.5)"
+                              : "rgba(59, 130, 246, 0.5)"
                           } 20%, transparent 65%)`,
                         }}
                       ></div>
@@ -200,38 +330,58 @@ export function CategoriesSection() {
                         className={`w-24 h-24 mx-auto rounded-full shadow-lg backdrop-blur-sm border transition-all duration-500 flex items-center justify-center group-hover:shadow-xl relative overflow-hidden z-10 group-hover:scale-105`}
                         style={{
                           background: `linear-gradient(135deg, ${
-                            category.name === "Smartphones"
+                            category.color.includes("blue")
                               ? "rgba(219, 234, 254, 0.9)"
-                              : category.name === "Laptops"
+                              : category.color.includes("green")
                               ? "rgba(220, 252, 231, 0.9)"
-                              : category.name === "Smart Watches"
+                              : category.color.includes("purple")
                               ? "rgba(243, 232, 255, 0.9)"
-                              : category.name === "Headphones"
+                              : category.color.includes("orange")
                               ? "rgba(255, 237, 213, 0.9)"
-                              : category.name === "Cameras"
+                              : category.color.includes("cyan")
                               ? "rgba(207, 250, 254, 0.9)"
-                              : category.name === "Gaming"
+                              : category.color.includes("pink")
                               ? "rgba(252, 231, 243, 0.9)"
-                              : category.name === "Tablets"
+                              : category.color.includes("indigo")
                               ? "rgba(224, 231, 255, 0.9)"
-                              : "rgba(254, 226, 226, 0.9)"
+                              : category.color.includes("red")
+                              ? "rgba(254, 226, 226, 0.9)"
+                              : category.color.includes("amber")
+                              ? "rgba(255, 251, 235, 0.9)"
+                              : category.color.includes("lime")
+                              ? "rgba(247, 254, 231, 0.9)"
+                              : category.color.includes("teal")
+                              ? "rgba(204, 251, 241, 0.9)"
+                              : category.color.includes("violet")
+                              ? "rgba(237, 233, 254, 0.9)"
+                              : "rgba(219, 234, 254, 0.9)"
                           }, white)`,
                           borderColor: `${
-                            category.name === "Smartphones"
+                            category.color.includes("blue")
                               ? "rgba(96, 165, 250, 0.3)"
-                              : category.name === "Laptops"
+                              : category.color.includes("green")
                               ? "rgba(74, 222, 128, 0.3)"
-                              : category.name === "Smart Watches"
+                              : category.color.includes("purple")
                               ? "rgba(192, 132, 252, 0.3)"
-                              : category.name === "Headphones"
+                              : category.color.includes("orange")
                               ? "rgba(251, 146, 60, 0.3)"
-                              : category.name === "Cameras"
+                              : category.color.includes("cyan")
                               ? "rgba(34, 211, 238, 0.3)"
-                              : category.name === "Gaming"
+                              : category.color.includes("pink")
                               ? "rgba(244, 114, 182, 0.3)"
-                              : category.name === "Tablets"
+                              : category.color.includes("indigo")
                               ? "rgba(129, 140, 248, 0.3)"
-                              : "rgba(248, 113, 113, 0.3)"
+                              : category.color.includes("red")
+                              ? "rgba(248, 113, 113, 0.3)"
+                              : category.color.includes("amber")
+                              ? "rgba(252, 211, 77, 0.3)"
+                              : category.color.includes("lime")
+                              ? "rgba(163, 230, 53, 0.3)"
+                              : category.color.includes("teal")
+                              ? "rgba(45, 212, 191, 0.3)"
+                              : category.color.includes("violet")
+                              ? "rgba(167, 139, 250, 0.3)"
+                              : "rgba(96, 165, 250, 0.3)"
                           }`,
                         }}
                       >
@@ -240,21 +390,31 @@ export function CategoriesSection() {
                           className={`w-16 h-16 rounded-full flex items-center justify-center transition-all duration-500 group-hover:scale-110 relative`}
                           style={{
                             background: `linear-gradient(135deg, ${
-                              category.name === "Smartphones"
+                              category.color.includes("blue")
                                 ? "rgba(59, 130, 246, 0.15)"
-                                : category.name === "Laptops"
+                                : category.color.includes("green")
                                 ? "rgba(34, 197, 94, 0.15)"
-                                : category.name === "Smart Watches"
+                                : category.color.includes("purple")
                                 ? "rgba(168, 85, 247, 0.15)"
-                                : category.name === "Headphones"
+                                : category.color.includes("orange")
                                 ? "rgba(249, 115, 22, 0.15)"
-                                : category.name === "Cameras"
+                                : category.color.includes("cyan")
                                 ? "rgba(6, 182, 212, 0.15)"
-                                : category.name === "Gaming"
+                                : category.color.includes("pink")
                                 ? "rgba(236, 72, 153, 0.15)"
-                                : category.name === "Tablets"
+                                : category.color.includes("indigo")
                                 ? "rgba(99, 102, 241, 0.15)"
-                                : "rgba(239, 68, 68, 0.15)"
+                                : category.color.includes("red")
+                                ? "rgba(239, 68, 68, 0.15)"
+                                : category.color.includes("amber")
+                                ? "rgba(245, 158, 11, 0.15)"
+                                : category.color.includes("lime")
+                                ? "rgba(132, 204, 22, 0.15)"
+                                : category.color.includes("teal")
+                                ? "rgba(20, 184, 166, 0.15)"
+                                : category.color.includes("violet")
+                                ? "rgba(124, 58, 237, 0.15)"
+                                : "rgba(59, 130, 246, 0.15)"
                             }, rgba(255, 255, 255, 0.8))`,
                           }}
                         >
@@ -272,33 +432,35 @@ export function CategoriesSection() {
                       <div className="absolute w-1.5 h-1.5 rounded-full bg-white/70 shadow-sm right-6 -top-1 group-hover:scale-150 transition-transform duration-700"></div>
                       <div className="absolute w-1 h-1 rounded-full bg-white/80 shadow-sm left-8 bottom-2 group-hover:scale-200 transition-transform duration-500"></div>
                     </div>
-
                     <h3
                       className={`font-bold mb-3 text-xl transition-colors relative`}
                     >
                       <span
-                        className={`text-gray-900 group-hover:${category.color} transition-all duration-300`}
+                        className={`text-gray-900 transition-all duration-300 ${category.hoverColor}`}
                       >
                         {category.name}
                       </span>
                       <div
-                        className={`w-0 h-0.5 mx-auto mt-2 ${category.color} opacity-0 group-hover:w-1/2 group-hover:opacity-70 transition-all duration-300`}
+                        className={`w-0 h-0.5 mx-auto mt-2 opacity-0 group-hover:w-1/2 group-hover:opacity-70 transition-all duration-300 ${category.color.replace(
+                          "text-",
+                          "bg-"
+                        )}`}
                       ></div>
                     </h3>
-
                     <div className="flex items-center justify-center space-x-1">
                       <p
-                        className={`text-base ${category.color} font-semibold`}
+                        className={`text-base font-semibold ${category.color}`}
                       >
                         {category.count}
                       </p>
                       <p className="text-sm text-gray-500">products</p>
                     </div>
-
                     <div
-                      className={`absolute bottom-3 left-1/2 transform -translate-x-1/2 w-0 group-hover:w-1/3 h-0.5 ${category.color} opacity-0 group-hover:opacity-40 transition-all duration-300`}
-                    ></div>
-
+                      className={`absolute bottom-3 left-1/2 transform -translate-x-1/2 w-0 group-hover:w-1/3 h-0.5 opacity-0 group-hover:opacity-40 transition-all duration-300 ${category.color.replace(
+                        "text-",
+                        "bg-"
+                      )}`}
+                    ></div>{" "}
                     <div className="mt-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                       <span className="inline-flex items-center text-xs font-medium text-gray-600">
                         Explore Now

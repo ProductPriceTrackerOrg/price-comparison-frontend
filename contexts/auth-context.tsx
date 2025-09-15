@@ -10,6 +10,8 @@ interface AuthContextType {
   session: Session | null;
   isLoggedIn: boolean;
   isAdmin: boolean;
+  redirectUrl: string | null;
+  setRedirectUrl: (url: string | null) => void;
   login: (email: string, password: string) => Promise<any>;
   signup: (email: string, password: string, fullName: string) => Promise<any>;
   logout: () => Promise<{ error: any | null }>;
@@ -23,6 +25,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [redirectUrl, setRedirectUrl] = useState<string | null>(null);
 
   useEffect(() => {
     // 1. Check for an existing session on component mount
@@ -83,6 +86,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     user,
     isLoggedIn: !!user,
     isAdmin,
+    redirectUrl,
+    setRedirectUrl,
     login: (email: string, password: string) =>
       supabase.auth.signInWithPassword({ email, password }),
     signup: (email: string, password: string, fullName: string) =>
