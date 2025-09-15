@@ -3,7 +3,7 @@
 import type React from "react";
 import { supabase } from "@/lib/supabase"; // Import the supabase client
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -60,7 +60,18 @@ export function AuthDialog({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [passwordStrength, setPasswordStrength] = useState(0);
   const { toast } = useToast();
-  const { login, signup } = useAuth();
+  const { login, signup, setRedirectUrl } = useAuth();
+
+  // Save current page URL when auth dialog opens
+  useEffect(() => {
+    if (isOpen) {
+      // Don't save auth pages or callback URLs as redirect targets
+      const currentPath = window.location.pathname;
+      if (!currentPath.startsWith("/auth/")) {
+        setRedirectUrl(window.location.pathname + window.location.search);
+      }
+    }
+  }, [isOpen, setRedirectUrl]);
 
   // Password strength calculation
   const calculatePasswordStrength = (password: string) => {

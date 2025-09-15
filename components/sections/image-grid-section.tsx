@@ -18,12 +18,14 @@ export function ImageGridSection() {
     "/grid/img10.jpg",
     "/grid/img11.jpg",
     "/grid/img12.jpg",
+    "/grid/image_21.jpg",
+    "/grid/image_22.jpg",
   ];
 
   // Duplicate arrays for seamless scrolling
   const row1Images = [...gridImages, ...gridImages];
   const row2Images = [...gridImages, ...gridImages];
-  
+
   // Use active states for hover effects
   const [activeIndices, setActiveIndices] = useState<{
     [key: string]: boolean;
@@ -54,7 +56,7 @@ export function ImageGridSection() {
               Browse our curated selection from top brands and retailers
             </p>
           </div>
-          
+
           {/* First row - slides from left to right */}
           <div className="flex justify-center items-center gap-4 mb-8 overflow-hidden">
             <div className="flex gap-6 animate-slide-slow">

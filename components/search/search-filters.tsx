@@ -28,7 +28,7 @@ export function SearchFilters({ onFiltersChange }: SearchFiltersProps) {
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 2000]);
   const [selectedRetailers, setSelectedRetailers] = useState<string[]>([]);
   const [inStockOnly, setInStockOnly] = useState(false);
-  const [sortBy, setSortBy] = useState("relevance");
+  const [sortBy, setSortBy] = useState("price-high");
 
   const retailers = [
     "TechStore",
@@ -62,7 +62,7 @@ export function SearchFilters({ onFiltersChange }: SearchFiltersProps) {
     setPriceRange([0, 2000]);
     setSelectedRetailers([]);
     setInStockOnly(false);
-    setSortBy("relevance");
+    setSortBy("price-high");
   };
 
   return (
