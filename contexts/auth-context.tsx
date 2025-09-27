@@ -73,11 +73,58 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // 4. Check for the 'Admin' role whenever the user object changes
   useEffect(() => {
-    if (user && user.app_metadata?.roles?.includes("Admin")) {
-      setIsAdmin(true);
-    } else {
-      setIsAdmin(false);
-    }
+    const fetchUserRole = async () => {
+      if (!user) {
+        setIsAdmin(false);
+        return;
+      }
+
+      try {
+        // First, get user role mappings
+        const { data: roleMappings, error: mappingError } = await supabase
+          .from("userrolemapping")
+          .select("role_id")
+          .eq("user_id", user.id);
+
+        if (mappingError) {
+          console.error("Error fetching user role mappings:", mappingError);
+          setIsAdmin(false);
+          return;
+        }
+
+        if (!roleMappings || roleMappings.length === 0) {
+          console.log("User has no roles assigned");
+          setIsAdmin(false);
+          return;
+        }
+
+        // Get the role names for these role IDs
+        const roleIds = roleMappings.map((mapping) => mapping.role_id);
+        const { data: roleData, error: rolesError } = await supabase
+          .from("roles")
+          .select("role_name")
+          .in("role_id", roleIds);
+
+        if (rolesError) {
+          console.error("Error fetching roles:", rolesError);
+          setIsAdmin(false);
+          return;
+        }
+
+        // Check if the user has the Admin role
+        const hasAdminRole = roleData?.some(
+          (role) => role.role_name === "Admin"
+        );
+
+        console.log("User roles:", roleData, "Is admin:", hasAdminRole);
+        setIsAdmin(hasAdminRole || false);
+      } catch (err) {
+        console.error("Error in role check:", err);
+        setIsAdmin(false);
+      }
+    };
+
+    fetchUserRole();
   }, [user]);
 
   // 5. Define the context value, mapping our functions to Supabase's functions

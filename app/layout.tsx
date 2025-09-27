@@ -1,4 +1,4 @@
-import type React from "react";
+import React from "react";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
@@ -10,6 +10,7 @@ import { PageLoadingIndicator } from "@/components/layout/page-loading-indicator
 import { NavigationProgressBar } from "@/components/layout/navigation-progress-bar";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
+import { LayoutWrapper } from "@/components/layout/layout-wrapper";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -35,9 +36,12 @@ export default function RootLayout({
             <SessionTimeoutProvider>
               <PageLoadingIndicator />
               <NavigationProgressBar />
-              <Header />
-              <main className="min-h-screen pt-16">{children}</main>
-              <Footer />
+              <LayoutWrapper 
+                header={<Header />} 
+                footer={<Footer />}
+              >
+                {children}
+              </LayoutWrapper>
               <Toaster />
             </SessionTimeoutProvider>
           </TokenRefreshHandler>
