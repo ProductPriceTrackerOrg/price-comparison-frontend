@@ -33,7 +33,52 @@ import { Switch } from "@/components/ui/switch";
 import { Spinner } from "@/components/ui/spinner";
 import { ProductCard } from "@/components/product/product-card";
 import { CustomPagination } from "@/components/ui/custom-pagination";
-import { getRetailerById, getProductsByRetailerId } from "@/lib/retailers-data";
+// Define interfaces for API responses
+interface Retailer {
+  id: number;
+  name: string;
+  logo?: string;
+  description?: string;
+  product_count: number;
+  rating: number;
+  verified?: boolean;
+}
+
+interface Product {
+  id: number;
+  name: string;
+  description?: string;
+  price: number;
+  original_price?: number;
+  discount?: number;
+  brand: string;
+  category_id?: number;
+  category_name?: string;
+  rating?: number;
+  image?: string;
+  in_stock: boolean;
+  shop_id: number;
+  shop_name?: string;
+}
+
+interface Category {
+  id: number;
+  name: string;
+  count: number;
+}
+
+interface Brand {
+  id: number;
+  name: string;
+  count: number;
+}
+
+interface Filters {
+  categories: Category[];
+  brands: Brand[];
+  minPrice: number;
+  maxPrice: number;
+}
 
 // Define price formatter
 const formatPrice = (price: number) => {
@@ -43,10 +88,16 @@ const formatPrice = (price: number) => {
 export default function RetailerProductsPage() {
   const params = useParams();
   const searchParams = useSearchParams();
-  const retailerId = Number(params.id);
+  const retailerId = params.id as string;
 
-  const [retailer, setRetailer] = useState<any>(null);
-  const [products, setProducts] = useState<any[]>([]);
+  const [retailer, setRetailer] = useState<Retailer | null>(null);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [filters, setFilters] = useState<Filters>({
+    categories: [],
+    brands: [],
+    minPrice: 0,
+    maxPrice: 200000,
+  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
@@ -58,6 +109,8 @@ export default function RetailerProductsPage() {
 
   // Filter states
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<string>("");
+  const [selectedBrand, setSelectedBrand] = useState<string>("");
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 200000]); // Adjust max as needed
   const [inStockOnly, setInStockOnly] = useState(false);
   const [hasDiscount, setHasDiscount] = useState(false);
@@ -67,44 +120,79 @@ export default function RetailerProductsPage() {
   // Fetch retailer and products
   useEffect(() => {
     if (retailerId) {
-      fetchRetailerData();
-      fetchProducts();
+      fetchData();
     }
-  }, [retailerId, currentPage, searchQuery, priceRange, inStockOnly, hasDiscount, sortBy]);
+  }, [retailerId, currentPage, searchQuery, selectedCategory, selectedBrand, priceRange, inStockOnly, hasDiscount, sortBy]);
 
-  const fetchRetailerData = () => {
-    const retailerData = getRetailerById(retailerId);
-    if (retailerData) {
-      setRetailer(retailerData);
-    } else {
-      setError("Retailer not found");
-    }
-  };
-
-  const fetchProducts = () => {
+  const fetchData = async () => {
     setLoading(true);
-    
-    // Create filters object
-    const filters = {
-      searchQuery: searchQuery,
-      minPrice: priceRange[0],
-      maxPrice: priceRange[1],
-      inStockOnly: inStockOnly,
-      hasDiscount: hasDiscount,
-      sortBy: sortBy,
-    };
-    
+    setError(null);
+
     try {
-      // In a real app this would be an API call
-      const result = getProductsByRetailerId(retailerId, currentPage, limit, filters);
+      // Construct the query parameters
+      const queryParams = new URLSearchParams({
+        page: currentPage.toString(),
+        limit: limit.toString(),
+        sort: sortBy,
+      });
       
-      setProducts(result.products);
-      setTotalPages(result.totalPages);
-      setTotalCount(result.totalCount);
+      if (searchQuery) {
+        queryParams.append("search", searchQuery);
+      }
+      
+      if (selectedCategory) {
+        queryParams.append("category", selectedCategory);
+      }
+      
+      if (selectedBrand) {
+        queryParams.append("brand", selectedBrand);
+      }
+      
+      if (priceRange[0] > 0) {
+        queryParams.append("min_price", priceRange[0].toString());
+      }
+      
+      if (priceRange[1] < 200000) {
+        queryParams.append("max_price", priceRange[1].toString());
+      }
+      
+      if (inStockOnly) {
+        queryParams.append("in_stock", "true");
+      }
+      
+      if (hasDiscount) {
+        queryParams.append("has_discount", "true");
+      }
+
+      // Fetch the products data from our API route
+      const response = await fetch(`/api/v1/retailers/${retailerId}/products?${queryParams}`);
+      
+      if (!response.ok) {
+        throw new Error("Failed to fetch retailer products");
+      }
+      
+      const data = await response.json();
+      
+      setRetailer(data.retailer);
+      setProducts(data.products);
+      setFilters({
+        categories: data.filters?.categories || [],
+        brands: data.filters?.brands || [],
+        minPrice: data.filters?.minPrice || 0,
+        maxPrice: data.filters?.maxPrice || 200000,
+      });
+      setTotalPages(data.pagination?.total_pages || 1);
+      setTotalCount(data.pagination?.total_items || 0);
+      
+      // If this is the first load, initialize price range
+      if (priceRange[0] === 0 && priceRange[1] === 200000) {
+        setPriceRange([data.filters?.minPrice || 0, data.filters?.maxPrice || 200000]);
+      }
+      
+      setLoading(false);
     } catch (error) {
-      console.error("Error fetching products:", error);
+      console.error("Error fetching retailer products:", error);
       setError("Failed to load products. Please try again.");
-    } finally {
       setLoading(false);
     }
   };
@@ -120,11 +208,13 @@ export default function RetailerProductsPage() {
   
   // Filter reset handler
   const resetFilters = () => {
-    setPriceRange([0, 200000]);
+    setPriceRange([filters.minPrice || 0, filters.maxPrice || 200000]);
     setInStockOnly(false);
     setHasDiscount(false);
     setSortBy("newest");
     setSearchQuery("");
+    setSelectedCategory("");
+    setSelectedBrand("");
     setCurrentPage(1);
   };
 

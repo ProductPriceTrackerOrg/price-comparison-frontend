@@ -42,10 +42,8 @@ export function RetailersSection() {
       setError(null);
 
       try {
-        // Fetch the retailers data
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/v1/home/retailers?limit=6`
-        );
+        // Fetch the retailers data from our API route
+        const response = await fetch("/api/v1/retailers?limit=6");
 
         if (!response.ok) {
           throw new Error("Failed to fetch retailers");
@@ -54,7 +52,7 @@ export function RetailersSection() {
         const data = await response.json();
 
         // Map API response to our Retailer interface
-        const mappedRetailers: Retailer[] = data.retailers.map(
+        const mappedRetailers: Retailer[] = (data.retailers || []).map(
           (retailer: ApiRetailer) => ({
             id: retailer.id,
             name: retailer.name,

@@ -1,35 +1,37 @@
-import { NextResponse } from 'next/server';
-import { categoriesData } from '@/lib/category-data';
+import { NextRequest, NextResponse } from 'next/server';
+import api from "@/lib/api";
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
+  const searchParams = request.nextUrl.searchParams;
+  
   // Get query parameters
-  const { searchParams } = new URL(request.url);
-  const limit = parseInt(searchParams.get('limit') || '20', 10);
-  const page = parseInt(searchParams.get('page') || '1', 10);
+  const page = searchParams.get('page') || '1';
+  const limit = searchParams.get('limit') || '20';
+  const retailerId = searchParams.get('shop_id') || '';
   
-  // Calculate pagination
-  const startIndex = (page - 1) * limit;
-  const endIndex = startIndex + limit;
-  
-  const paginatedCategories = categoriesData.slice(startIndex, endIndex);
-  
-  // Count total products across all categories
-  const totalProducts = categoriesData.reduce(
-    (sum, category) => sum + category.product_count, 
-    0
-  );
-  
-  const response = {
-    categories: paginatedCategories,
-    total_categories: categoriesData.length,
-    total_products: totalProducts,
-    pagination: {
-      current_page: page,
-      total_pages: Math.ceil(categoriesData.length / limit),
-      total_items: categoriesData.length,
-      items_per_page: limit
+  try {
+    // Construct query params
+    const queryParams = new URLSearchParams({
+      page,
+      limit,
+    });
+    
+    if (retailerId) {
+      queryParams.append('shop_id', retailerId);
     }
-  };
-  
-  return NextResponse.json(response);
+    
+    // Forward the request to our backend API
+    const apiUrl = `/api/v1/categories?${queryParams}`;
+    const response = await api.get(apiUrl);
+
+    // Return the backend response
+    return NextResponse.json(response.data);
+  } catch (error: any) {
+    console.error("Error fetching categories:", error);
+
+    return NextResponse.json(
+      { error: "Failed to fetch categories" },
+      { status: error.response?.status || 500 }
+    );
+  }
 }

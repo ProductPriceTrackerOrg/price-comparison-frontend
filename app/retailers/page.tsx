@@ -21,7 +21,41 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { CustomPagination } from "@/components/ui/custom-pagination";
-import { getRetailers, Retailer } from "@/lib/retailers-data";
+
+// Define interfaces for API responses
+interface ApiRetailer {
+  id: number;
+  name: string;
+  logo?: string;
+  website?: string;
+  rating?: number;
+  product_count?: number;
+  description?: string;
+  verified?: boolean;
+  founded_year?: number;
+  headquarters?: string;
+  contact?: {
+    phone?: string;
+    email?: string;
+  };
+}
+
+interface Retailer {
+  id: number;
+  name: string;
+  logo: string;
+  rating: number;
+  productCount: number;
+  verified: boolean;
+  description: string;
+  website?: string;
+  foundedYear?: number;
+  headquarters?: string;
+  contact?: {
+    phone?: string;
+    email?: string;
+  };
+}
 
 export default function RetailersPage() {
   const [retailers, setRetailers] = useState<Retailer[]>([]);
@@ -42,12 +76,45 @@ export default function RetailersPage() {
     setError(null);
 
     try {
-      // In a real application, this would be an API call
-      const response = getRetailers(currentPage, limit, searchQuery);
-      
-      setRetailers(response.retailers);
-      setTotalPages(response.totalPages);
-      setTotalCount(response.totalCount);
+      // Construct the query parameters
+      const queryParams = new URLSearchParams({
+        page: currentPage.toString(),
+        limit: limit.toString(),
+      });
+
+      if (searchQuery) {
+        queryParams.append("search", searchQuery);
+      }
+
+      // Fetch the retailers data from our API route
+      const response = await fetch(`/api/v1/retailers?${queryParams}`);
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch retailers");
+      }
+
+      const data = await response.json();
+
+      // Map API response to our Retailer interface
+      const mappedRetailers: Retailer[] = (data.retailers || []).map(
+        (retailer: ApiRetailer) => ({
+          id: retailer.id,
+          name: retailer.name,
+          logo: retailer.logo || "/placeholder.svg?height=60&width=120",
+          rating: retailer.rating || 4.5,
+          productCount: retailer.product_count || 0,
+          verified: retailer.verified || false,
+          description: retailer.description || "Quality products retailer",
+          website: retailer.website,
+          foundedYear: retailer.founded_year,
+          headquarters: retailer.headquarters,
+          contact: retailer.contact,
+        })
+      );
+
+      setRetailers(mappedRetailers);
+      setTotalPages(data.pagination?.total_pages || 1);
+      setTotalCount(data.pagination?.total_items || 0);
       setLoading(false);
     } catch (error) {
       console.error("Error fetching retailers:", error);
@@ -80,15 +147,20 @@ export default function RetailersPage() {
           </div>
 
           <div className="text-center max-w-3xl mx-auto">
-            <h1 className="text-4xl md:text-5xl font-bold mb-4">Our Trusted Partners</h1>
+            <h1 className="text-4xl md:text-5xl font-bold mb-4">
+              Our Trusted Partners
+            </h1>
             <p className="text-lg text-blue-100 mb-8">
-              Explore our network of verified retailers offering competitive prices on electronics
-              and tech products
+              Explore our network of verified retailers offering competitive
+              prices on electronics and tech products
             </p>
 
             {/* Search Form */}
             <div className="max-w-xl mx-auto">
-              <form onSubmit={handleSearch} className="flex rounded-lg overflow-hidden shadow-lg">
+              <form
+                onSubmit={handleSearch}
+                className="flex rounded-lg overflow-hidden shadow-lg"
+              >
                 <Input
                   type="text"
                   placeholder="Search retailers..."
@@ -122,7 +194,7 @@ export default function RetailersPage() {
               </div>
             </CardContent>
           </Card>
-          
+
           <Card className="bg-gradient-to-br from-emerald-50 to-green-50 border-emerald-100">
             <CardContent className="p-6 flex items-center">
               <div className="w-14 h-14 rounded-full flex items-center justify-center bg-emerald-100 text-emerald-700 mr-4">
@@ -131,12 +203,13 @@ export default function RetailersPage() {
               <div>
                 <p className="text-sm text-gray-600">Verified Partners</p>
                 <p className="text-2xl font-bold">
-                  {retailers.filter(r => r.verified).length} of {retailers.length}
+                  {retailers.filter((r) => r.verified).length} of{" "}
+                  {retailers.length}
                 </p>
               </div>
             </CardContent>
           </Card>
-          
+
           <Card className="bg-gradient-to-br from-amber-50 to-yellow-50 border-amber-100">
             <CardContent className="p-6 flex items-center">
               <div className="w-14 h-14 rounded-full flex items-center justify-center bg-amber-100 text-amber-700 mr-4">
@@ -145,7 +218,9 @@ export default function RetailersPage() {
               <div>
                 <p className="text-sm text-gray-600">Total Products</p>
                 <p className="text-2xl font-bold">
-                  {retailers.reduce((sum, retailer) => sum + retailer.productCount, 0).toLocaleString()}
+                  {retailers
+                    .reduce((sum, retailer) => sum + retailer.productCount, 0)
+                    .toLocaleString()}
                 </p>
               </div>
             </CardContent>
@@ -155,7 +230,9 @@ export default function RetailersPage() {
         {/* Search results summary */}
         <div className="flex justify-between items-center mb-8">
           <h2 className="text-2xl font-bold text-gray-800">
-            {searchQuery ? `Search Results for "${searchQuery}"` : "All Retailers"}
+            {searchQuery
+              ? `Search Results for "${searchQuery}"`
+              : "All Retailers"}
           </h2>
           <p className="text-gray-600">
             Showing {retailers.length} of {totalCount} retailers
@@ -176,11 +253,16 @@ export default function RetailersPage() {
           </div>
         ) : retailers.length === 0 ? (
           <div className="text-center py-16">
-            <p className="text-gray-500 mb-4">No retailers found matching your search criteria.</p>
-            <Button variant="outline" onClick={() => {
-              setSearchQuery("");
-              setCurrentPage(1);
-            }}>
+            <p className="text-gray-500 mb-4">
+              No retailers found matching your search criteria.
+            </p>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setSearchQuery("");
+                setCurrentPage(1);
+              }}
+            >
               Clear Search
             </Button>
           </div>
@@ -245,7 +327,7 @@ export default function RetailersPage() {
                             rel="noopener noreferrer"
                             className="text-blue-600 hover:underline"
                           >
-                            {retailer.website.replace(/^https?:\/\//, '')}
+                            {retailer.website.replace(/^https?:\/\//, "")}
                           </a>
                         </div>
                       )}
@@ -285,12 +367,17 @@ export default function RetailersPage() {
 
                       <div className="flex items-center text-gray-700">
                         <Package className="h-4 w-4 mr-2 text-blue-600" />
-                        <span>{retailer.productCount.toLocaleString()} Products</span>
+                        <span>
+                          {retailer.productCount.toLocaleString()} Products
+                        </span>
                       </div>
                     </div>
 
                     <div className="flex justify-end">
-                      <Button asChild className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700">
+                      <Button
+                        asChild
+                        className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+                      >
                         <Link href={`/retailers/${retailer.id}/products`}>
                           Browse Products
                           <ArrowRight className="ml-2 h-4 w-4" />

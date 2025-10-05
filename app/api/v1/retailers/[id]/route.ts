@@ -9,20 +9,16 @@ export async function GET(
 
   try {
     // Forward the request to our backend API
-    const apiUrl = `/api/v1/categories/${id}`;
+    const apiUrl = `/api/v1/retailers/${id}`;
     const response = await api.get(apiUrl);
 
     // Return the backend response
     return NextResponse.json(response.data);
   } catch (error: any) {
-    console.error("Error fetching category:", error);
-    
-    if (error.response?.status === 404) {
-      return NextResponse.json({ error: "Category not found" }, { status: 404 });
-    }
+    console.error("Error fetching retailer details:", error);
 
     return NextResponse.json(
-      { error: "Failed to fetch category" },
+      { error: "Failed to fetch retailer details" },
       { status: error.response?.status || 500 }
     );
   }
