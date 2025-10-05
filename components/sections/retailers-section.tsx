@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Store, Star, Package, Shield, ArrowRight } from "lucide-react";
@@ -178,10 +179,10 @@ export function RetailersSection() {
             asChild
             className="hidden md:flex border-blue-300 hover:bg-blue-50/60 text-blue-700 px-6 py-5 rounded-xl"
           >
-            <a href="/retailers" className="font-medium text-base">
+            <Link href="/retailers" className="font-medium text-base">
               View All Partners
               <ArrowRight className="ml-2 h-5 w-5" />
-            </a>
+            </Link>
           </Button>
         </div>
         {loading ? (
@@ -272,9 +273,12 @@ export function RetailersSection() {
 
                     <Button
                       variant="outline"
+                      asChild
                       className="w-full bg-gradient-to-r from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100 text-blue-700 border-blue-200 font-medium py-5"
                     >
-                      Browse Products
+                      <Link href={`/retailers/${retailer.id}/products`}>
+                        Browse Products
+                      </Link>
                     </Button>
                   </div>
                 </CardContent>
@@ -288,10 +292,10 @@ export function RetailersSection() {
             asChild
             className="bg-gradient-to-r from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100 border-blue-300 text-blue-700 px-8 py-6 rounded-xl text-lg"
           >
-            <a href="/retailers">
+            <Link href="/retailers">
               View All Retailers
               <ArrowRight className="ml-2 h-5 w-5" />
-            </a>
+            </Link>
           </Button>
         </div>
         {/* Partner trust indicators */}
