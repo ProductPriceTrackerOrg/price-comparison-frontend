@@ -36,10 +36,7 @@ export default function RootLayout({
             <SessionTimeoutProvider>
               <PageLoadingIndicator />
               <NavigationProgressBar />
-              <LayoutWrapper 
-                header={<Header />} 
-                footer={<Footer />}
-              >
+              <LayoutWrapper header={<Header />} footer={<Footer />}>
                 {children}
               </LayoutWrapper>
               <Toaster />
