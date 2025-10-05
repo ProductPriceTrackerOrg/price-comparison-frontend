@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
@@ -44,7 +44,8 @@ interface Retailer {
   verified?: boolean;
 }
 
-interface Product {
+// API product from backend
+interface ApiProduct {
   id: number;
   name: string;
   description?: string;
@@ -59,6 +60,23 @@ interface Product {
   in_stock: boolean;
   shop_id: number;
   shop_name?: string;
+  category?: string;
+}
+
+// Product interface matching what ProductCard component expects
+interface Product {
+  id: number;
+  name: string;
+  brand: string;
+  category: string;
+  price: number;
+  originalPrice?: number;
+  retailer: string;
+  inStock: boolean;
+  image: string;
+  discount?: number;
+  rating?: number;
+  description?: string;
 }
 
 interface Category {
@@ -100,7 +118,7 @@ export default function RetailerProductsPage() {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
+
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -116,15 +134,43 @@ export default function RetailerProductsPage() {
   const [hasDiscount, setHasDiscount] = useState(false);
   const [sortBy, setSortBy] = useState<string>("newest");
   const [showFilters, setShowFilters] = useState(true);
+
+  // Track if this is the first load
+  const isFirstLoad = useRef(true);
   
   // Fetch retailer and products
   useEffect(() => {
     if (retailerId) {
       fetchData();
     }
-  }, [retailerId, currentPage, searchQuery, selectedCategory, selectedBrand, priceRange, inStockOnly, hasDiscount, sortBy]);
+    // When component unmounts, reset first load flag
+    return () => {
+      isFirstLoad.current = true;
+    };
+  }, [
+    retailerId,
+    currentPage,
+    searchQuery,
+    selectedCategory,
+    selectedBrand,
+    // priceRange removed from dependencies to prevent infinite loop
+    inStockOnly,
+    hasDiscount,
+    sortBy,
+  ]);
 
+  // Create a reference for the current request to avoid race conditions
+  const activeRequestRef = useRef(false);
+  
   const fetchData = async () => {
+    // If there's an active request, don't start another one
+    if (activeRequestRef.current) {
+      console.log("Skipping duplicate request - already fetching data");
+      return;
+    }
+    
+    console.log(`Fetching retailer products - retailerId: ${retailerId}, page: ${currentPage}`);
+    activeRequestRef.current = true;
     setLoading(true);
     setError(null);
 
@@ -135,46 +181,105 @@ export default function RetailerProductsPage() {
         limit: limit.toString(),
         sort: sortBy,
       });
-      
+
       if (searchQuery) {
         queryParams.append("search", searchQuery);
       }
-      
+
       if (selectedCategory) {
         queryParams.append("category", selectedCategory);
       }
-      
+
       if (selectedBrand) {
         queryParams.append("brand", selectedBrand);
       }
-      
-      if (priceRange[0] > 0) {
-        queryParams.append("min_price", priceRange[0].toString());
-      }
-      
-      if (priceRange[1] < 200000) {
-        queryParams.append("max_price", priceRange[1].toString());
-      }
-      
+
+      // Always include current price range from state
+      queryParams.append("min_price", priceRange[0].toString());
+      queryParams.append("max_price", priceRange[1].toString());
+
       if (inStockOnly) {
         queryParams.append("in_stock", "true");
       }
-      
+
       if (hasDiscount) {
         queryParams.append("has_discount", "true");
       }
 
       // Fetch the products data from our API route
-      const response = await fetch(`/api/v1/retailers/${retailerId}/products?${queryParams}`);
+      const apiUrl = `/api/v1/retailers/${retailerId}/products?${queryParams}`;
+      console.log(`API Request URL: ${apiUrl}`);
       
+      const response = await fetch(apiUrl);
+      console.log(`API Response status: ${response.status}`);
+
       if (!response.ok) {
-        throw new Error("Failed to fetch retailer products");
+        throw new Error(`Failed to fetch retailer products: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log("API response received", { 
+        hasRetailer: !!data.retailer, 
+        productsCount: data.products?.length || 0,
+        hasFilters: !!data.filters,
+        retailerData: data.retailer,
+        paginationData: data.pagination
+      });
+      
+      // Validate the data structure
+      if (!data.retailer) {
+        console.warn("API response missing retailer data");
       }
       
-      const data = await response.json();
-      
+      if (!Array.isArray(data.products)) {
+        console.error("API response products is not an array:", typeof data.products);
+        throw new Error("Invalid data format: products is not an array");
+      }
+
       setRetailer(data.retailer);
-      setProducts(data.products);
+      
+      console.log("Raw API products sample:", data.products?.[0]);
+      
+      // Map API products to our interface to ensure all required fields
+      const mappedProducts: Product[] = (data.products || []).map((apiProduct: ApiProduct) => {
+        try {
+          // Check if the apiProduct is valid
+          if (!apiProduct || typeof apiProduct !== 'object') {
+            console.error("Invalid product data:", apiProduct);
+            return null;
+          }
+          
+          if (apiProduct.id === undefined) {
+            console.error("Product missing ID:", apiProduct);
+            return null;
+          }
+
+          return {
+            id: apiProduct.id,
+            name: apiProduct.name || "Unnamed Product",
+            brand: apiProduct.brand || "Unknown",
+            price: typeof apiProduct.price === 'number' ? apiProduct.price : 0,
+            originalPrice: typeof apiProduct.original_price === 'number' ? apiProduct.original_price : undefined,
+            discount: typeof apiProduct.discount === 'number' ? apiProduct.discount : undefined,
+            rating: typeof apiProduct.rating === 'number' ? apiProduct.rating : undefined,
+            description: apiProduct.description,
+            // Ensure required fields for ProductCard are present
+            category: apiProduct.category_name || apiProduct.category || "Unknown",
+            retailer: apiProduct.shop_name || data.retailer?.name || "Unknown",
+            inStock: Boolean(apiProduct.in_stock),
+            // If image is missing, use a placeholder
+            image: apiProduct.image || "/placeholder.svg?height=200&width=200"
+          };
+        } catch (err) {
+          console.error("Error mapping product:", err, apiProduct);
+          return null;
+        }
+      })
+      // Filter out any null values from failed mappings
+      .filter((product): product is Product => product !== null);
+      
+      console.log("Mapped products", { count: mappedProducts.length });
+      setProducts(mappedProducts);
       setFilters({
         categories: data.filters?.categories || [],
         brands: data.filters?.brands || [],
@@ -183,29 +288,56 @@ export default function RetailerProductsPage() {
       });
       setTotalPages(data.pagination?.total_pages || 1);
       setTotalCount(data.pagination?.total_items || 0);
+
+      // Only initialize price range on first load
+      if (isFirstLoad.current && data.filters) {
+        console.log("Initializing price range on first load", {
+          min: data.filters.minPrice || 0,
+          max: data.filters.maxPrice || 200000
+        });
+        isFirstLoad.current = false;
+        setPriceRange([
+          data.filters.minPrice || 0,
+          data.filters.maxPrice || 200000,
+        ]);
+      }
+
+      setLoading(false);
+      activeRequestRef.current = false;
+      console.log("Fetch completed successfully");
+    } catch (error: any) {
+      console.error("Error fetching retailer products:", error);
       
-      // If this is the first load, initialize price range
-      if (priceRange[0] === 0 && priceRange[1] === 200000) {
-        setPriceRange([data.filters?.minPrice || 0, data.filters?.maxPrice || 200000]);
+      // More descriptive error message based on the error type
+      let errorMessage = "Failed to load products. Please try again.";
+      
+      if (error.message?.includes("socket hang up") || error.code === "ECONNRESET") {
+        errorMessage = "Connection to server was lost. Please check your internet connection and try again.";
+      } else if (error.message?.includes("products is not an array")) {
+        errorMessage = "The server returned an invalid response format. Please try again later.";
+      } else if (error.message?.includes("Failed to fetch")) {
+        errorMessage = "Unable to connect to the server. Please check your internet connection.";
       }
       
+      setError(errorMessage);
       setLoading(false);
-    } catch (error) {
-      console.error("Error fetching retailer products:", error);
-      setError("Failed to load products. Please try again.");
-      setLoading(false);
+      activeRequestRef.current = false;
+      
+      // Set empty products to avoid showing stale data
+      setProducts([]);
     }
   };
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     setCurrentPage(1); // Reset to first page when searching
+    fetchData(); // Explicitly trigger data fetch on search submit
   };
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
   };
-  
+
   // Filter reset handler
   const resetFilters = () => {
     setPriceRange([filters.minPrice || 0, filters.maxPrice || 200000]);
@@ -232,10 +364,24 @@ export default function RetailerProductsPage() {
     );
   }
 
-  if (!retailer && !error) {
+  // Show spinner only during initial load, after that we show the page even if loading
+  const isInitialLoad = loading && !retailer;
+
+  // Debug information to help identify issues
+  console.log("Page render state:", {
+    loading,
+    hasRetailer: !!retailer,
+    productsCount: products.length,
+    isInitialLoad,
+    hasError: !!error
+  });
+  
+  if (isInitialLoad && !error) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <Spinner size="lg" className="text-blue-600" />
+      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center">
+        <Spinner size="lg" className="text-blue-600 mb-4" />
+        <p className="text-gray-600">Loading retailer information...</p>
+        <p className="text-gray-400 text-sm mt-2">This may take a moment...</p>
       </div>
     );
   }
@@ -251,7 +397,10 @@ export default function RetailerProductsPage() {
               Home
             </Link>
             <span className="mx-2">&gt;</span>
-            <Link href="/retailers" className="hover:text-white transition-colors">
+            <Link
+              href="/retailers"
+              className="hover:text-white transition-colors"
+            >
               Retailers
             </Link>
             <span className="mx-2">&gt;</span>
@@ -264,7 +413,9 @@ export default function RetailerProductsPage() {
                 <Store className="h-8 w-8 text-blue-600" />
               </div>
               <div>
-                <h1 className="text-3xl md:text-4xl font-bold">{retailer?.name}</h1>
+                <h1 className="text-3xl md:text-4xl font-bold">
+                  {retailer?.name}
+                </h1>
                 <p className="text-blue-100">{retailer?.description}</p>
               </div>
             </div>
@@ -272,7 +423,9 @@ export default function RetailerProductsPage() {
             <div className="flex items-center gap-4">
               <div className="bg-white/10 backdrop-blur-sm rounded-lg px-4 py-3">
                 <div className="text-xs text-blue-200">Total Products</div>
-                <div className="text-2xl font-bold">{retailer?.productCount.toLocaleString()}</div>
+                <div className="text-2xl font-bold">
+                  {retailer?.product_count.toLocaleString()}
+                </div>
               </div>
 
               {retailer?.verified && (
@@ -285,13 +438,23 @@ export default function RetailerProductsPage() {
 
           {/* Search bar */}
           <div className="mt-8 max-w-2xl">
-            <form onSubmit={handleSearch} className="flex rounded-lg overflow-hidden shadow-lg">
+            <form
+              onSubmit={handleSearch}
+              className="flex rounded-lg overflow-hidden shadow-lg"
+            >
               <Input
                 type="text"
                 placeholder={`Search products from ${retailer?.name}...`}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="flex-grow h-14 px-6 bg-white/95 border-0 text-gray-900 text-lg focus-visible:ring-blue-500"
+                onKeyDown={(e) => {
+                  // Prevent form submission on every key press
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleSearch(e);
+                  }
+                }}
               />
               <Button
                 type="submit"
@@ -309,14 +472,18 @@ export default function RetailerProductsPage() {
         {/* Filters and Results */}
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Filters sidebar */}
-          <div className={`lg:w-64 space-y-6 ${showFilters ? 'block' : 'hidden lg:block'}`}>
+          <div
+            className={`lg:w-64 space-y-6 ${
+              showFilters ? "block" : "hidden lg:block"
+            }`}
+          >
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-bold text-gray-800 flex items-center">
                 <Filter className="h-5 w-5 mr-2" /> Filters
               </h2>
-              <Button 
-                variant="ghost" 
-                size="sm" 
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={resetFilters}
                 className="text-blue-600 hover:text-blue-800"
               >
@@ -337,6 +504,7 @@ export default function RetailerProductsPage() {
                   step={1000}
                   value={[priceRange[0], priceRange[1]]}
                   onValueChange={(value) => setPriceRange([value[0], value[1]])}
+                  onValueCommit={() => fetchData()} // Only fetch when slider stops moving
                   className="my-6"
                 />
                 <div className="flex items-center justify-between text-sm">
@@ -383,7 +551,9 @@ export default function RetailerProductsPage() {
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
               <div>
                 <h2 className="text-2xl font-bold text-gray-800">
-                  {searchQuery ? `Results for "${searchQuery}"` : "All Products"}
+                  {searchQuery
+                    ? `Results for "${searchQuery}"`
+                    : "All Products"}
                 </h2>
                 <p className="text-gray-600">
                   {totalCount === 0
@@ -391,7 +561,7 @@ export default function RetailerProductsPage() {
                     : `Showing ${products.length} of ${totalCount} products`}
                 </p>
               </div>
-              
+
               <div className="flex flex-col md:flex-row gap-4 w-full md:w-auto">
                 {/* Sort dropdown */}
                 <div className="flex-1 md:flex-none">
@@ -401,8 +571,12 @@ export default function RetailerProductsPage() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="newest">Newest</SelectItem>
-                      <SelectItem value="price_asc">Price: Low to High</SelectItem>
-                      <SelectItem value="price_desc">Price: High to Low</SelectItem>
+                      <SelectItem value="price_asc">
+                        Price: Low to High
+                      </SelectItem>
+                      <SelectItem value="price_desc">
+                        Price: High to Low
+                      </SelectItem>
                       <SelectItem value="name_asc">Name: A to Z</SelectItem>
                       <SelectItem value="name_desc">Name: Z to A</SelectItem>
                     </SelectContent>
@@ -410,13 +584,13 @@ export default function RetailerProductsPage() {
                 </div>
 
                 {/* Mobile filters toggle */}
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   className="lg:hidden flex-1"
                   onClick={() => setShowFilters(!showFilters)}
                 >
                   <SlidersHorizontal className="h-4 w-4 mr-2" />
-                  {showFilters ? 'Hide Filters' : 'Show Filters'}
+                  {showFilters ? "Hide Filters" : "Show Filters"}
                 </Button>
               </div>
             </div>
@@ -429,7 +603,9 @@ export default function RetailerProductsPage() {
             ) : products.length === 0 ? (
               <div className="text-center py-16 bg-white rounded-lg border border-gray-200">
                 <ShoppingBag className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">No products found</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  No products found
+                </h3>
                 <p className="text-gray-600 mb-6">
                   Try adjusting your search or filter criteria
                 </p>

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import chatApi from "@/lib/chat-api";
+import { handleApiError } from "@/lib/error-handling";
 
 export async function POST(request: NextRequest) {
   try {
@@ -20,7 +21,7 @@ export async function POST(request: NextRequest) {
     console.log("Chat request:", { product_id, session_id });
 
     try {
-      // Forward the request to the backend chat agent running on localhost:8001
+      // Forward the request to the backend chat agent
       const chatEndpoint = "/api/v1/chat";
 
       const response = await chatApi.post(chatEndpoint, {
@@ -32,20 +33,22 @@ export async function POST(request: NextRequest) {
       // Return the response from the backend agent
       return NextResponse.json(response.data);
     } catch (apiError: any) {
-      console.error("Error from chat backend:", apiError);
+      console.error("Error from chat backend:", apiError.message);
 
+      // Special handling for chat API - still keep fallback responses
       // If the backend service is not available, fall back to mock responses
-      // This allows for development without the backend running
-      if (apiError.code === "ECONNREFUSED" || !apiError.response) {
+      if (
+        apiError.code === "ECONNREFUSED" ||
+        apiError.code === "ECONNABORTED" ||
+        apiError.message?.includes("socket hang up") ||
+        !apiError.response
+      ) {
         console.warn("Chat backend not available, using fallback response");
         return generateFallbackResponse(user_message, session_id);
       }
 
-      // Otherwise forward the error response from the backend
-      return NextResponse.json(
-        { error: apiError.response?.data?.detail || "Error from chat service" },
-        { status: apiError.response?.status || 500 }
-      );
+      // Otherwise use our central error handler
+      return handleApiError(apiError, "Chat service");
     }
   } catch (error) {
     console.error("Error processing chat:", error);

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import axios from "axios";
+import api from "@/lib/api";
+import { handleApiError } from "@/lib/error-handling";
 
 /**
  * API handler for search autocomplete suggestions
@@ -19,18 +20,9 @@ export async function GET(request: Request) {
       return NextResponse.json({ suggestions: [] });
     }
 
-    // Get the API URL from environment variables
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-    if (!apiUrl) {
-      console.error("API URL not configured");
-      return NextResponse.json(
-        { error: "API configuration error" },
-        { status: 500 }
-      );
-    }
-
-    // Forward the request to the backend API
-    const response = await axios.get(`${apiUrl}/api/v1/search/autocomplete`, {
+    // Forward the request to the backend API using our configured API client
+    // that now has retry logic and better error handling
+    const response = await api.get("/api/v1/search/autocomplete", {
       params: {
         q: query,
         limit: parseInt(limit, 10),
@@ -42,10 +34,19 @@ export async function GET(request: Request) {
   } catch (error: any) {
     console.error("Error fetching search suggestions:", error.message);
 
-    // Return an empty array on error rather than failing
-    return NextResponse.json(
-      { suggestions: [] },
-      { status: error.response?.status || 500 }
-    );
+    // For autocomplete, we can return an empty array rather than an error
+    // This creates a better UX since autocomplete is non-critical functionality
+    if (
+      error.code === "ECONNABORTED" ||
+      error.code === "ECONNREFUSED" ||
+      error.message?.includes("socket hang up") ||
+      (error.response && error.response.status >= 500)
+    ) {
+      console.warn("Search autocomplete unavailable, returning empty results");
+      return NextResponse.json({ suggestions: [] });
+    }
+
+    // For other errors, use the standard error handler
+    return handleApiError(error, "Search autocomplete");
   }
 }
