@@ -1,61 +1,34 @@
 "use client";
 
 import { useState, useEffect } from "react";
-
-
-
-import { BuyingGuidesSection } from "@/components/buyer-central/buying-guides-section";
-import { MarketInsightsSection } from "@/components/buyer-central/market-insights-section";
-import { SmartAlertsSection } from "@/components/buyer-central/smart-alerts-section";
-import { PriceComparisonSection } from "@/components/buyer-central/price-comparison-section";
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
+import { ShoppingBag } from "lucide-react";
+import { PageHeader } from "@/components/layout/page-header";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import {
-  ShoppingBag,
-  BookOpen,
-  TrendingUp,
-  Bell,
-  BarChart3,
-  Home,
-  Zap,
-  Target,
-  Users,
-  Award,
-} from "lucide-react";
+
+// Import only the components we need for the simplified implementation
+import { PriceComparisonSection } from "@/components/buyer-central/price-comparison-section";
+import { BuyingGuidesSection } from "@/components/buyer-central/buying-guides-section";
+
+// Import types
 import {
   BuyingGuideCategory,
-  MarketIntelligence,
-  BuyingAlert,
   RetailerComparison,
   PriceComparisonData,
 } from "@/lib/types/buyer-central";
 export default function BuyerCentralPage() {
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("guides");
+  const [activeTab, setActiveTab] = useState("compare");
 
-  // Data states
+  // Data states - simplified to only include what we need
   const [guideCategories, setGuideCategories] = useState<BuyingGuideCategory[]>(
     []
   );
-  const [marketInsights, setMarketInsights] = useState<MarketIntelligence[]>(
-    []
-  );
-  const [smartAlerts, setSmartAlerts] = useState<BuyingAlert[]>([]);
-  const [retailerComparisons, setRetailerComparisons] = useState<
-    RetailerComparison[]
-  >([]);
   const [comparisonData, setComparisonData] = useState<PriceComparisonData[]>(
     []
   );
+  const [retailerComparisons, setRetailerComparisons] = useState<
+    RetailerComparison[]
+  >([]);
 
   useEffect(() => {
     loadBuyerCentralData();
@@ -66,8 +39,6 @@ export default function BuyerCentralPage() {
       setLoading(true);
       await Promise.all([
         loadBuyingGuides(),
-        loadMarketInsights(),
-        loadSmartAlerts(),
         loadRetailerComparisons(),
         loadPriceComparisons(),
       ]);
@@ -112,49 +83,7 @@ export default function BuyerCentralPage() {
     setGuideCategories(mockCategories);
   };
 
-  const loadMarketInsights = async () => {
-    // Mock data - replace with actual API call
-    const mockInsights: MarketIntelligence[] = [
-      {
-        categoryName: "Smartphones",
-        bestBuyingPeriod: {
-          month: "September",
-          discountPercentage: 25,
-          reason: "New model releases",
-        },
-        avgPriceRange: { min: 299, max: 1599 },
-        topRetailers: [
-          { retailerName: "TechMart", competitiveScore: 9.2, avgDiscount: 15 },
-          {
-            retailerName: "ElectroHub",
-            competitiveScore: 8.8,
-            avgDiscount: 12,
-          },
-        ],
-        priceVolatility: 0.18,
-        recommendedAction: "wait",
-      },
-    ];
-    setMarketInsights(mockInsights);
-  };
-
-  const loadSmartAlerts = async () => {
-    // Mock data - replace with actual API call
-    const mockAlerts: BuyingAlert[] = [
-      {
-        alertId: "alert1",
-        alertType: "price_drop",
-        categoryName: "Smartphones",
-        title: "iPhone 15 Pro Max - 15% price drop detected",
-        description: "Significant price reduction across multiple retailers",
-        urgency: "high",
-        validUntil: "2024-08-15",
-        actionRequired: true,
-        relatedProducts: [1, 2, 3],
-      },
-    ];
-    setSmartAlerts(mockAlerts);
-  };
+  // Market insights and Smart alerts are removed in this simplified version
 
   const loadRetailerComparisons = async () => {
     // Mock data - replace with actual API call
@@ -337,123 +266,42 @@ export default function BuyerCentralPage() {
     setComparisonData(mockComparisonData);
   };
 
+  // Define breadcrumb items for consistent header with other pages
+  const breadcrumbItems = [
+    { label: "Home", href: "/" },
+    { label: "Buyer Central", href: "/buyer-central" },
+  ];
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      
-      
+    <div className="container mx-auto px-4 py-8">
+      <PageHeader
+        title="Buyer Central"
+        icon={ShoppingBag}
+        breadcrumbItems={breadcrumbItems}
+      />
 
-      <main className="bg-gradient-to-br from-blue-50/30 via-white to-purple-50/30">
-        <div className="container mx-auto px-4 py-8">
-          {/* Breadcrumb */}
-          <div className="mb-6">
-            <Breadcrumb>
-              <BreadcrumbList>
-                <BreadcrumbItem>
-                  <BreadcrumbLink href="/" className="flex items-center gap-1">
-                    <Home className="h-4 w-4" />
-                    Home
-                  </BreadcrumbLink>
-                </BreadcrumbItem>
-                <BreadcrumbSeparator />
-                <BreadcrumbItem>
-                  <BreadcrumbPage>Buyer Central</BreadcrumbPage>
-                </BreadcrumbItem>
-              </BreadcrumbList>
-            </Breadcrumb>
-          </div>
+      <Tabs
+        value={activeTab}
+        onValueChange={setActiveTab}
+        className="space-y-6"
+      >
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="compare">Price Comparison</TabsTrigger>
+          <TabsTrigger value="guides">Buying Guides</TabsTrigger>
+        </TabsList>
 
-          {/* Hero Section */}
-          <div className="mb-8 text-center">
-            <div className="inline-flex items-center justify-center p-3 bg-blue-100 dark:bg-blue-900/20 rounded-full mb-4">
-              <ShoppingBag className="h-8 w-8 text-blue-600" />
-            </div>
-            <h1 className="text-4xl font-bold text-gray-900 mb-4">
-              Buyer Central
-            </h1>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-6">
-              Your ultimate resource for smart shopping decisions. Get expert
-              guides, market insights, and real-time alerts to make informed
-              purchases.
-            </p>
+        <TabsContent value="compare" className="space-y-6">
+          <PriceComparisonSection
+            comparisonData={comparisonData}
+            retailerComparisons={retailerComparisons}
+            loading={loading}
+          />
+        </TabsContent>
 
-            {/* Quick Stats */}
-            <div className="flex items-center justify-center gap-6 mb-8">
-              <div className="flex items-center gap-2">
-                <BookOpen className="h-5 w-5 text-blue-600" />
-                <span className="text-sm text-gray-600">35+ Buying Guides</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <TrendingUp className="h-5 w-5 text-green-600" />
-                <span className="text-sm text-gray-600">
-                  Real-time Market Data
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Zap className="h-5 w-5 text-orange-600" />
-                <span className="text-sm text-gray-600">Smart Alerts</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Award className="h-5 w-5 text-purple-600" />
-                <span className="text-sm text-gray-600">Expert Reviews</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Main Content */}
-          <Tabs
-            value={activeTab}
-            onValueChange={setActiveTab}
-            className="space-y-6"
-          >
-            <TabsList className="grid w-full grid-cols-4">
-              <TabsTrigger value="guides" className="flex items-center gap-2">
-                <BookOpen className="h-4 w-4" />
-                Buying Guides
-              </TabsTrigger>
-              <TabsTrigger value="insights" className="flex items-center gap-2">
-                <TrendingUp className="h-4 w-4" />
-                Market Insights
-              </TabsTrigger>
-              <TabsTrigger value="alerts" className="flex items-center gap-2">
-                <Bell className="h-4 w-4" />
-                Smart Alerts
-              </TabsTrigger>
-              <TabsTrigger value="compare" className="flex items-center gap-2">
-                <BarChart3 className="h-4 w-4" />
-                Price Compare
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="guides" className="space-y-6">
-              <BuyingGuidesSection
-                categories={guideCategories}
-                loading={loading}
-              />
-            </TabsContent>
-
-            <TabsContent value="insights" className="space-y-6">
-              <MarketInsightsSection
-                insights={marketInsights}
-                loading={loading}
-              />
-            </TabsContent>
-
-            <TabsContent value="alerts" className="space-y-6">
-              <SmartAlertsSection alerts={smartAlerts} loading={loading} />
-            </TabsContent>
-
-            <TabsContent value="compare" className="space-y-6">
-              <PriceComparisonSection
-                comparisonData={comparisonData}
-                retailerComparisons={retailerComparisons}
-                loading={loading}
-              />
-            </TabsContent>
-          </Tabs>
-        </div>
-      </main>
-
-      
+        <TabsContent value="guides" className="space-y-6">
+          <BuyingGuidesSection categories={guideCategories} loading={loading} />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

@@ -1,83 +1,317 @@
-# Buyer Central API Implementation Guide
+# Buyer Central Implementation Guide
 
-This document provides comprehensive API endpoints for the Buyer Central features, including buying guides, market insights, smart alerts, and price comparison functionality.
+This document outlines the implementation details for the simplified Buyer Central feature, focusing on price comparison functionality and buying guides using BigQuery as the data warehouse.
 
 ## Overview
 
-The Buyer Central API provides endpoints for buyer-focused features that help users make informed purchasing decisions through guides, alerts, and intelligent price comparisons.
+The simplified Buyer Central implementation focuses on two core features:
+1. **Price comparison** across retailers for specific products
+2. **Buying guides** showing optimal purchasing times for different product categories
 
 ## Database Schema Integration
 
-### Core Tables Used
+### Core Tables
 
-#### User & Operational Database
+#### BigQuery Data Warehouse Tables
 
-- **Users**: User management and preferences
-- **UserPreferences**: Alert settings and notification preferences
-- **UserWatchlist**: Tracked products for alerts
-- **PriceAlerts**: User-configured price alerts
-- **UserSessions**: Session management for personalized features
+- **products**: Product information and details
+  - `product_id`: Unique identifier for the product
+  - `product_name`: Name of the product
+  - `brand_name`: Brand name
+  - `category_id`: Category identifier
+  - `category_name`: Name of the category
+  - `model_number`: Model number
+  - `image_url`: Product image URL
 
-#### Data Warehouse
+- **retailers**: Information about retailers
+  - `retailer_id`: Unique identifier for the retailer
+  - `retailer_name`: Name of the retailer
+  - `website_url`: Retailer website URL
+  - `logo_url`: Retailer logo URL
 
-- **FactProductPrice**: Current and historical pricing data
-- **DimCanonicalProduct**: Product information and details
-- **DimVariant**: Product variants and specifications
-- **DimCategory**: Product categorization
-- **DimShop**: Retailer information
-- **FactPriceAnomaly**: Price change anomalies and alerts
-- **DimTimeMonth**: Temporal data for trend analysis
+- **product_prices**: Current price data
+  - `price_id`: Unique identifier for the price entry
+  - `product_id`: Product identifier
+  - `retailer_id`: Retailer identifier
+  - `price`: Current price
+  - `stock_status`: In stock, low stock, out of stock
+  - `url`: URL to the product page on retailer site
+  - `crawl_timestamp`: When the price was retrieved
+
+- **price_history**: Historical pricing data
+  - `history_id`: Unique identifier for the history entry
+  - `product_id`: Product identifier
+  - `retailer_id`: Retailer identifier
+  - `price`: Historical price
+  - `recorded_at`: When the price was recorded
+
+- **buying_guides**: Information about optimal buying times
+  - `guide_id`: Unique identifier for the guide
+  - `category_id`: Category identifier
+  - `category_name`: Name of the category
+  - `best_time_to_buy`: Description of the best time to buy
+  - `best_months`: Best months for purchasing
+  - `avg_discount`: Average discount percentage
+  - `recommendation`: Buying recommendation
+  - `reason_to_buy`: Explanation for the recommendation
+
+## Key Queries
+
+### Price Comparison Queries
+
+#### Get Latest Prices for a Product
+
+```sql
+SELECT 
+  p.product_id,
+  p.product_name,
+  p.brand_name,
+  p.category_name,
+  p.image_url,
+  r.retailer_id,
+  r.retailer_name,
+  pp.price,
+  pp.stock_status,
+  pp.url,
+  pp.crawl_timestamp as last_updated
+FROM 
+  `project_id.dataset.products` p
+JOIN 
+  `project_id.dataset.product_prices` pp ON p.product_id = pp.product_id
+JOIN 
+  `project_id.dataset.retailers` r ON pp.retailer_id = r.retailer_id
+WHERE
+  p.product_id = @product_id
+  AND pp.crawl_timestamp = (
+    SELECT MAX(crawl_timestamp) 
+    FROM `project_id.dataset.product_prices` 
+    WHERE product_id = @product_id AND retailer_id = pp.retailer_id
+  )
+ORDER BY 
+  pp.price ASC;
+```
+
+#### Get Price Range and Statistics for a Product
+
+```sql
+WITH latest_prices AS (
+  SELECT 
+    pp.product_id,
+    pp.retailer_id,
+    pp.price,
+    ROW_NUMBER() OVER (PARTITION BY pp.product_id, pp.retailer_id ORDER BY pp.crawl_timestamp DESC) as row_num
+  FROM 
+    `project_id.dataset.product_prices` pp
+  WHERE
+    pp.product_id = @product_id
+)
+
+SELECT
+  p.product_id,
+  p.product_name,
+  p.category_name,
+  p.brand_name,
+  p.image_url,
+  MIN(lp.price) as lowest_price,
+  MAX(lp.price) as highest_price,
+  AVG(lp.price) as average_price,
+  COUNT(DISTINCT lp.retailer_id) as retailer_count
+FROM
+  `project_id.dataset.products` p
+JOIN
+  latest_prices lp ON p.product_id = lp.product_id
+WHERE
+  lp.row_num = 1
+GROUP BY
+  p.product_id, p.product_name, p.category_name, p.brand_name, p.image_url;
+```
+
+#### Calculate Price Change Percentage (Last 30 Days)
+
+```sql
+WITH current_prices AS (
+  SELECT 
+    product_id,
+    retailer_id,
+    price as current_price
+  FROM 
+    `project_id.dataset.product_prices`
+  WHERE 
+    crawl_timestamp = (SELECT MAX(crawl_timestamp) FROM `project_id.dataset.product_prices`)
+),
+
+past_prices AS (
+  SELECT 
+    product_id,
+    retailer_id,
+    price as past_price
+  FROM 
+    `project_id.dataset.price_history`
+  WHERE 
+    recorded_at = (
+      SELECT MAX(recorded_at) 
+      FROM `project_id.dataset.price_history`
+      WHERE recorded_at <= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 30 DAY)
+    )
+)
+
+SELECT
+  p.product_id,
+  p.product_name,
+  cp.retailer_id,
+  r.retailer_name,
+  cp.current_price,
+  pp.past_price,
+  ROUND(((cp.current_price - pp.past_price) / pp.past_price) * 100, 2) as price_change_pct
+FROM
+  `project_id.dataset.products` p
+JOIN
+  current_prices cp ON p.product_id = cp.product_id
+JOIN
+  past_prices pp ON p.product_id = pp.product_id AND cp.retailer_id = pp.retailer_id
+JOIN
+  `project_id.dataset.retailers` r ON cp.retailer_id = r.retailer_id
+WHERE
+  p.product_id = @product_id;
+```
+
+### Buying Guide Queries
+
+#### Get All Buying Guides
+
+```sql
+SELECT
+  guide_id,
+  category_id,
+  category_name,
+  best_time_to_buy,
+  best_months,
+  avg_discount,
+  recommendation,
+  reason_to_buy
+FROM
+  `project_id.dataset.buying_guides`
+ORDER BY
+  category_name;
+```
+
+#### Get Buying Guide for a Specific Category
+
+```sql
+SELECT
+  guide_id,
+  category_id,
+  category_name,
+  best_time_to_buy,
+  best_months,
+  avg_discount,
+  recommendation,
+  reason_to_buy
+FROM
+  `project_id.dataset.buying_guides`
+WHERE
+  category_id = @category_id;
+```
 
 ## API Endpoints
 
-### 1. Buying Guides Management
+### 1. Price Comparison Endpoints
 
-#### GET /api/buyer-central/buying-guides
+#### GET /api/v1/products/search
 
-Get all buying guides with categories and featured content.
+Search for products by name, brand, or other criteria.
 
-```python
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
-from typing import List, Optional
-import json
+**Query Parameters:**
+- `query`: Search text
+- `limit`: Number of results to return (default: 10)
+- `offset`: Pagination offset (default: 0)
+- `category`: Filter by category ID (optional)
 
-@app.get("/api/buyer-central/buying-guides")
-async def get_buying_guides(
-    category_id: Optional[int] = None,
-    featured_only: bool = False,
-    db: Session = Depends(get_db)
-):
-    """
-    Retrieve buying guides with optional filtering.
+**Response:**
+```json
+{
+  "products": [
+    {
+      "productId": "123",
+      "productName": "iPhone 15 Pro Max 256GB",
+      "brandName": "Apple",
+      "categoryId": "smartphones",
+      "categoryName": "Smartphones",
+      "imageUrl": "/images/products/iphone-15-pro-max.jpg",
+      "averagePrice": 1199.99
+    }
+  ],
+  "totalCount": 150,
+  "nextOffset": 10
+}
+```
 
-    Query includes:
-    - Category-specific guides
-    - Featured guides
-    - Quick tips and recommendations
-    """
+#### GET /api/v1/products/{productId}/compare
 
-    query = """
-    SELECT
-        bg.guide_id,
-        bg.title,
-        bg.description,
-        bg.content,
-        bg.difficulty_level,
-        bg.estimated_read_time,
-        bg.author,
-        bg.created_date,
-        bg.updated_date,
-        bg.is_featured,
-        c.category_id,
-        c.category_name,
-        COUNT(bgr.rating) as rating_count,
-        AVG(bgr.rating) as average_rating
-    FROM BuyingGuides bg
-    JOIN DimCategory c ON bg.category_id = c.category_id
-    LEFT JOIN BuyingGuideRatings bgr ON bg.guide_id = bgr.guide_id
-    WHERE 1=1
-    """
+Get price comparison data for a specific product across all retailers.
+
+**Response:**
+```json
+{
+  "product": {
+    "productId": "123",
+    "productName": "iPhone 15 Pro Max 256GB",
+    "brandName": "Apple",
+    "categoryId": "smartphones",
+    "categoryName": "Smartphones",
+    "imageUrl": "/images/products/iphone-15-pro-max.jpg",
+    "lowestPrice": 1149.99,
+    "highestPrice": 1299.99,
+    "averagePrice": 1199.99,
+    "priceChange": -2.5
+  },
+  "retailerPrices": [
+    {
+      "retailerId": "456",
+      "retailerName": "TechMart",
+      "price": 1149.99,
+      "stockStatus": "in_stock",
+      "lastUpdated": "2025-10-06T15:30:00Z",
+      "productUrl": "https://techmart.com/products/iphone-15-pro-max"
+    },
+    {
+      "retailerId": "789",
+      "retailerName": "ElectroHub",
+      "price": 1199.99,
+      "stockStatus": "in_stock",
+      "lastUpdated": "2025-10-06T14:45:00Z",
+      "productUrl": "https://electrohub.com/products/iphone-15-pro-max"
+    }
+  ]
+}
+```
+
+### 2. Buying Guide Endpoints
+
+#### GET /api/v1/buying-guides
+
+Get all buying guides.
+
+**Query Parameters:**
+- `category`: Filter by category ID (optional)
+
+**Response:**
+```json
+{
+  "guides": [
+    {
+      "guideId": "guide-123",
+      "categoryId": "smartphones",
+      "categoryName": "Smartphones",
+      "bestTimeToBuy": "After new model releases",
+      "bestMonths": "September-October",
+      "averageDiscount": 15.5,
+      "recommendation": "Wait for new releases",
+      "reasonToBuy": "Major manufacturers release new models in August-September, causing prices for previous models to drop significantly."
+    }
+  ]
+}
+```
 
     params = {}
 
@@ -1463,46 +1697,81 @@ async def get_retailer_comparison(
     """
 
     result = db.execute(text(query))
+## Implementation Steps
 
-    retailers = []
-    for row in result:
-        # Determine strengths based on metrics
-        strengths = []
-        if row.best_price_percentage > 20:
-            strengths.append("Competitive Pricing")
-        if row.stock_availability > 90:
-            strengths.append("High Availability")
-        if row.base_rating > 4.0:
-            strengths.append("Customer Satisfaction")
-        if row.total_products > 1000:
-            strengths.append("Wide Selection")
+1. **Set up BigQuery Tables**
+   - Create dataset and tables using the schema definitions above
+   - Set appropriate access controls
 
-        retailers.append({
-            "retailerId": row.shop_id,
-            "retailerName": row.shop_name,
-            "averageRating": float(row.base_rating) if row.base_rating else 0,
-            "totalProducts": row.total_products,
-            "competitivenessScore": round(row.competitiveness_score, 1),
-            "stockAvailability": round(row.stock_availability, 1),
-            "bestPricePercentage": round(row.best_price_percentage, 1),
-            "deliverySpeed": "2-3 days",  # This would come from retailer profile
-            "returnPolicy": "30 days",    # This would come from retailer profile
-            "customerServiceRating": float(row.base_rating) if row.base_rating else 0,
-            "strengths": strengths
-        })
+2. **Data Pipeline Implementation**
+   - Implement crawlers or API integrations to collect product prices
+   - Set up scheduled jobs to refresh price data
+   - Create transformation pipelines to calculate statistics and trends
 
-    return {
-        "success": True,
-        "data": retailers,
-        "total": len(retailers)
-    }
-```
+3. **API Layer Development**
+   - Develop API endpoints as described above
+   - Implement caching strategy to minimize BigQuery query costs
+   - Add authentication and rate limiting
 
-## Error Handling
+4. **Frontend Integration**
+   - Use the provided React components for price comparison and buying guides
+   - Connect to the API endpoints
+   - Implement search and filtering functionality
 
-```python
-from fastapi import HTTPException
-from sqlalchemy.exc import SQLAlchemyError
+## Performance Considerations
+
+1. **BigQuery Optimization**
+   - Partition the `product_prices` and `price_history` tables by date
+   - Use clustering on frequently queried columns (product_id, retailer_id)
+   - Create materialized views for common queries
+
+2. **Caching Strategy**
+   - Cache price comparison results for popular products
+   - Implement a time-based cache invalidation strategy
+   - Use Redis or a similar in-memory data store for caching
+
+3. **Query Cost Management**
+   - Minimize full table scans
+   - Use partitioned queries when accessing historical data
+   - Schedule batch processing for analytics queries
+
+## Monitoring
+
+1. **Data Quality Monitoring**
+   - Track price data freshness
+   - Monitor for anomalies in price data
+   - Alert on crawl failures
+
+2. **API Monitoring**
+   - Track API usage and performance
+   - Monitor error rates and response times
+   - Set up alerting for API failures
+
+## Error Handling Best Practices
+
+1. **API Error Handling**
+   - Use proper HTTP status codes for different error types
+   - Include meaningful error messages in responses
+   - Log detailed errors for debugging
+
+2. **Data Validation**
+   - Validate input parameters before processing
+   - Check for missing or malformed data
+   - Implement retry logic for transient errors
+
+## Future Enhancements
+
+1. **Price Prediction**
+   - Implement ML models to predict future price trends
+   - Add price alerts based on predictive analytics
+
+2. **Personalized Recommendations**
+   - Add user preferences to tailor buying recommendations
+   - Implement collaborative filtering for product suggestions
+
+3. **Integration with Review Data**
+   - Combine price data with product reviews for comprehensive buying guides
+   - Add sentiment analysis for retailer trustworthiness
 
 @app.exception_handler(SQLAlchemyError)
 async def sqlalchemy_exception_handler(request, exc):
