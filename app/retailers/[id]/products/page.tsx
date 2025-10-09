@@ -61,6 +61,10 @@ interface ApiProduct {
   shop_id: number;
   shop_name?: string;
   category?: string;
+  // Add retailer field to match backend response
+  retailer?: string;
+  retailer_id?: number;
+  images?: string[];
 }
 
 // Product interface matching what ProductCard component expects
@@ -114,7 +118,7 @@ export default function RetailerProductsPage() {
     categories: [],
     brands: [],
     minPrice: 0,
-    maxPrice: 200000,
+    maxPrice: 2000000, // Increase max price to 2,000,000
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -129,7 +133,7 @@ export default function RetailerProductsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [selectedBrand, setSelectedBrand] = useState<string>("");
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 200000]); // Adjust max as needed
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 2000000]); // Adjust max to 2,000,000
   const [inStockOnly, setInStockOnly] = useState(false);
   const [hasDiscount, setHasDiscount] = useState(false);
   const [sortBy, setSortBy] = useState<string>("newest");
@@ -137,7 +141,7 @@ export default function RetailerProductsPage() {
 
   // Track if this is the first load
   const isFirstLoad = useRef(true);
-  
+
   // Fetch retailer and products
   useEffect(() => {
     if (retailerId) {
@@ -161,15 +165,17 @@ export default function RetailerProductsPage() {
 
   // Create a reference for the current request to avoid race conditions
   const activeRequestRef = useRef(false);
-  
+
   const fetchData = async () => {
     // If there's an active request, don't start another one
     if (activeRequestRef.current) {
       console.log("Skipping duplicate request - already fetching data");
       return;
     }
-    
-    console.log(`Fetching retailer products - retailerId: ${retailerId}, page: ${currentPage}`);
+
+    console.log(
+      `Fetching retailer products - retailerId: ${retailerId}, page: ${currentPage}`
+    );
     activeRequestRef.current = true;
     setLoading(true);
     setError(null);
@@ -209,91 +215,123 @@ export default function RetailerProductsPage() {
       // Fetch the products data from our API route
       const apiUrl = `/api/v1/retailers/${retailerId}/products?${queryParams}`;
       console.log(`API Request URL: ${apiUrl}`);
-      
+
       const response = await fetch(apiUrl);
       console.log(`API Response status: ${response.status}`);
 
       if (!response.ok) {
-        throw new Error(`Failed to fetch retailer products: ${response.status}`);
+        throw new Error(
+          `Failed to fetch retailer products: ${response.status}`
+        );
       }
 
       const data = await response.json();
-      console.log("API response received", { 
-        hasRetailer: !!data.retailer, 
+      console.log("API response received", {
+        hasRetailer: !!data.retailer,
         productsCount: data.products?.length || 0,
         hasFilters: !!data.filters,
         retailerData: data.retailer,
-        paginationData: data.pagination
+        paginationData: data.pagination || data.meta, // Support both pagination and meta keys
       });
-      
+
       // Validate the data structure
       if (!data.retailer) {
         console.warn("API response missing retailer data");
       }
-      
+
       if (!Array.isArray(data.products)) {
-        console.error("API response products is not an array:", typeof data.products);
+        console.error(
+          "API response products is not an array:",
+          typeof data.products
+        );
         throw new Error("Invalid data format: products is not an array");
       }
 
       setRetailer(data.retailer);
-      
-      console.log("Raw API products sample:", data.products?.[0]);
-      
-      // Map API products to our interface to ensure all required fields
-      const mappedProducts: Product[] = (data.products || []).map((apiProduct: ApiProduct) => {
-        try {
-          // Check if the apiProduct is valid
-          if (!apiProduct || typeof apiProduct !== 'object') {
-            console.error("Invalid product data:", apiProduct);
-            return null;
-          }
-          
-          if (apiProduct.id === undefined) {
-            console.error("Product missing ID:", apiProduct);
-            return null;
-          }
 
-          return {
-            id: apiProduct.id,
-            name: apiProduct.name || "Unnamed Product",
-            brand: apiProduct.brand || "Unknown",
-            price: typeof apiProduct.price === 'number' ? apiProduct.price : 0,
-            originalPrice: typeof apiProduct.original_price === 'number' ? apiProduct.original_price : undefined,
-            discount: typeof apiProduct.discount === 'number' ? apiProduct.discount : undefined,
-            rating: typeof apiProduct.rating === 'number' ? apiProduct.rating : undefined,
-            description: apiProduct.description,
-            // Ensure required fields for ProductCard are present
-            category: apiProduct.category_name || apiProduct.category || "Unknown",
-            retailer: apiProduct.shop_name || data.retailer?.name || "Unknown",
-            inStock: Boolean(apiProduct.in_stock),
-            // If image is missing, use a placeholder
-            image: apiProduct.image || "/placeholder.svg?height=200&width=200"
-          };
-        } catch (err) {
-          console.error("Error mapping product:", err, apiProduct);
-          return null;
-        }
-      })
-      // Filter out any null values from failed mappings
-      .filter((product): product is Product => product !== null);
-      
+      console.log("Raw API products sample:", data.products?.[0]);
+
+      // Map API products to our interface to ensure all required fields
+      const mappedProducts: Product[] = (data.products || [])
+        .map((apiProduct: ApiProduct) => {
+          try {
+            // Check if the apiProduct is valid
+            if (!apiProduct || typeof apiProduct !== "object") {
+              console.error("Invalid product data:", apiProduct);
+              return null;
+            }
+
+            if (apiProduct.id === undefined) {
+              console.error("Product missing ID:", apiProduct);
+              return null;
+            }
+
+            return {
+              id: apiProduct.id,
+              name: apiProduct.name || "Unnamed Product",
+              brand: apiProduct.brand || "Unknown",
+              price:
+                typeof apiProduct.price === "number" ? apiProduct.price : 0,
+              originalPrice:
+                typeof apiProduct.original_price === "number"
+                  ? apiProduct.original_price
+                  : undefined,
+              discount:
+                typeof apiProduct.discount === "number"
+                  ? apiProduct.discount
+                  : undefined,
+              rating:
+                typeof apiProduct.rating === "number"
+                  ? apiProduct.rating
+                  : undefined,
+              description: apiProduct.description,
+              // Ensure required fields for ProductCard are present
+              category:
+                apiProduct.category_name || apiProduct.category || "Unknown",
+              // Fix retailer name by using shop_name, retailer or directly from apiProduct.retailer
+              retailer:
+                apiProduct.shop_name ||
+                apiProduct.retailer ||
+                data.retailer?.name ||
+                "Unknown",
+              inStock: Boolean(apiProduct.in_stock),
+              // If image is missing, use a placeholder
+              image:
+                apiProduct.image || "/placeholder.svg?height=200&width=200",
+            };
+          } catch (err) {
+            console.error("Error mapping product:", err, apiProduct);
+            return null;
+          }
+        })
+        // Filter out any null values from failed mappings
+        .filter(
+          (product: Product | null): product is Product => product !== null
+        );
+
       console.log("Mapped products", { count: mappedProducts.length });
       setProducts(mappedProducts);
       setFilters({
         categories: data.filters?.categories || [],
         brands: data.filters?.brands || [],
         minPrice: data.filters?.minPrice || 0,
-        maxPrice: data.filters?.maxPrice || 200000,
+        maxPrice: data.filters?.maxPrice || 2000000, // Increase max price to 2,000,000
       });
-      setTotalPages(data.pagination?.total_pages || 1);
-      setTotalCount(data.pagination?.total_items || 0);
+
+      // Support both pagination and meta keys from API response
+      const paginationData = data.pagination || data.meta;
+      setTotalPages(
+        paginationData?.total_pages || paginationData?.total_pages || 1
+      );
+      setTotalCount(
+        paginationData?.total_items || paginationData?.total_count || 0
+      );
 
       // Only initialize price range on first load
       if (isFirstLoad.current && data.filters) {
         console.log("Initializing price range on first load", {
           min: data.filters.minPrice || 0,
-          max: data.filters.maxPrice || 200000
+          max: data.filters.maxPrice || 200000,
         });
         isFirstLoad.current = false;
         setPriceRange([
@@ -307,22 +345,28 @@ export default function RetailerProductsPage() {
       console.log("Fetch completed successfully");
     } catch (error: any) {
       console.error("Error fetching retailer products:", error);
-      
+
       // More descriptive error message based on the error type
       let errorMessage = "Failed to load products. Please try again.";
-      
-      if (error.message?.includes("socket hang up") || error.code === "ECONNRESET") {
-        errorMessage = "Connection to server was lost. Please check your internet connection and try again.";
+
+      if (
+        error.message?.includes("socket hang up") ||
+        error.code === "ECONNRESET"
+      ) {
+        errorMessage =
+          "Connection to server was lost. Please check your internet connection and try again.";
       } else if (error.message?.includes("products is not an array")) {
-        errorMessage = "The server returned an invalid response format. Please try again later.";
+        errorMessage =
+          "The server returned an invalid response format. Please try again later.";
       } else if (error.message?.includes("Failed to fetch")) {
-        errorMessage = "Unable to connect to the server. Please check your internet connection.";
+        errorMessage =
+          "Unable to connect to the server. Please check your internet connection.";
       }
-      
+
       setError(errorMessage);
       setLoading(false);
       activeRequestRef.current = false;
-      
+
       // Set empty products to avoid showing stale data
       setProducts([]);
     }
@@ -340,7 +384,7 @@ export default function RetailerProductsPage() {
 
   // Filter reset handler
   const resetFilters = () => {
-    setPriceRange([filters.minPrice || 0, filters.maxPrice || 200000]);
+    setPriceRange([filters.minPrice || 0, filters.maxPrice || 2000000]);
     setInStockOnly(false);
     setHasDiscount(false);
     setSortBy("newest");
@@ -373,9 +417,9 @@ export default function RetailerProductsPage() {
     hasRetailer: !!retailer,
     productsCount: products.length,
     isInitialLoad,
-    hasError: !!error
+    hasError: !!error,
   });
-  
+
   if (isInitialLoad && !error) {
     return (
       <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center">
@@ -391,7 +435,7 @@ export default function RetailerProductsPage() {
       {/* Retailer Header */}
       <div className="bg-gradient-to-b from-blue-900 to-indigo-900 text-white py-12">
         <div className="container mx-auto px-4">
-          {/* Breadcrumb */}
+          {/* Breadcrumb - Fixed to show retailer name */}
           <div className="flex items-center text-sm text-blue-100 mb-6">
             <Link href="/" className="hover:text-white transition-colors">
               Home
@@ -404,7 +448,7 @@ export default function RetailerProductsPage() {
               Retailers
             </Link>
             <span className="mx-2">&gt;</span>
-            <span>{retailer?.name}</span>
+            <span>{retailer?.name || "Loading..."}</span>
           </div>
 
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
@@ -424,7 +468,11 @@ export default function RetailerProductsPage() {
               <div className="bg-white/10 backdrop-blur-sm rounded-lg px-4 py-3">
                 <div className="text-xs text-blue-200">Total Products</div>
                 <div className="text-2xl font-bold">
-                  {retailer?.product_count.toLocaleString()}
+                  {retailer && typeof retailer.product_count === "number"
+                    ? retailer.product_count.toLocaleString()
+                    : totalCount > 0
+                    ? totalCount.toLocaleString()
+                    : "..."}
                 </div>
               </div>
 
@@ -450,7 +498,7 @@ export default function RetailerProductsPage() {
                 className="flex-grow h-14 px-6 bg-white/95 border-0 text-gray-900 text-lg focus-visible:ring-blue-500"
                 onKeyDown={(e) => {
                   // Prevent form submission on every key press
-                  if (e.key === 'Enter') {
+                  if (e.key === "Enter") {
                     e.preventDefault();
                     handleSearch(e);
                   }
@@ -500,8 +548,8 @@ export default function RetailerProductsPage() {
                 <Slider
                   defaultValue={[priceRange[0], priceRange[1]]}
                   min={0}
-                  max={200000}
-                  step={1000}
+                  max={2000000}
+                  step={5000}
                   value={[priceRange[0], priceRange[1]]}
                   onValueChange={(value) => setPriceRange([value[0], value[1]])}
                   onValueCommit={() => fetchData()} // Only fetch when slider stops moving
@@ -625,7 +673,10 @@ export default function RetailerProductsPage() {
                 <CustomPagination
                   currentPage={currentPage}
                   totalPages={totalPages}
-                  onPageChange={handlePageChange}
+                  onPageChange={(page) => {
+                    setCurrentPage(page);
+                    window.scrollTo(0, 0); // Scroll to top when changing page
+                  }}
                 />
               </div>
             )}
