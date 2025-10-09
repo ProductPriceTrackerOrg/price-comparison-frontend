@@ -65,7 +65,7 @@ export default function RetailersPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
-  const limit = 6; // Retailers per page
+  const limit = 8; // Retailers per page
 
   useEffect(() => {
     fetchRetailers();

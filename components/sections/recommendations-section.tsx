@@ -293,7 +293,7 @@ export function RecommendationsSection() {
               </div>
               <div>
                 <h3 className="text-2xl font-bold text-gray-900">
-                  Users Also Bought
+                  Users Also Liked
                 </h3>
                 <p className="text-gray-600 text-sm mt-1">
                   Smart watches and camera protection
