@@ -5,7 +5,7 @@ import axiosRetry from "axios-retry";
 // Create an axios instance with the base URL of your FastAPI backend
 const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:9000",
-  timeout: 15000, // 15 seconds timeout (increased from 10s)
+  timeout: 30000, // 30 seconds timeout (increased from 15s)
   maxContentLength: 5 * 1024 * 1024, // 5MB max content size
   headers: {
     "Content-Type": "application/json",
