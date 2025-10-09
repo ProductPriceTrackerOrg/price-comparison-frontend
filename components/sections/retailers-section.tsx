@@ -10,15 +10,15 @@ import { Spinner } from "@/components/ui/spinner";
 
 // Define interfaces for API responses
 interface ApiRetailer {
-  id: number;
+  shop_id: number;
   name: string;
   logo?: string;
-  website?: string;
-  rating?: number;
+  website_url?: string;
+  avg_rating?: number;
   product_count?: number;
-  description?: string;
-  verified?: boolean;
-  is_featured?: boolean;
+  specialty?: string;
+  contact_phone?: string;
+  contact_whatsapp?: string;
 }
 
 interface Retailer {
@@ -43,7 +43,7 @@ export function RetailersSection() {
 
       try {
         // Fetch the retailers data from our API route
-        const response = await fetch("/api/v1/retailers?limit=6");
+        const response = await fetch("/api/v1/home/retailers?limit=6");
 
         if (!response.ok) {
           throw new Error("Failed to fetch retailers");
@@ -54,10 +54,10 @@ export function RetailersSection() {
         // Map API response to our Retailer interface
         const mappedRetailers: Retailer[] = (data.retailers || []).map(
           (retailer: ApiRetailer) => ({
-            id: retailer.id,
+            id: retailer.shop_id,
             name: retailer.name,
             logo: retailer.logo || "/placeholder.svg?height=60&width=120",
-            rating: retailer.rating || 4.5,
+            rating: retailer.avg_rating || 4.5,
             products: retailer.product_count
               ? `${
                   retailer.product_count > 1000
@@ -65,8 +65,10 @@ export function RetailersSection() {
                     : retailer.product_count
                 }`
               : "50K+",
-            verified: retailer.verified || false,
-            description: retailer.description || "Quality products retailer",
+            verified: true, // Assuming all retailers from API are verified
+            description: retailer.specialty
+              ? `Specializes in ${retailer.specialty}`
+              : "Quality products retailer",
           })
         );
 
@@ -82,46 +84,46 @@ export function RetailersSection() {
             id: 1,
             name: "lifemobile.lk",
             logo: "https://placekitten.com/200/200?retailer=1",
-            rating: 4.812659714936021,
+            rating: 4.81,
             products: "15K+",
             verified: true,
-            description: "Leading electronics retailer",
+            description: "Specializes in Electronics",
           },
           {
             id: 0,
             name: "appleme",
             logo: "https://placekitten.com/200/200?retailer=0",
-            rating: 4.345862934860713,
+            rating: 4.34,
             products: "2K+",
             verified: true,
-            description: "Premium Apple products",
+            description: "Specializes in Electronics",
           },
           {
             id: 3,
             name: "simplytek",
             logo: "https://placekitten.com/200/200?retailer=3",
-            rating: 4.958517092698053,
+            rating: 4.95,
             products: "2K+",
             verified: true,
-            description: "Quality tech solutions",
+            description: "Specializes in Electronics",
           },
           {
             id: 4,
             name: "laptop.lk",
             logo: "https://placekitten.com/200/200?retailer=4",
-            rating: 4.347462893925521,
+            rating: 4.34,
             products: "1K+",
             verified: true,
-            description: "Laptop and computer specialist",
+            description: "Specializes in Electronics",
           },
           {
             id: 2,
             name: "onei.lk",
             logo: "https://placekitten.com/200/200?retailer=2",
-            rating: 4.778775384683049,
+            rating: 4.77,
             products: "582",
             verified: true,
-            description: "Premium electronics retailer",
+            description: "Specializes in Electronics",
           },
         ]);
         setLoading(false);

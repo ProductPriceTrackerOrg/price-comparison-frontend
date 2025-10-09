@@ -1,106 +1,112 @@
 import { Product } from "./product-data";
 
 export interface Retailer {
-  id: number;
+  id: number; // maps to shop_id from BigQuery
   name: string;
   logo: string;
-  rating: number;
-  productCount: number;
+  rating: number; // maps to avg_rating from BigQuery
+  productCount: number; // maps to product_count from BigQuery
   verified: boolean;
-  description: string;
-  website?: string;
+  description: string; // derived from specialty in BigQuery
+  website?: string; // maps to website_url from BigQuery
   foundedYear?: number;
   headquarters?: string;
   contact?: {
     email?: string;
-    phone?: string;
+    phone?: string; // maps to contact_phone from BigQuery
+    whatsapp?: string; // maps to contact_whatsapp from BigQuery
     address?: string;
   };
 }
 
 export const retailers: Retailer[] = [
   {
-    id: 1,
+    id: 1, // shop_id
     name: "lifemobile.lk",
     logo: "https://placekitten.com/200/200?retailer=1",
-    rating: 4.812659714936021,
-    productCount: 15464,
+    rating: 4.81, // avg_rating
+    productCount: 15464, // product_count
     verified: true,
-    description: "Leading electronics retailer specializing in mobile devices and accessories",
-    website: "https://lifemobile.lk",
+    description: "Specializes in Electronics", // derived from specialty
+    website: "https://lifemobile.lk", // website_url
     foundedYear: 2015,
     headquarters: "Colombo, Sri Lanka",
     contact: {
       email: "info@lifemobile.lk",
-      phone: "+94112322511",
+      phone: "+94112322511", // contact_phone
+      whatsapp: "+94770000111", // contact_whatsapp
       address: "123 Main St, Colombo 03, Sri Lanka",
     },
   },
   {
-    id: 0,
+    id: 0, // shop_id
     name: "appleme",
     logo: "https://placekitten.com/200/200?retailer=0",
-    rating: 4.345862934860713,
-    productCount: 2398,
+    rating: 4.34, // avg_rating
+    productCount: 2398, // product_count
     verified: true,
-    description: "Premium Apple products and accessories",
-    website: "https://appleme",
+    description: "Specializes in Electronics", // derived from specialty
+    website: "https://appleme.lk", // website_url
     foundedYear: 2017,
     headquarters: "Kandy, Sri Lanka",
     contact: {
       email: "support@appleme.lk",
-      phone: "+94777911011",
+      phone: "+94777911011", // contact_phone
+      whatsapp: "+94777911022", // contact_whatsapp
       address: "456 Tech Park, Kandy, Sri Lanka",
     },
   },
   {
-    id: 3,
+    id: 3, // shop_id
     name: "simplytek",
     logo: "https://placekitten.com/200/200?retailer=3",
-    rating: 4.958517092698053,
-    productCount: 2345,
+    rating: 4.95, // avg_rating
+    productCount: 2345, // product_count
     verified: true,
-    description: "Quality tech solutions and electronics",
-    website: "https://simplytek",
+    description: "Specializes in Electronics", // derived from specialty
+    website: "https://simplytek.lk", // website_url
     foundedYear: 2016,
     headquarters: "Galle, Sri Lanka",
     contact: {
       email: "care@simplytek.lk",
-      phone: "+94117555888",
+      phone: "+94117555888", // contact_phone
+      whatsapp: "+94117555889", // contact_whatsapp
       address: "789 Smart Plaza, Galle, Sri Lanka",
     },
   },
   {
-    id: 4,
+    id: 4, // shop_id
     name: "laptop.lk",
     logo: "https://placekitten.com/200/200?retailer=4",
-    rating: 4.347462893925521,
-    productCount: 1831,
+    rating: 4.34, // avg_rating
+    productCount: 1831, // product_count
     verified: true,
-    description: "Laptop and computer specialist",
-    website: "https://laptop.lk",
+    description: "Specializes in Electronics", // derived from specialty
+    website: "https://laptop.lk", // website_url
     foundedYear: 2018,
     headquarters: "Colombo, Sri Lanka",
     contact: {
       email: "hello@laptop.lk",
-      phone: "+94777336464",
+      phone: "+94777336464", // contact_phone
+      whatsapp: "+94777336465", // contact_whatsapp
       address: "321 Digital Avenue, Colombo 05, Sri Lanka",
     },
   },
   {
-    id: 2,
+    id: 2, // shop_id
     name: "onei.lk",
     logo: "https://placekitten.com/200/200?retailer=2",
-    rating: 4.778775384683049,
-    productCount: 582,
+    rating: 4.77, // avg_rating
+    productCount: 582, // product_count
     verified: true,
-    description: "Premium electronics retailer",
-    website: "https://onei.lk",
+    description: "Specializes in Electronics", // derived from specialty
+    website: "https://onei.lk", // website_url
     foundedYear: 2019,
     headquarters: "Matara, Sri Lanka",
     contact: {
       email: "sales@onei.lk",
-      phone: "+94770176666",
+      phone: "+94770176666", // contact_phone
+      whatsapp: "+94770176667", // contact_whatsapp
       address: "987 Electronic Square, Matara, Sri Lanka",
     },
   },
