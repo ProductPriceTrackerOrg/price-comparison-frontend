@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { ShoppingBag } from "lucide-react";
+import { ShoppingBag, AlertTriangle } from "lucide-react";
 import { PageHeader } from "@/components/layout/page-header";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -15,8 +15,25 @@ import {
   RetailerComparison,
   PriceComparisonData,
 } from "@/lib/types/buyer-central";
+
+// Import API functions
+import { 
+  getBuyerCentralBuyingGuides,
+  getBuyerCentralPriceComparison,
+  getRetailerComparisons
+} from "@/lib/buyer-central-api";
 export default function BuyerCentralPage() {
+  // Loading states for each data type
   const [loading, setLoading] = useState(true);
+  const [guidesLoading, setGuidesLoading] = useState(true);
+  const [retailersLoading, setRetailersLoading] = useState(true);
+  const [priceDataLoading, setPriceDataLoading] = useState(true);
+  
+  // Error states for each data type
+  const [guidesError, setGuidesError] = useState<string | null>(null);
+  const [retailersError, setRetailersError] = useState<string | null>(null);
+  const [priceDataError, setPriceDataError] = useState<string | null>(null);
+  
   const [activeTab, setActiveTab] = useState("compare");
 
   // Data states - simplified to only include what we need
@@ -35,235 +52,95 @@ export default function BuyerCentralPage() {
   }, []);
 
   const loadBuyerCentralData = async () => {
-    try {
-      setLoading(true);
-      await Promise.all([
-        loadBuyingGuides(),
-        loadRetailerComparisons(),
-        loadPriceComparisons(),
-      ]);
-    } catch (error) {
-      console.error("Failed to load buyer central data:", error);
-    } finally {
-      setLoading(false);
-    }
+    setLoading(true);
+    
+    // Load all data in parallel
+    await Promise.all([
+      loadBuyingGuides(),
+      loadRetailerComparisons(),
+      loadPriceComparisons(),
+    ]);
+    
+    // When all data is loaded (whether successful or not), set overall loading to false
+    setLoading(false);
   };
 
   const loadBuyingGuides = async () => {
-    // Mock data - replace with actual API call
-    const mockCategories: BuyingGuideCategory[] = [
-      {
-        categoryId: 1,
-        categoryName: "Smartphones",
-        description: "Complete guides for choosing the perfect smartphone",
-        icon: "📱",
-        guideCount: 12,
-        avgProductPrice: 899,
-        popularBrands: ["Apple", "Samsung", "Google"],
-      },
-      {
-        categoryId: 2,
-        categoryName: "Laptops",
-        description: "Expert advice for laptop purchases",
-        icon: "💻",
-        guideCount: 15,
-        avgProductPrice: 1299,
-        popularBrands: ["Apple", "Dell", "HP"],
-      },
-      {
-        categoryId: 3,
-        categoryName: "Smart Watches",
-        description: "Everything you need to know about smart watches",
-        icon: "⌚",
-        guideCount: 8,
-        avgProductPrice: 349,
-        popularBrands: ["Apple", "Samsung", "Fitbit"],
-      },
-    ];
-    setGuideCategories(mockCategories);
+    setGuidesLoading(true);
+    setGuidesError(null);
+    
+    try {
+      // Call the API function to get buying guides
+      const response = await getBuyerCentralBuyingGuides();
+      if (response && response.success && response.data) {
+        setGuideCategories(response.data);
+      } else {
+        const errorMsg = "Failed to load buying guides: Invalid response format";
+        console.error(errorMsg, response);
+        setGuidesError(errorMsg);
+        setGuideCategories([]);
+      }
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : "Unknown error occurred";
+      console.error("Error loading buying guides:", error);
+      setGuidesError(`Failed to load buying guides: ${errorMsg}`);
+      setGuideCategories([]);
+    } finally {
+      setGuidesLoading(false);
+    }
   };
 
   // Market insights and Smart alerts are removed in this simplified version
 
   const loadRetailerComparisons = async () => {
-    // Mock data - replace with actual API call
-    const mockRetailers: RetailerComparison[] = [
-      {
-        retailerId: 1,
-        retailerName: "TechMart",
-        averageRating: 4.8,
-        overallRating: 4.8,
-        priceCompetitiveness: 9.2,
-        competitivenessScore: 92,
-        customerService: 4.5,
-        customerServiceRating: 4.5,
-        shippingSpeed: 4.7,
-        returnPolicy: 4.9,
-        deliverySpeed: "2-3 days",
-        specialties: ["Electronics", "Gaming"],
-        strengths: ["Competitive Pricing", "Fast Delivery", "Customer Support"],
-        averageDiscount: 15,
-        totalProducts: 25840,
-      },
-      {
-        retailerId: 2,
-        retailerName: "ElectroHub",
-        averageRating: 4.6,
-        overallRating: 4.6,
-        priceCompetitiveness: 8.8,
-        competitivenessScore: 88,
-        customerService: 4.2,
-        customerServiceRating: 4.2,
-        shippingSpeed: 4.5,
-        returnPolicy: 4.6,
-        deliverySpeed: "1-2 days",
-        specialties: ["Mobile", "Accessories"],
-        strengths: ["Wide Selection", "Fast Shipping"],
-        averageDiscount: 12,
-        totalProducts: 18650,
-      },
-      {
-        retailerId: 3,
-        retailerName: "MegaStore",
-        averageRating: 4.4,
-        overallRating: 4.4,
-        priceCompetitiveness: 8.5,
-        competitivenessScore: 85,
-        customerService: 4.0,
-        customerServiceRating: 4.0,
-        shippingSpeed: 4.3,
-        returnPolicy: 4.5,
-        deliverySpeed: "3-5 days",
-        specialties: ["Appliances", "Electronics"],
-        strengths: ["Good Prices", "Reliable"],
-        averageDiscount: 10,
-        totalProducts: 32100,
-      },
-    ];
-    setRetailerComparisons(mockRetailers);
+    setRetailersLoading(true);
+    setRetailersError(null);
+    
+    try {
+      // Get retailer comparisons from API
+      const retailers = await getRetailerComparisons();
+      setRetailerComparisons(retailers);
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : "Unknown error occurred";
+      console.error("Error loading retailer comparisons:", error);
+      setRetailersError(`Failed to load retailer data: ${errorMsg}`);
+      setRetailerComparisons([]);
+    } finally {
+      setRetailersLoading(false);
+    }
   };
 
   const loadPriceComparisons = async () => {
-    // Mock data - replace with actual API call
-    const mockComparisonData: PriceComparisonData[] = [
-      {
-        productId: 1,
-        productName: "iPhone 15 Pro Max 256GB",
-        categoryName: "Smartphones",
-        averagePrice: 1199,
-        retailerPrices: [
-          {
-            retailerId: 1,
-            retailerName: "TechMart",
-            price: 1149,
-            stockStatus: "in_stock",
-            rating: 4.8,
-            lastUpdated: "2024-08-06",
-          },
-          {
-            retailerId: 2,
-            retailerName: "ElectroHub",
-            price: 1199,
-            stockStatus: "in_stock",
-            rating: 4.6,
-            lastUpdated: "2024-08-06",
-          },
-          {
-            retailerId: 3,
-            retailerName: "MegaStore",
-            price: 1229,
-            stockStatus: "in_stock",
-            rating: 4.4,
-            lastUpdated: "2024-08-05",
-          },
-          {
-            retailerId: 4,
-            retailerName: "QuickBuy",
-            price: 1179,
-            stockStatus: "low_stock",
-            rating: 4.2,
-            lastUpdated: "2024-08-06",
-          },
-        ],
-        priceHistory: {
-          priceChange: -3.2,
-          trend: "decreasing",
-        },
-      },
-      {
-        productId: 2,
-        productName: "Samsung Galaxy S24 Ultra 512GB",
-        categoryName: "Smartphones",
-        averagePrice: 1399,
-        retailerPrices: [
-          {
-            retailerId: 1,
-            retailerName: "TechMart",
-            price: 1359,
-            stockStatus: "in_stock",
-            rating: 4.8,
-            lastUpdated: "2024-08-06",
-          },
-          {
-            retailerId: 2,
-            retailerName: "ElectroHub",
-            price: 1399,
-            stockStatus: "in_stock",
-            rating: 4.6,
-            lastUpdated: "2024-08-06",
-          },
-          {
-            retailerId: 3,
-            retailerName: "MegaStore",
-            price: 1449,
-            stockStatus: "in_stock",
-            rating: 4.4,
-            lastUpdated: "2024-08-05",
-          },
-        ],
-        priceHistory: {
-          priceChange: -1.8,
-          trend: "stable",
-        },
-      },
-      {
-        productId: 3,
-        productName: "MacBook Pro 14-inch M3 Pro",
-        categoryName: "Laptops",
-        averagePrice: 2499,
-        retailerPrices: [
-          {
-            retailerId: 1,
-            retailerName: "TechMart",
-            price: 2399,
-            stockStatus: "in_stock",
-            rating: 4.8,
-            lastUpdated: "2024-08-06",
-          },
-          {
-            retailerId: 2,
-            retailerName: "ElectroHub",
-            price: 2499,
-            stockStatus: "in_stock",
-            rating: 4.6,
-            lastUpdated: "2024-08-06",
-          },
-          {
-            retailerId: 4,
-            retailerName: "QuickBuy",
-            price: 2449,
-            stockStatus: "in_stock",
-            rating: 4.2,
-            lastUpdated: "2024-08-06",
-          },
-        ],
-        priceHistory: {
-          priceChange: -4.1,
-          trend: "decreasing",
-        },
-      },
-    ];
-    setComparisonData(mockComparisonData);
+    setPriceDataLoading(true);
+    setPriceDataError(null);
+    
+    try {
+      // Define a set of popular product IDs to compare
+      // In a real application, these could be derived from:
+      // - Recently viewed products
+      // - Popular products in the system
+      // - Products the user has added to a comparison list
+      const popularProductIds = [1, 2, 3]; // Example product IDs
+      
+      // Call the API to get price comparison data
+      const response = await getBuyerCentralPriceComparison(popularProductIds);
+      
+      if (response && response.success && response.data) {
+        setComparisonData(response.data);
+      } else {
+        const errorMsg = "Failed to load price comparison: Invalid response format";
+        console.error(errorMsg, response);
+        setPriceDataError(errorMsg);
+        setComparisonData([]);
+      }
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : "Unknown error occurred";
+      console.error("Error loading price comparisons:", error);
+      setPriceDataError(`Failed to load price comparison: ${errorMsg}`);
+      setComparisonData([]);
+    } finally {
+      setPriceDataLoading(false);
+    }
   };
 
   // Define breadcrumb items for consistent header with other pages
@@ -291,15 +168,34 @@ export default function BuyerCentralPage() {
         </TabsList>
 
         <TabsContent value="compare" className="space-y-6">
+          {/* Display error message if there is one */}
+          {(priceDataError || retailersError) && (
+            <div className="flex items-center gap-2 p-4 mb-4 text-red-700 bg-red-50 rounded-md border border-red-200">
+              <AlertTriangle className="h-5 w-5" />
+              <span>{priceDataError || retailersError}</span>
+            </div>
+          )}
+          
           <PriceComparisonSection
             comparisonData={comparisonData}
             retailerComparisons={retailerComparisons}
-            loading={loading}
+            loading={priceDataLoading || retailersLoading}
           />
         </TabsContent>
 
         <TabsContent value="guides" className="space-y-6">
-          <BuyingGuidesSection categories={guideCategories} loading={loading} />
+          {/* Display error message if there is one */}
+          {guidesError && (
+            <div className="flex items-center gap-2 p-4 mb-4 text-red-700 bg-red-50 rounded-md border border-red-200">
+              <AlertTriangle className="h-5 w-5" />
+              <span>{guidesError}</span>
+            </div>
+          )}
+          
+          <BuyingGuidesSection 
+            categories={guideCategories} 
+            loading={guidesLoading} 
+          />
         </TabsContent>
       </Tabs>
     </div>

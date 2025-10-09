@@ -42,7 +42,7 @@ export function BuyingGuidesSection({
     setDialogOpen(false);
     setSelectedGuide(null);
   };
-  
+
   if (loading) {
     return (
       <div className="space-y-6">
@@ -71,7 +71,7 @@ export function BuyingGuidesSection({
     );
   }
 
-  const formatPrice = (price: number) => `$${price.toLocaleString()}`;
+  const formatPrice = (price: number) => `Rs. ${price.toLocaleString()}`;
 
   // Mock best buying period data - this would come from your backend
   const bestBuyingPeriods = {
@@ -91,8 +91,8 @@ export function BuyingGuidesSection({
           Buyer's Guides
         </h2>
         <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-          Learn the best times to buy products and get expert recommendations for
-          making informed purchase decisions.
+          Learn the best times to buy products and get expert recommendations
+          for making informed purchase decisions.
         </p>
       </div>
 
@@ -107,12 +107,19 @@ export function BuyingGuidesSection({
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {Object.entries(bestBuyingPeriods).map(([category, info]) => (
-              <Card key={category} className="border border-blue-200 bg-blue-50/50">
+              <Card
+                key={category}
+                className="border border-blue-200 bg-blue-50/50"
+              >
                 <CardContent className="p-4">
-                  <h3 className="font-semibold text-blue-900 mb-1">{category}</h3>
+                  <h3 className="font-semibold text-blue-900 mb-1">
+                    {category}
+                  </h3>
                   <div className="flex items-center gap-2 mb-2">
                     <Badge variant="secondary">{info.month}</Badge>
-                    <span className="text-sm text-blue-700">Best Month to Buy</span>
+                    <span className="text-sm text-blue-700">
+                      Best Month to Buy
+                    </span>
                   </div>
                   <p className="text-sm text-gray-600">{info.reason}</p>
                 </CardContent>
@@ -136,7 +143,9 @@ export function BuyingGuidesSection({
                     <span className="text-2xl">{category.icon}</span>
                     {category.categoryName}
                   </CardTitle>
-                  <p className="text-sm text-gray-500">{category.description}</p>
+                  <p className="text-sm text-gray-500">
+                    {category.description}
+                  </p>
                 </div>
               </div>
             </CardHeader>
@@ -171,7 +180,7 @@ export function BuyingGuidesSection({
                 variant="ghost"
                 size="sm"
                 className="w-full text-blue-600 hover:text-blue-700 hover:bg-blue-50 border border-blue-200"
-                onClick={() => 
+                onClick={() =>
                   handleReadGuide({
                     guideId: `guide-${category.categoryId}`,
                     title: `${category.categoryName} Buying Guide`,
@@ -179,7 +188,11 @@ export function BuyingGuidesSection({
                     content: `This is a sample content for ${category.categoryName} buying guide. In a real implementation, this would contain comprehensive information to help users make informed purchase decisions.`,
                     lastUpdated: "2024-07-15",
                     readTime: 5,
-                    tags: ["buying guide", category.categoryName.toLowerCase(), "2024"],
+                    tags: [
+                      "buying guide",
+                      category.categoryName.toLowerCase(),
+                      "2024",
+                    ],
                   })
                 }
               >
@@ -207,7 +220,8 @@ export function BuyingGuidesSection({
                 Research Price History
               </h4>
               <p className="text-sm text-green-700 dark:text-green-300">
-                Check if current prices are actually good deals by looking at the product's price history across multiple retailers.
+                Check if current prices are actually good deals by looking at
+                the product's price history across multiple retailers.
               </p>
             </div>
             <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
@@ -216,7 +230,8 @@ export function BuyingGuidesSection({
                 Time Your Purchase
               </h4>
               <p className="text-sm text-blue-700 dark:text-blue-300">
-                Many products have predictable price cycles. Check our guides for the optimal months to buy specific categories.
+                Many products have predictable price cycles. Check our guides
+                for the optimal months to buy specific categories.
               </p>
             </div>
             <div className="p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
@@ -225,7 +240,8 @@ export function BuyingGuidesSection({
                 Read User Reviews
               </h4>
               <p className="text-sm text-purple-700 dark:text-purple-300">
-                Don't just focus on price. Look at user reviews to ensure the product meets your needs and quality expectations.
+                Don't just focus on price. Look at user reviews to ensure the
+                product meets your needs and quality expectations.
               </p>
             </div>
           </div>
@@ -265,9 +281,13 @@ export function BuyingGuidesSection({
               </div>
 
               <div className="border-t pt-4">
-                <h4 className="font-medium text-lg mb-4">Recommended Products</h4>
+                <h4 className="font-medium text-lg mb-4">
+                  Recommended Products
+                </h4>
                 <p className="text-gray-500">
-                  In a full implementation, this section would display recommended products for this category with their current best prices.
+                  In a full implementation, this section would display
+                  recommended products for this category with their current best
+                  prices.
                 </p>
               </div>
             </div>

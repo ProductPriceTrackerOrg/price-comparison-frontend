@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -21,6 +21,8 @@ import {
   RetailerComparison,
   PriceComparisonData,
 } from "@/lib/types/buyer-central";
+import { getSearchAutocomplete } from "@/lib/buyer-central-api";
+import { debounce } from "lodash";
 
 interface SearchProduct {
   id: number;
@@ -44,73 +46,73 @@ export function PriceComparisonSection({
 }: PriceComparisonSectionProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<SearchProduct[]>([]);
+  const [autocompleteSuggestions, setAutocompleteSuggestions] = useState<
+    string[]
+  >([]);
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [selectedProducts, setSelectedProducts] = useState<SearchProduct[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
 
-  // Mock search function - replace with actual API call
-  const searchProducts = async (query: string) => {
+  // Fetch autocomplete suggestions from the API
+  const fetchAutocompleteSuggestions = useCallback(async (query: string) => {
     if (query.length < 2) {
-      setSearchResults([]);
+      setAutocompleteSuggestions([]);
       setShowSearchResults(false);
       return;
     }
 
-    // Mock search results
-    const mockResults: SearchProduct[] = [
-      {
-        id: 1,
-        name: "iPhone 15 Pro Max 256GB",
-        brand: "Apple",
-        category: "Smartphones",
-        avgPrice: 1199,
-        image: "/placeholder.jpg",
-      },
-      {
-        id: 2,
-        name: "Samsung Galaxy S24 Ultra 512GB",
-        brand: "Samsung",
-        category: "Smartphones",
-        avgPrice: 1399,
-        image: "/placeholder.jpg",
-      },
-      {
-        id: 3,
-        name: "MacBook Pro 14-inch M3 Pro",
-        brand: "Apple",
-        category: "Laptops",
-        avgPrice: 2499,
-        image: "/placeholder.jpg",
-      },
-      {
-        id: 4,
-        name: "Dell XPS 13 Plus",
-        brand: "Dell",
-        category: "Laptops",
-        avgPrice: 1299,
-        image: "/placeholder.jpg",
-      },
-      {
-        id: 5,
-        name: "Sony WH-1000XM5",
-        brand: "Sony",
-        category: "Headphones",
-        avgPrice: 399,
-        image: "/placeholder.jpg",
-      },
-    ].filter(
-      (product) =>
-        product.name.toLowerCase().includes(query.toLowerCase()) ||
-        product.brand.toLowerCase().includes(query.toLowerCase())
-    );
+    setIsSearching(true);
+    try {
+      // Call the autocomplete API
+      const suggestions = await getSearchAutocomplete(query);
+      setAutocompleteSuggestions(suggestions);
 
-    setSearchResults(mockResults);
-    setShowSearchResults(true);
-  };
+      // Convert suggestions to SearchProduct format
+      const productResults: SearchProduct[] = suggestions.map(
+        (suggestion, index) => {
+          // Extract brand from suggestion if possible (usually before the first space)
+          const parts = suggestion.split(" ");
+          const brand = parts[0];
+
+          return {
+            id: index + 1, // Generate a temp ID
+            name: suggestion,
+            brand: brand,
+            category: "Electronics", // Default category
+            avgPrice: Math.floor(Math.random() * 1000) + 500, // Random price for now
+            // Would be replaced with actual data in a real implementation
+          };
+        }
+      );
+
+      setSearchResults(productResults);
+      setShowSearchResults(suggestions.length > 0);
+    } catch (error) {
+      console.error("Error fetching search suggestions:", error);
+    } finally {
+      setIsSearching(false);
+    }
+  }, []);
+
+  // Debounce the search to prevent too many API calls
+  const debouncedSearch = useCallback(
+    debounce((query: string) => {
+      fetchAutocompleteSuggestions(query);
+    }, 300),
+    [fetchAutocompleteSuggestions]
+  );
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const query = e.target.value;
     setSearchQuery(query);
-    searchProducts(query);
+
+    if (query.length >= 2) {
+      debouncedSearch(query);
+    } else {
+      setAutocompleteSuggestions([]);
+      setSearchResults([]);
+      setShowSearchResults(false);
+    }
   };
 
   const addProductToComparison = (product: SearchProduct) => {
@@ -174,10 +176,8 @@ export function PriceComparisonSection({
   };
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-    }).format(amount);
+    // Format as Sri Lankan Rupees
+    return `Rs. ${amount.toLocaleString()}`;
   };
 
   return (
@@ -222,7 +222,16 @@ export function PriceComparisonSection({
             )}
 
             {/* Search Results */}
-            {showSearchResults && searchResults.length > 0 && (
+            {isSearching && (
+              <div className="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg p-4">
+                <div className="flex items-center justify-center gap-2">
+                  <div className="w-4 h-4 rounded-full bg-blue-600 animate-pulse"></div>
+                  <div className="text-sm text-gray-500">Searching...</div>
+                </div>
+              </div>
+            )}
+
+            {!isSearching && showSearchResults && searchResults.length > 0 && (
               <div className="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg max-h-80 overflow-y-auto">
                 <ul className="py-1">
                   {searchResults.map((product) => (
@@ -238,7 +247,7 @@ export function PriceComparisonSection({
                           <span>•</span>
                           <span>{product.category}</span>
                           <span>•</span>
-                          <span>{formatCurrency(product.avgPrice)}</span>
+                          <span>Rs. {product.avgPrice.toLocaleString()}</span>
                         </div>
                       </div>
                       <Plus className="h-4 w-4 text-blue-600" />
@@ -248,13 +257,15 @@ export function PriceComparisonSection({
               </div>
             )}
 
-            {showSearchResults && searchResults.length === 0 && (
-              <div className="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg p-4 text-center">
-                <p className="text-gray-500">
-                  No products found. Try different keywords.
-                </p>
-              </div>
-            )}
+            {!isSearching &&
+              showSearchResults &&
+              searchResults.length === 0 && (
+                <div className="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg p-4 text-center">
+                  <p className="text-gray-500">
+                    No products found. Try different keywords.
+                  </p>
+                </div>
+              )}
           </div>
 
           {/* Selected Products */}
@@ -282,7 +293,7 @@ export function PriceComparisonSection({
                         {product.name}
                       </div>
                       <div className="text-sm text-gray-500">
-                        Avg: {formatCurrency(product.avgPrice)}
+                        Avg: Rs. {product.avgPrice.toLocaleString()}
                       </div>
                     </div>
                     <button
@@ -316,7 +327,7 @@ export function PriceComparisonSection({
                   }
                 >
                   <div className="font-medium">iPhone 15 Pro Max</div>
-                  <div className="text-sm text-gray-500">Apple • $1,199</div>
+                  <div className="text-sm text-gray-500">Apple • Rs. 1,199</div>
                 </Button>
                 <Button
                   variant="outline"
@@ -332,7 +343,9 @@ export function PriceComparisonSection({
                   }
                 >
                   <div className="font-medium">Samsung Galaxy S24 Ultra</div>
-                  <div className="text-sm text-gray-500">Samsung • $1,399</div>
+                  <div className="text-sm text-gray-500">
+                    Samsung • Rs. 1,399
+                  </div>
                 </Button>
                 <Button
                   variant="outline"
@@ -348,7 +361,7 @@ export function PriceComparisonSection({
                   }
                 >
                   <div className="font-medium">MacBook Pro M3 Pro</div>
-                  <div className="text-sm text-gray-500">Apple • $2,499</div>
+                  <div className="text-sm text-gray-500">Apple • Rs. 2,499</div>
                 </Button>
                 <Button
                   variant="outline"
@@ -364,7 +377,7 @@ export function PriceComparisonSection({
                   }
                 >
                   <div className="font-medium">Dell XPS 13 Plus</div>
-                  <div className="text-sm text-gray-500">Dell • $1,299</div>
+                  <div className="text-sm text-gray-500">Dell • Rs. 1,299</div>
                 </Button>
               </div>
             </div>
@@ -412,7 +425,7 @@ export function PriceComparisonSection({
                           </h3>
                           <div className="text-sm text-gray-500">
                             Category: {product.categoryName} • Average Price:{" "}
-                            {formatCurrency(product.averagePrice || 0)}
+                            Rs. {(product.averagePrice || 0).toLocaleString()}
                           </div>
                         </div>
 
@@ -492,7 +505,7 @@ export function PriceComparisonSection({
                                         : ""
                                     }`}
                                   >
-                                    {formatCurrency(retailer.price)}
+                                    Rs. {retailer.price.toLocaleString()}
                                   </span>
                                   {index === bestPriceIndex && (
                                     <Badge className="ml-2 bg-green-100 text-green-800 hover:bg-green-200">
