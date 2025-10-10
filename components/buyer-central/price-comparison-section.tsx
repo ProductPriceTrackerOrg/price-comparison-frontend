@@ -21,7 +21,11 @@ import {
   RetailerComparison,
   PriceComparisonData,
 } from "@/lib/types/buyer-central";
-import { getSearchAutocomplete } from "@/lib/buyer-central-api";
+import {
+  getSearchAutocomplete,
+  searchBuyerCentralProducts,
+  SearchProductResult,
+} from "@/lib/buyer-central-api";
 import { debounce } from "lodash";
 
 interface SearchProduct {
@@ -30,7 +34,9 @@ interface SearchProduct {
   brand: string;
   category: string;
   image?: string;
-  avgPrice: number;
+  currentPrice: number;
+  retailer?: string;
+  productUrl?: string;
 }
 
 interface PriceComparisonSectionProps {
@@ -63,29 +69,9 @@ export function PriceComparisonSection({
 
     setIsSearching(true);
     try {
-      // Call the autocomplete API
+      // Call the autocomplete API to get product name suggestions
       const suggestions = await getSearchAutocomplete(query);
       setAutocompleteSuggestions(suggestions);
-
-      // Convert suggestions to SearchProduct format
-      const productResults: SearchProduct[] = suggestions.map(
-        (suggestion, index) => {
-          // Extract brand from suggestion if possible (usually before the first space)
-          const parts = suggestion.split(" ");
-          const brand = parts[0];
-
-          return {
-            id: index + 1, // Generate a temp ID
-            name: suggestion,
-            brand: brand,
-            category: "Electronics", // Default category
-            avgPrice: Math.floor(Math.random() * 1000) + 500, // Random price for now
-            // Would be replaced with actual data in a real implementation
-          };
-        }
-      );
-
-      setSearchResults(productResults);
       setShowSearchResults(suggestions.length > 0);
     } catch (error) {
       console.error("Error fetching search suggestions:", error);
@@ -93,6 +79,50 @@ export function PriceComparisonSection({
       setIsSearching(false);
     }
   }, []);
+
+  // Search for products by exact name to get comparison data
+  const searchProductByExactName = async (exactProductName: string) => {
+    setIsSearching(true);
+    try {
+      // Call the search-products API with the exact product name
+      const response = await searchBuyerCentralProducts(exactProductName);
+
+      if (
+        response &&
+        response.success &&
+        response.data &&
+        response.data.length > 0
+      ) {
+        // Convert the search results to SearchProduct format
+        const productResults: SearchProduct[] = response.data.map(
+          (product) => ({
+            id: product.id,
+            name: product.name,
+            brand: product.brand,
+            category: product.category,
+            image: product.image,
+            currentPrice: product.currentPrice,
+            retailer: product.retailer,
+            productUrl: product.productUrl,
+          })
+        );
+
+        setSearchResults(productResults);
+
+        // If there are search results, add the first one to comparison
+        if (productResults.length > 0) {
+          addProductToComparison(productResults[0]);
+        }
+      } else {
+        console.error("No products found for:", exactProductName);
+      }
+    } catch (error) {
+      console.error("Error searching products by exact name:", error);
+    } finally {
+      setIsSearching(false);
+      setShowSearchResults(false);
+    }
+  };
 
   // Debounce the search to prevent too many API calls
   const debouncedSearch = useCallback(
@@ -107,10 +137,11 @@ export function PriceComparisonSection({
     setSearchQuery(query);
 
     if (query.length >= 2) {
+      // Show autocomplete suggestions while typing
       debouncedSearch(query);
     } else {
+      // Clear suggestions when query is too short
       setAutocompleteSuggestions([]);
-      setSearchResults([]);
       setShowSearchResults(false);
     }
   };
@@ -231,31 +262,30 @@ export function PriceComparisonSection({
               </div>
             )}
 
-            {!isSearching && showSearchResults && searchResults.length > 0 && (
-              <div className="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg max-h-80 overflow-y-auto">
-                <ul className="py-1">
-                  {searchResults.map((product) => (
-                    <li
-                      key={product.id}
-                      className="px-4 py-2 hover:bg-gray-100 cursor-pointer flex items-center justify-between"
-                      onClick={() => addProductToComparison(product)}
-                    >
-                      <div>
-                        <div className="font-medium">{product.name}</div>
-                        <div className="text-sm text-gray-500 flex items-center gap-2">
-                          <span>{product.brand}</span>
-                          <span>•</span>
-                          <span>{product.category}</span>
-                          <span>•</span>
-                          <span>Rs. {product.avgPrice.toLocaleString()}</span>
+            {!isSearching &&
+              showSearchResults &&
+              autocompleteSuggestions.length > 0 && (
+                <div className="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg max-h-80 overflow-y-auto">
+                  <ul className="py-1">
+                    {autocompleteSuggestions.map((suggestion, index) => (
+                      <li
+                        key={index}
+                        className="px-4 py-2 hover:bg-gray-100 cursor-pointer flex items-center justify-between"
+                        onClick={() => {
+                          // When user clicks on a suggestion, search for products with that exact name
+                          searchProductByExactName(suggestion);
+                          setSearchQuery("");
+                        }}
+                      >
+                        <div>
+                          <div className="font-medium">{suggestion}</div>
                         </div>
-                      </div>
-                      <Plus className="h-4 w-4 text-blue-600" />
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
+                        <Plus className="h-4 w-4 text-blue-600" />
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
 
             {!isSearching &&
               showSearchResults &&
@@ -293,7 +323,9 @@ export function PriceComparisonSection({
                         {product.name}
                       </div>
                       <div className="text-sm text-gray-500">
-                        Avg: Rs. {product.avgPrice.toLocaleString()}
+                        {product.currentPrice
+                          ? `Price: Rs. ${product.currentPrice.toLocaleString()}`
+                          : "Price unavailable"}
                       </div>
                     </div>
                     <button
@@ -322,7 +354,7 @@ export function PriceComparisonSection({
                       name: "iPhone 15 Pro Max 256GB",
                       brand: "Apple",
                       category: "Smartphones",
-                      avgPrice: 1199,
+                      currentPrice: 1199,
                     })
                   }
                 >
@@ -338,7 +370,7 @@ export function PriceComparisonSection({
                       name: "Samsung Galaxy S24 Ultra 512GB",
                       brand: "Samsung",
                       category: "Smartphones",
-                      avgPrice: 1399,
+                      currentPrice: 1399,
                     })
                   }
                 >
@@ -356,7 +388,7 @@ export function PriceComparisonSection({
                       name: "MacBook Pro 14-inch M3 Pro",
                       brand: "Apple",
                       category: "Laptops",
-                      avgPrice: 2499,
+                      currentPrice: 2499,
                     })
                   }
                 >
@@ -372,7 +404,7 @@ export function PriceComparisonSection({
                       name: "Dell XPS 13 Plus",
                       brand: "Dell",
                       category: "Laptops",
-                      avgPrice: 1299,
+                      currentPrice: 1299,
                     })
                   }
                 >
@@ -394,7 +426,7 @@ export function PriceComparisonSection({
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {comparisonData.length === 0 ? (
+          {selectedProducts.length === 0 && searchResults.length === 0 ? (
             <div className="text-center py-12">
               <ShoppingCart className="h-12 w-12 text-gray-300 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-1">
@@ -407,6 +439,89 @@ export function PriceComparisonSection({
             </div>
           ) : (
             <div className="space-y-8">
+              {/* Show the selected products from API search results */}
+              {selectedProducts.map((product) => (
+                <div
+                  key={product.id}
+                  className="border rounded-lg overflow-hidden"
+                >
+                  <div className="bg-gray-50 p-4 border-b">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h3 className="font-bold text-lg">{product.name}</h3>
+                        <div className="text-sm text-gray-500">
+                          Brand: {product.brand} • Category: {product.category}{" "}
+                          • Price: Rs.{" "}
+                          {product.currentPrice
+                            ? product.currentPrice.toLocaleString()
+                            : "N/A"}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="overflow-x-auto">
+                    <table className="w-full min-w-[600px]">
+                      <thead>
+                        <tr className="bg-gray-50">
+                          <th className="text-left py-3 px-4 font-medium text-gray-600">
+                            Retailer
+                          </th>
+                          <th className="text-left py-3 px-4 font-medium text-gray-600">
+                            Price
+                          </th>
+                          <th className="text-center py-3 px-4 font-medium text-gray-600">
+                            Action
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {/* For individual product with retailer and URL */}
+                        {product.retailer && (
+                          <tr className="border-t bg-green-50">
+                            <td className="py-3 px-4">
+                              <div className="font-medium">
+                                {product.retailer}
+                              </div>
+                            </td>
+                            <td className="py-3 px-4">
+                              <div className="flex items-center">
+                                <span className="font-bold text-green-700">
+                                  Rs.{" "}
+                                  {product.currentPrice
+                                    ? product.currentPrice.toLocaleString()
+                                    : "N/A"}
+                                </span>
+                                <Badge className="ml-2 bg-green-100 text-green-800 hover:bg-green-200">
+                                  Best Price
+                                </Badge>
+                              </div>
+                            </td>
+                            <td className="py-3 px-4 text-center">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="inline-flex items-center gap-1"
+                                onClick={() => {
+                                  if (product.productUrl) {
+                                    window.open(product.productUrl, "_blank");
+                                  }
+                                }}
+                              >
+                                <ShoppingCart className="h-3.5 w-3.5" />
+                                <span>Buy</span>
+                                <ExternalLink className="h-3 w-3 ml-1" />
+                              </Button>
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              ))}
+
+              {/* Show the traditional comparison data if it exists */}
               {comparisonData.map((product) => {
                 const bestPriceIndex = getBestPriceIndex(
                   product.retailerPrices
@@ -542,6 +657,13 @@ export function PriceComparisonSection({
                                   size="sm"
                                   variant="outline"
                                   className="inline-flex items-center gap-1"
+                                  onClick={() => {
+                                    // Check if productUrl exists before using it
+                                    const url = (retailer as any).productUrl;
+                                    if (url) {
+                                      window.open(url, "_blank");
+                                    }
+                                  }}
                                 >
                                   <ShoppingCart className="h-3.5 w-3.5" />
                                   <span>Buy</span>

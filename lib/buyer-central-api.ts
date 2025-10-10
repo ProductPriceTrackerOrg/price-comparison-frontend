@@ -7,17 +7,28 @@ import {
 } from "./types/buyer-central";
 
 /**
- * Search for products in the buyer central system
- * @param query Search query string
- * @param limit Maximum number of results to return (optional, default 10)
+ * Search for products in the buyer central system by exact product name
+ * @param query The full product name to search for
+ * @param limit Maximum number of results to return (optional, default 4)
  * @param categoryId Filter by category ID (optional)
- * @returns List of products matching the search query
+ * @returns List of matching products across retailers with their prices and URLs
  */
+export interface SearchProductResult {
+  id: number;
+  name: string;
+  brand: string;
+  category: string;
+  retailer: string;
+  currentPrice: number;
+  productUrl: string;
+  image: string;
+}
+
 export const searchBuyerCentralProducts = async (
   query: string,
-  limit: number = 10,
+  limit: number = 4,
   categoryId?: number
-) => {
+): Promise<BuyerCentralApiResponse<SearchProductResult[]>> => {
   try {
     const params: Record<string, string | number> = {
       query,
@@ -28,7 +39,7 @@ export const searchBuyerCentralProducts = async (
       params.category_id = categoryId;
     }
 
-    const response = await api.get<BuyerCentralApiResponse<any[]>>(
+    const response = await api.get<BuyerCentralApiResponse<SearchProductResult[]>>(
       "/api/v1/buyer-central/search-products",
       { params }
     );
@@ -159,18 +170,18 @@ export const getRetailerComparisons = async (): Promise<
 /**
  * Get search autocomplete suggestions
  * @param query Search query string (minimum 2 characters)
- * @param limit Maximum number of suggestions to return (optional, default 10)
+ * @param limit Maximum number of suggestions to return (optional, default 50)
  * @returns Array of product name suggestions
  */
 export const getSearchAutocomplete = async (
   query: string,
-  limit: number = 10
+  limit: number = 50
 ): Promise<string[]> => {
   try {
     if (query.length < 2) {
       return [];
     }
-
+    
     const params = {
       q: query,
       limit,
@@ -180,7 +191,7 @@ export const getSearchAutocomplete = async (
       "/api/v1/search/autocomplete",
       { params }
     );
-
+    
     return response.data.suggestions;
   } catch (error) {
     console.error("Error fetching search autocomplete:", error);
