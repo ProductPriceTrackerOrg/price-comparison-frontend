@@ -396,10 +396,7 @@ export default function AnalyticsPage() {
     console.log("Navigate to all price alerts");
   };
 
-  const breadcrumbItems = [
-    { label: "Home", href: "/" },
-    { label: "Market Analytics", href: "/analytics" },
-  ];
+  const breadcrumbItems = [{ label: "Market Analytics", href: "/analytics" }];
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
