@@ -150,7 +150,7 @@ export default function BuyerCentralPage() {
 
   // Define breadcrumb items for consistent header with other pages
   const breadcrumbItems = [
-    { label: "Home", href: "/" },
+    // { label: "Home", href: "/" },
     { label: "Buyer Central", href: "/buyer-central" },
   ];
 

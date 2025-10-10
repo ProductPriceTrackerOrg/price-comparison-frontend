@@ -80,7 +80,7 @@ export function PriceComparisonSection({
     }
   }, []);
 
-  // Search for products by exact name to get comparison data
+  // Search for products by name to get comparison data
   const searchProductByExactName = async (exactProductName: string) => {
     setIsSearching(true);
     try {
@@ -107,18 +107,19 @@ export function PriceComparisonSection({
           })
         );
 
+        // Store all products in searchResults
         setSearchResults(productResults);
 
-        // Group the products by name and find the one with the lowest price
-        const groupedProducts = groupProductsByName(productResults);
+        // Find the product with the lowest price across all results
+        const lowestPriceProduct = productResults.reduce(
+          (lowest, current) =>
+            current.currentPrice < lowest.currentPrice ? current : lowest,
+          productResults[0]
+        );
 
-        // Add the grouped product to comparison
-        if (Object.keys(groupedProducts).length > 0) {
-          const productName = Object.keys(groupedProducts)[0];
-          addGroupedProductToComparison(
-            groupedProducts[productName],
-            productName
-          );
+        // Add the product with lowest price to comparison
+        if (!selectedProducts.find((p) => p.id === lowestPriceProduct.id)) {
+          setSelectedProducts([...selectedProducts, lowestPriceProduct]);
         }
       } else {
         console.error("No products found for:", exactProductName);
@@ -485,23 +486,23 @@ export function PriceComparisonSection({
             </div>
           ) : (
             <div className="space-y-8">
-              {/* Show the selected products from API search results */}
-              {selectedProducts.map((product) => (
-                <div
-                  key={product.id}
-                  className="border rounded-lg overflow-hidden"
-                >
+              {/* Show search results if available */}
+              {searchResults.length > 0 && (
+                <div className="border rounded-lg overflow-hidden">
                   <div className="bg-gray-50 p-4 border-b">
                     <div className="flex justify-between items-start">
                       <div>
-                        <h3 className="font-bold text-lg">{product.name}</h3>
+                        <h3 className="font-bold text-lg">Price Comparison</h3>
                         <div className="text-sm text-gray-500">
-                          Brand: {product.brand} • Category: {product.category}{" "}
-                          • Price: Rs.{" "}
-                          {product.currentPrice
-                            ? product.currentPrice.toLocaleString()
-                            : "N/A"}
+                          Showing all related products sorted by price from
+                          lowest to highest
                         </div>
+                        {searchResults.length > 0 && searchResults[0] && (
+                          <div className="mt-1 text-xs text-blue-600">
+                            Brand: {searchResults[0].brand} • Category:{" "}
+                            {searchResults[0].category}
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -522,9 +523,8 @@ export function PriceComparisonSection({
                         </tr>
                       </thead>
                       <tbody>
-                        {/* Find all products with the same name from searchResults */}
+                        {/* Show all products from search results, sorted by price */}
                         {searchResults
-                          .filter((p) => p.name === product.name)
                           .sort((a, b) => a.currentPrice - b.currentPrice)
                           .map((matchingProduct, index, sortedArray) => {
                             const isBestPrice = index === 0; // First item in sorted array has the lowest price
@@ -539,6 +539,9 @@ export function PriceComparisonSection({
                                 <td className="py-3 px-4">
                                   <div className="font-medium">
                                     {matchingProduct.retailer}
+                                  </div>
+                                  <div className="text-xs text-gray-500">
+                                    {matchingProduct.name}
                                   </div>
                                 </td>
                                 <td className="py-3 px-4">
@@ -586,7 +589,7 @@ export function PriceComparisonSection({
                     </table>
                   </div>
                 </div>
-              ))}
+              )}
 
               {/* Show the traditional comparison data if it exists */}
               {comparisonData.map((product) => {
