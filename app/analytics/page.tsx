@@ -15,6 +15,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { PageHeader } from "@/components/layout/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  fetchPriceHistoryData,
+  fetchMarketSummaryData,
+  mapPriceHistoryResponse,
+  mapMarketSummaryResponse,
+  AnalyticsFilters,
+} from "@/lib/analytics-api";
 
 // New User-Centric Analytics Components
 import {
@@ -102,15 +109,25 @@ export default function AnalyticsPage() {
       setLoading(true);
       setError(null);
 
-      // In a real implementation, these would be separate API calls
-      // that use the filters to fetch appropriate data
-      await Promise.all([
-        fetchPriceHistory(),
+      // Make parallel API calls to fetch real data
+      const [priceHistoryResponse, marketSummaryResponse] = await Promise.all([
+        fetchPriceHistoryData(filters),
+        fetchMarketSummaryData(filters),
+        // We still use these mock functions for data that doesn't have real APIs yet
         fetchCategoryInsights(),
         fetchShopInsights(),
         fetchPriceAlerts(),
-        fetchMarketSummary(),
       ]);
+
+      // Map API responses to component prop formats
+      const { priceHistory: newPriceHistory, bestTimeToBuy: newBestTimeToBuy } =
+        mapPriceHistoryResponse(priceHistoryResponse);
+
+      setPriceHistory(newPriceHistory);
+      setBestTimeToBuy(newBestTimeToBuy);
+
+      // Set the market summary data from the API
+      setMarketSummary(mapMarketSummaryResponse(marketSummaryResponse));
 
       // Update selected category name for display
       if (filters.category !== "all") {
@@ -121,9 +138,6 @@ export default function AnalyticsPage() {
       } else {
         setSelectedCategory("");
       }
-
-      // Generate buying recommendation based on price history and filters
-      generateBuyingRecommendation();
     } catch (err) {
       setError("Failed to load analytics data. Please try again.");
       console.error("Analytics fetch error:", err);

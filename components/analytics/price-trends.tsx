@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { TrendingDown, TrendingUp, Calendar, AlertCircle } from "lucide-react";
+import { formatSLCurrency } from "@/lib/utils";
 import {
   Area,
   AreaChart,
@@ -60,7 +61,8 @@ export function PriceTrends({
   };
 
   const formatPrice = (price: number) => {
-    return `$${price.toLocaleString()}`;
+    // Format the price as Sri Lankan Rupees
+    return formatSLCurrency(price);
   };
 
   // Find the max drop (for scaling the bars)

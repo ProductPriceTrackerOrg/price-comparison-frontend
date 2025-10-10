@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { BarChart3, PieChart, Activity, Tag, ShoppingBag } from "lucide-react";
+import { formatSLCurrency } from "@/lib/utils";
 import {
   PieChart as RechartsChart,
   Pie,
@@ -49,9 +50,15 @@ export function MarketSummary({ summary, loading }: MarketSummaryProps) {
   }
 
   const formatNumber = (num: number) => {
+    // For product counts and other non-currency values
     if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
     if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
     return num.toString();
+  };
+  
+  const formatCurrency = (amount: number) => {
+    // For price values, format as Sri Lankan Rupees
+    return formatSLCurrency(amount);
   };
 
   const getBuyingScoreText = () => {
