@@ -17,10 +17,10 @@ import {
 } from "@/lib/types/buyer-central";
 
 // Import API functions
-import { 
+import {
   getBuyerCentralBuyingGuides,
   getBuyerCentralPriceComparison,
-  getRetailerComparisons
+  getRetailerComparisons,
 } from "@/lib/buyer-central-api";
 export default function BuyerCentralPage() {
   // Loading states for each data type
@@ -28,12 +28,12 @@ export default function BuyerCentralPage() {
   const [guidesLoading, setGuidesLoading] = useState(true);
   const [retailersLoading, setRetailersLoading] = useState(true);
   const [priceDataLoading, setPriceDataLoading] = useState(true);
-  
+
   // Error states for each data type
   const [guidesError, setGuidesError] = useState<string | null>(null);
   const [retailersError, setRetailersError] = useState<string | null>(null);
   const [priceDataError, setPriceDataError] = useState<string | null>(null);
-  
+
   const [activeTab, setActiveTab] = useState("compare");
 
   // Data states - simplified to only include what we need
@@ -53,14 +53,14 @@ export default function BuyerCentralPage() {
 
   const loadBuyerCentralData = async () => {
     setLoading(true);
-    
+
     // Load all data in parallel
     await Promise.all([
       loadBuyingGuides(),
       loadRetailerComparisons(),
       loadPriceComparisons(),
     ]);
-    
+
     // When all data is loaded (whether successful or not), set overall loading to false
     setLoading(false);
   };
@@ -68,20 +68,22 @@ export default function BuyerCentralPage() {
   const loadBuyingGuides = async () => {
     setGuidesLoading(true);
     setGuidesError(null);
-    
+
     try {
       // Call the API function to get buying guides
       const response = await getBuyerCentralBuyingGuides();
       if (response && response.success && response.data) {
         setGuideCategories(response.data);
       } else {
-        const errorMsg = "Failed to load buying guides: Invalid response format";
+        const errorMsg =
+          "Failed to load buying guides: Invalid response format";
         console.error(errorMsg, response);
         setGuidesError(errorMsg);
         setGuideCategories([]);
       }
     } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : "Unknown error occurred";
+      const errorMsg =
+        error instanceof Error ? error.message : "Unknown error occurred";
       console.error("Error loading buying guides:", error);
       setGuidesError(`Failed to load buying guides: ${errorMsg}`);
       setGuideCategories([]);
@@ -95,13 +97,14 @@ export default function BuyerCentralPage() {
   const loadRetailerComparisons = async () => {
     setRetailersLoading(true);
     setRetailersError(null);
-    
+
     try {
       // Get retailer comparisons from API
       const retailers = await getRetailerComparisons();
       setRetailerComparisons(retailers);
     } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : "Unknown error occurred";
+      const errorMsg =
+        error instanceof Error ? error.message : "Unknown error occurred";
       console.error("Error loading retailer comparisons:", error);
       setRetailersError(`Failed to load retailer data: ${errorMsg}`);
       setRetailerComparisons([]);
@@ -113,7 +116,7 @@ export default function BuyerCentralPage() {
   const loadPriceComparisons = async () => {
     setPriceDataLoading(true);
     setPriceDataError(null);
-    
+
     try {
       // Define a set of popular product IDs to compare
       // In a real application, these could be derived from:
@@ -121,20 +124,22 @@ export default function BuyerCentralPage() {
       // - Popular products in the system
       // - Products the user has added to a comparison list
       const popularProductIds = [1, 2, 3]; // Example product IDs
-      
+
       // Call the API to get price comparison data
       const response = await getBuyerCentralPriceComparison(popularProductIds);
-      
+
       if (response && response.success && response.data) {
         setComparisonData(response.data);
       } else {
-        const errorMsg = "Failed to load price comparison: Invalid response format";
+        const errorMsg =
+          "Failed to load price comparison: Invalid response format";
         console.error(errorMsg, response);
         setPriceDataError(errorMsg);
         setComparisonData([]);
       }
     } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : "Unknown error occurred";
+      const errorMsg =
+        error instanceof Error ? error.message : "Unknown error occurred";
       console.error("Error loading price comparisons:", error);
       setPriceDataError(`Failed to load price comparison: ${errorMsg}`);
       setComparisonData([]);
@@ -175,7 +180,7 @@ export default function BuyerCentralPage() {
               <span>{priceDataError || retailersError}</span>
             </div>
           )}
-          
+
           <PriceComparisonSection
             comparisonData={comparisonData}
             retailerComparisons={retailerComparisons}
@@ -191,10 +196,10 @@ export default function BuyerCentralPage() {
               <span>{guidesError}</span>
             </div>
           )}
-          
-          <BuyingGuidesSection 
-            categories={guideCategories} 
-            loading={guidesLoading} 
+
+          <BuyingGuidesSection
+            categories={guideCategories}
+            loading={guidesLoading}
           />
         </TabsContent>
       </Tabs>

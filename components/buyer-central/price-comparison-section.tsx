@@ -109,9 +109,16 @@ export function PriceComparisonSection({
 
         setSearchResults(productResults);
 
-        // If there are search results, add the first one to comparison
-        if (productResults.length > 0) {
-          addProductToComparison(productResults[0]);
+        // Group the products by name and find the one with the lowest price
+        const groupedProducts = groupProductsByName(productResults);
+
+        // Add the grouped product to comparison
+        if (Object.keys(groupedProducts).length > 0) {
+          const productName = Object.keys(groupedProducts)[0];
+          addGroupedProductToComparison(
+            groupedProducts[productName],
+            productName
+          );
         }
       } else {
         console.error("No products found for:", exactProductName);
@@ -122,6 +129,21 @@ export function PriceComparisonSection({
       setIsSearching(false);
       setShowSearchResults(false);
     }
+  };
+
+  // Group products by name to show multiple retailers for the same product
+  const groupProductsByName = (
+    products: SearchProduct[]
+  ): Record<string, SearchProduct[]> => {
+    return products.reduce((groups, product) => {
+      // Use product name as the key for grouping
+      const name = product.name;
+      if (!groups[name]) {
+        groups[name] = [];
+      }
+      groups[name].push(product);
+      return groups;
+    }, {} as Record<string, SearchProduct[]>);
   };
 
   // Debounce the search to prevent too many API calls
@@ -150,6 +172,30 @@ export function PriceComparisonSection({
     if (!selectedProducts.find((p) => p.id === product.id)) {
       setSelectedProducts([...selectedProducts, product]);
     }
+    setSearchQuery("");
+    setShowSearchResults(false);
+  };
+
+  // Add a group of products with the same name to the comparison
+  const addGroupedProductToComparison = (
+    products: SearchProduct[],
+    productName: string
+  ) => {
+    // Find the product with the lowest price to use as the main product in the comparison
+    const lowestPriceProduct = products.reduce(
+      (lowest, current) =>
+        current.currentPrice < lowest.currentPrice ? current : lowest,
+      products[0]
+    );
+
+    // Store all products in the state
+    setSearchResults(products);
+
+    // Add the main product to the comparison list
+    if (!selectedProducts.find((p) => p.name === productName)) {
+      setSelectedProducts([...selectedProducts, lowestPriceProduct]);
+    }
+
     setSearchQuery("");
     setShowSearchResults(false);
   };
@@ -289,7 +335,7 @@ export function PriceComparisonSection({
 
             {!isSearching &&
               showSearchResults &&
-              searchResults.length === 0 && (
+              autocompleteSuggestions.length === 0 && (
                 <div className="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg p-4 text-center">
                   <p className="text-gray-500">
                     No products found. Try different keywords.
@@ -476,45 +522,66 @@ export function PriceComparisonSection({
                         </tr>
                       </thead>
                       <tbody>
-                        {/* For individual product with retailer and URL */}
-                        {product.retailer && (
-                          <tr className="border-t bg-green-50">
-                            <td className="py-3 px-4">
-                              <div className="font-medium">
-                                {product.retailer}
-                              </div>
-                            </td>
-                            <td className="py-3 px-4">
-                              <div className="flex items-center">
-                                <span className="font-bold text-green-700">
-                                  Rs.{" "}
-                                  {product.currentPrice
-                                    ? product.currentPrice.toLocaleString()
-                                    : "N/A"}
-                                </span>
-                                <Badge className="ml-2 bg-green-100 text-green-800 hover:bg-green-200">
-                                  Best Price
-                                </Badge>
-                              </div>
-                            </td>
-                            <td className="py-3 px-4 text-center">
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="inline-flex items-center gap-1"
-                                onClick={() => {
-                                  if (product.productUrl) {
-                                    window.open(product.productUrl, "_blank");
-                                  }
-                                }}
+                        {/* Find all products with the same name from searchResults */}
+                        {searchResults
+                          .filter((p) => p.name === product.name)
+                          .sort((a, b) => a.currentPrice - b.currentPrice)
+                          .map((matchingProduct, index, sortedArray) => {
+                            const isBestPrice = index === 0; // First item in sorted array has the lowest price
+
+                            return (
+                              <tr
+                                key={matchingProduct.id}
+                                className={`border-t ${
+                                  isBestPrice ? "bg-green-50" : ""
+                                }`}
                               >
-                                <ShoppingCart className="h-3.5 w-3.5" />
-                                <span>Buy</span>
-                                <ExternalLink className="h-3 w-3 ml-1" />
-                              </Button>
-                            </td>
-                          </tr>
-                        )}
+                                <td className="py-3 px-4">
+                                  <div className="font-medium">
+                                    {matchingProduct.retailer}
+                                  </div>
+                                </td>
+                                <td className="py-3 px-4">
+                                  <div className="flex items-center">
+                                    <span
+                                      className={`font-bold ${
+                                        isBestPrice ? "text-green-700" : ""
+                                      }`}
+                                    >
+                                      Rs.{" "}
+                                      {matchingProduct.currentPrice
+                                        ? matchingProduct.currentPrice.toLocaleString()
+                                        : "N/A"}
+                                    </span>
+                                    {isBestPrice && (
+                                      <Badge className="ml-2 bg-green-100 text-green-800 hover:bg-green-200">
+                                        Best Price
+                                      </Badge>
+                                    )}
+                                  </div>
+                                </td>
+                                <td className="py-3 px-4 text-center">
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="inline-flex items-center gap-1"
+                                    onClick={() => {
+                                      if (matchingProduct.productUrl) {
+                                        window.open(
+                                          matchingProduct.productUrl,
+                                          "_blank"
+                                        );
+                                      }
+                                    }}
+                                  >
+                                    <ShoppingCart className="h-3.5 w-3.5" />
+                                    <span>Buy</span>
+                                    <ExternalLink className="h-3 w-3 ml-1" />
+                                  </Button>
+                                </td>
+                              </tr>
+                            );
+                          })}
                       </tbody>
                     </table>
                   </div>
