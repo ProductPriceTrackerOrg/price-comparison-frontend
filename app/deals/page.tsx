@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
+import { CustomPagination } from "@/components/ui/custom-pagination";
 import {
   Percent,
   TrendingDown,
@@ -29,20 +30,29 @@ export default function DealsPage() {
   const [page, setPage] = useState(1);
   const [hasNextPage, setHasNextPage] = useState(false);
   const [totalDeals, setTotalDeals] = useState(0);
-  const [loadingMore, setLoadingMore] = useState(false);
+  const [totalPages, setTotalPages] = useState(1);
 
   // Filter states
   const [category, setCategory] = useState<string | null>(null);
   const [minDiscount, setMinDiscount] = useState<number | null>(null);
   const [inStockOnly, setInStockOnly] = useState(true);
 
-  const fetchDeals = async (pageNum = 1, resetResults = true) => {
+  const handlePageChange = (pageNum: number) => {
+    if (pageNum !== page) {
+      setPage(pageNum);
+      fetchDeals(pageNum);
+      // Scroll to top of results
+      window.scrollTo({
+        top: document.getElementById("results-section")?.offsetTop || 0,
+        behavior: "smooth",
+      });
+    }
+  };
+
+  const fetchDeals = async (pageNum = 1) => {
     try {
-      setLoadingMore(pageNum > 1);
-      if (resetResults) {
-        setLoading(true);
-        setError(null);
-      }
+      setLoading(true);
+      setError(null);
 
       // Build query parameters
       const queryParams = new URLSearchParams();
@@ -52,7 +62,7 @@ export default function DealsPage() {
       if (inStockOnly !== null)
         queryParams.append("in_stock_only", inStockOnly.toString());
       queryParams.append("page", pageNum.toString());
-      queryParams.append("limit", "8"); // Show 8 deals per page
+      queryParams.append("limit", "20"); // Show 8 deals per page
 
       const response = await fetch(`/api/v1/top-deals/deals?${queryParams}`);
 
@@ -62,34 +72,28 @@ export default function DealsPage() {
 
       const data: DealsListResponse = await response.json();
 
-      if (resetResults) {
-        setDeals(data.items);
-      } else {
-        setDeals((prev) => [...prev, ...data.items]);
-      }
+      // Always set the deals directly since we're using pagination
+      setDeals(data.items);
 
       setStats(data.stats);
       setHasNextPage(data.has_next);
-      setTotalDeals(data.total);
+      setTotalDeals(data.stats.total_deals);
+      // Calculate total pages based on the limit (20 items per page)
+      setTotalPages(Math.ceil(data.stats.total_deals / 20)); // Using 20 as defined in fetchDeals
       setPage(pageNum);
     } catch (error) {
       console.error("Error fetching deals:", error);
       setError("Failed to load deals. Please try again.");
     } finally {
       setLoading(false);
-      setLoadingMore(false);
-    }
-  };
-
-  const loadMoreDeals = () => {
-    if (hasNextPage && !loadingMore) {
-      fetchDeals(page + 1, false);
     }
   };
 
   // Apply filters
   const applyFilters = () => {
-    fetchDeals(1, true);
+    // Reset to first page when applying filters
+    setPage(1);
+    fetchDeals(1);
   };
 
   // Reset filters
@@ -97,7 +101,9 @@ export default function DealsPage() {
     setCategory(null);
     setMinDiscount(null);
     setInStockOnly(true);
-    fetchDeals(1, true);
+    // Reset to first page when clearing filters
+    setPage(1);
+    fetchDeals(1);
   };
 
   // Transform deal to product format for ProductCard
@@ -253,7 +259,10 @@ export default function DealsPage() {
           )}
 
           {/* Deals Grid - 4 columns on desktop */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div
+            id="results-section"
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
+          >
             {loading && !deals.length ? (
               // Skeleton loading
               Array(8)
@@ -297,24 +306,14 @@ export default function DealsPage() {
             )}
           </div>
 
-          {/* Load More */}
-          <div className="text-center mt-12">
-            {hasNextPage && (
-              <Button
-                size="lg"
-                className="bg-blue-600 hover:bg-blue-700"
-                onClick={loadMoreDeals}
-                disabled={loadingMore}
-              >
-                {loadingMore ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Loading...
-                  </>
-                ) : (
-                  "Load More Deals"
-                )}
-              </Button>
+          {/* Pagination */}
+          <div className="text-center mt-12" id="pagination-section">
+            {!loading && deals.length > 0 && (
+              <CustomPagination
+                currentPage={page}
+                totalPages={totalPages}
+                onPageChange={handlePageChange}
+              />
             )}
           </div>
         </div>

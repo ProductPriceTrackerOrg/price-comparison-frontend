@@ -66,7 +66,7 @@ export default function NewArrivalsPage() {
   const [filters, setFilters] = useState<FilterState>({
     category: "all",
     retailer: "all",
-    priceRange: [0, 2000],
+    priceRange: [0, 2000000], // Assuming max price is 2,000,000
     sortBy: "newest",
     timeRange: "30d",
     inStockOnly: false,
