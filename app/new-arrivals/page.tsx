@@ -27,8 +27,6 @@ import {
   Calendar,
 } from "lucide-react";
 
-
-
 import { PageHeader } from "@/components/layout/page-header";
 import { ProductCard } from "@/components/product/product-card";
 import { NewArrivalFilters } from "@/components/new-arrivals/new-arrival-filters";
@@ -238,8 +236,6 @@ export default function NewArrivalsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      
-      
       <main className="bg-gradient-to-br from-blue-50/30 via-white to-purple-50/30">
         <div className="container mx-auto px-4 py-8">
           {/* Page Header with Beautiful Blue Background */}
@@ -420,7 +416,6 @@ export default function NewArrivalsPage() {
           )}
         </div>
       </main>
-      
     </div>
   );
 }

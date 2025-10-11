@@ -35,11 +35,90 @@ export interface MarketSummaryResponse {
   };
 }
 
+// New API response interfaces for Category Insights and Shop Comparison
+export interface CategoryInsightItem {
+  category_name: string;
+  avg_price: number;
+  price_change: number;
+  price_volatility: number;
+  product_count: number;
+  deal_count: number;
+}
+
+export interface CategoryInsightsResponse {
+  insights: CategoryInsightItem[];
+}
+
+export interface ShopInsightItem {
+  shop_name: string;
+  product_count: number;
+  avg_price_rating: number;
+  reliability_score: number;
+  availability_percentage: number;
+  best_categories: string[];
+}
+
+export interface ShopComparisonResponse {
+  insights: ShopInsightItem[];
+}
+
 export interface AnalyticsFilters {
   timeRange: string; // "7d" | "30d" | "90d" | "1y"
   category: string;
   retailer: string;
 }
+
+/**
+ * Fetch category insights data from the API
+ * 
+ * @param filters - Time range and retailer filters
+ * @returns Category insights data
+ */
+export const fetchCategoryInsights = async (
+  filters: AnalyticsFilters
+): Promise<CategoryInsightsResponse> => {
+  try {
+    const { timeRange, retailer } = filters;
+    const response = await api.get<CategoryInsightsResponse>('/api/v1/analytics/category-insights', {
+      params: {
+        time_range: timeRange,
+        retailer: retailer !== 'all' ? retailer : undefined
+      }
+    });
+    
+    return response.data;
+  } catch (error) {
+    console.error('Failed to fetch category insights data:', error);
+    // Return empty data structure
+    return { insights: [] };
+  }
+};
+
+/**
+ * Fetch shop comparison data from the API
+ * 
+ * @param filters - Time range and category filters
+ * @returns Shop comparison data
+ */
+export const fetchShopComparison = async (
+  filters: AnalyticsFilters
+): Promise<ShopComparisonResponse> => {
+  try {
+    const { timeRange, category } = filters;
+    const response = await api.get<ShopComparisonResponse>('/api/v1/analytics/shop-comparison', {
+      params: {
+        time_range: timeRange,
+        category: category !== 'all' ? category : undefined
+      }
+    });
+    
+    return response.data;
+  } catch (error) {
+    console.error('Failed to fetch shop comparison data:', error);
+    // Return empty data structure
+    return { insights: [] };
+  }
+};
 
 /**
  * Fetch price history data from the API
@@ -151,4 +230,38 @@ export const mapMarketSummaryResponse = (response: MarketSummaryResponse) => {
     bestBuyingScore: summary.best_buying_score,
     categoryDistribution: summary.category_distribution
   };
+};
+
+/**
+ * Map the API category insights response to the frontend component props format
+ * 
+ * @param response - Category insights response from the API
+ * @returns Formatted category insights data for frontend components
+ */
+export const mapCategoryInsightsResponse = (response: CategoryInsightsResponse) => {
+  return response.insights.map(item => ({
+    categoryName: item.category_name,
+    avgPrice: item.avg_price,
+    priceChange: item.price_change,
+    priceVolatility: item.price_volatility,
+    productCount: item.product_count,
+    dealCount: item.deal_count
+  }));
+};
+
+/**
+ * Map the API shop comparison response to the frontend component props format
+ * 
+ * @param response - Shop comparison response from the API
+ * @returns Formatted shop comparison data for frontend components
+ */
+export const mapShopComparisonResponse = (response: ShopComparisonResponse) => {
+  return response.insights.map(item => ({
+    shopName: item.shop_name,
+    productCount: item.product_count,
+    avgPriceRating: item.avg_price_rating,
+    reliabilityScore: item.reliability_score,
+    availabilityPercentage: item.availability_percentage,
+    bestCategories: item.best_categories || []
+  }));
 };

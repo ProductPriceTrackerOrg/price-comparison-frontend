@@ -1,11 +1,13 @@
 # Price Drops Page Implementation
 
 ## Overview
+
 The Price Drops page (`/price-drops`) displays products that have recently experienced price reductions. This implementation is based on your database schema and follows the design patterns established in your PricePulse frontend.
 
 ## Files Created/Modified
 
 ### Core Components
+
 1. **`app/price-drops/page.tsx`** - Main price drops page component
 2. **`app/price-drops/loading.tsx`** - Loading state for the page
 3. **`components/product/price-drop-card.tsx`** - Individual price drop card component
@@ -14,12 +16,14 @@ The Price Drops page (`/price-drops`) displays products that have recently exper
 ## Features Implemented
 
 ### 📊 Statistics Dashboard
+
 - Total number of price drops
 - Average discount percentage
 - Number of retailers with drops
 - Number of categories with drops
 
 ### 🔍 Advanced Filtering
+
 - **Time Range**: Last 24 hours, 7 days, 30 days, 3 months
 - **Category**: Filter by product categories (Smartphones, Laptops, etc.)
 - **Retailer**: Filter by specific retailers
@@ -27,7 +31,9 @@ The Price Drops page (`/price-drops`) displays products that have recently exper
 - **Sorting**: By discount percentage or amount, recent drops
 
 ### 💳 Product Cards
+
 Each price drop card displays:
+
 - Product image with hover effects
 - Price drop percentage badge
 - Current vs previous price
@@ -37,7 +43,7 @@ Each price drop card displays:
 - Action buttons (Track, Share, View)
 
 ### 🔄 Interactive Features
-- **Favorite/Track Products**: Users can track products (requires login)
+
 - **Share Products**: Native sharing or copy link to clipboard
 - **External Links**: Direct links to retailer product pages
 - **Error Handling**: Retry functionality for failed API calls
@@ -45,6 +51,7 @@ Each price drop card displays:
 ## Database Integration
 
 ### API Endpoints (To Be Implemented)
+
 Based on your schema, the following API endpoints should be created:
 
 ```
@@ -52,59 +59,23 @@ GET /api/price-drops
 - Query params: timeRange, category, retailer, minDiscount, sortBy, limit, page
 - Returns: PriceDropResponse[]
 
-GET /api/categories
-- Returns: Category[]
+GET /api/price-drops/stats
+- Returns:
+Total number of price drops, Average discount percentage, Number of retailers with drops, Number of categories with drops
 
-GET /api/retailers  
-- Returns: Retailer[]
 
-POST /api/user/favorites
-- Body: { variant_id: number }
-- Adds product to user's tracked products
-
-DELETE /api/user/favorites
-- Body: { variant_id: number }
-- Removes product from user's tracked products
 ```
 
 ### Database Queries
+
 The backend should query the following tables:
+
 - `FactProductPrice` - For current and historical pricing
 - `DimCanonicalProduct` & `DimVariant` - For product information
 - `DimShop` - For retailer details
 - `DimCategory` - For product categories
-- `UserFavorites` - For user tracking functionality
 
-### Sample Query Structure
-```sql
-SELECT 
-    v.variant_id,
-    cp.canonical_product_id,
-    cp.product_title,
-    cp.brand,
-    c.category_name,
-    v.variant_title,
-    s.shop_name,
-    fp_current.current_price,
-    fp_previous.current_price as previous_price,
-    (fp_current.current_price - fp_previous.current_price) as price_change,
-    ((fp_current.current_price - fp_previous.current_price) / fp_previous.current_price * 100) as percentage_change,
-    fp_current.date_id as drop_date,
-    v.image_url,
-    v.product_url,
-    fp_current.is_available,
-    DATEDIFF(CURRENT_DATE, fp_current.date_id) as days_since_drop
-FROM DimVariant v
-JOIN DimCanonicalProduct cp ON v.canonical_product_id = cp.canonical_product_id
-JOIN DimCategory c ON cp.category_id = c.category_id
-JOIN DimShop s ON v.shop_id = s.shop_id
-JOIN FactProductPrice fp_current ON v.variant_id = fp_current.variant_id
-JOIN FactProductPrice fp_previous ON v.variant_id = fp_previous.variant_id
-WHERE fp_current.current_price < fp_previous.current_price
-AND fp_current.date_id > fp_previous.date_id
--- Add filtering conditions based on query parameters
-ORDER BY percentage_change ASC -- or other sorting options
-```
+````
 
 ## Design Features
 
@@ -198,9 +169,10 @@ ORDER BY percentage_change ASC -- or other sorting options
 ```env
 NEXT_PUBLIC_API_BASE_URL=your-api-base-url
 NEXT_PUBLIC_ANALYTICS_ID=your-analytics-id
-```
+````
 
 ### Build Optimization
+
 - Enable image optimization in next.config.js
 - Configure proper caching headers
 - Implement code splitting for better performance

@@ -18,8 +18,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   fetchPriceHistoryData,
   fetchMarketSummaryData,
+  fetchCategoryInsights,
+  fetchShopComparison,
   mapPriceHistoryResponse,
   mapMarketSummaryResponse,
+  mapCategoryInsightsResponse,
+  mapShopComparisonResponse,
   AnalyticsFilters,
 } from "@/lib/analytics-api";
 
@@ -110,12 +114,17 @@ export default function AnalyticsPage() {
       setError(null);
 
       // Make parallel API calls to fetch real data
-      const [priceHistoryResponse, marketSummaryResponse] = await Promise.all([
+      const [
+        priceHistoryResponse,
+        marketSummaryResponse,
+        categoryInsightsResponse,
+        shopComparisonResponse,
+      ] = await Promise.all([
         fetchPriceHistoryData(filters),
         fetchMarketSummaryData(filters),
-        // We still use these mock functions for data that doesn't have real APIs yet
-        fetchCategoryInsights(),
-        fetchShopInsights(),
+        fetchCategoryInsights(filters),
+        fetchShopComparison(filters),
+        // We still use this mock function for data that doesn't have a real API yet
         fetchPriceAlerts(),
       ]);
 
@@ -128,6 +137,12 @@ export default function AnalyticsPage() {
 
       // Set the market summary data from the API
       setMarketSummary(mapMarketSummaryResponse(marketSummaryResponse));
+
+      // Set the category insights and shop insights data from the API
+      setCategoryInsights(
+        mapCategoryInsightsResponse(categoryInsightsResponse)
+      );
+      setShopInsights(mapShopComparisonResponse(shopComparisonResponse));
 
       // Update selected category name for display
       if (filters.category !== "all") {
@@ -189,97 +204,7 @@ export default function AnalyticsPage() {
     setPriceHistory(mockPriceHistory);
   };
 
-  const fetchCategoryInsights = async () => {
-    const mockCategories: CategoryInsight[] = [
-      {
-        categoryName: "Smartphones",
-        avgPrice: 799,
-        priceChange: -8.4,
-        priceVolatility: 0.32,
-        productCount: 1250,
-        dealCount: 85,
-      },
-      {
-        categoryName: "Laptops",
-        avgPrice: 1199,
-        priceChange: -3.2,
-        priceVolatility: 0.18,
-        productCount: 980,
-        dealCount: 42,
-      },
-      {
-        categoryName: "Smart Watches",
-        avgPrice: 299,
-        priceChange: -5.8,
-        priceVolatility: 0.24,
-        productCount: 650,
-        dealCount: 38,
-      },
-      {
-        categoryName: "Gaming",
-        avgPrice: 599,
-        priceChange: 2.1,
-        priceVolatility: 0.42,
-        productCount: 1580,
-        dealCount: 24,
-      },
-      {
-        categoryName: "Audio",
-        avgPrice: 149,
-        priceChange: -1.4,
-        priceVolatility: 0.15,
-        productCount: 2100,
-        dealCount: 64,
-      },
-    ];
-    setCategoryInsights(mockCategories);
-  };
-
-  const fetchShopInsights = async () => {
-    const mockShops: ShopInsight[] = [
-      {
-        shopName: "TechMart",
-        productCount: 4250,
-        avgPriceRating: 87,
-        reliabilityScore: 92,
-        availabilityPercentage: 94,
-        bestCategories: ["Smartphones", "Laptops"],
-      },
-      {
-        shopName: "ElectroHub",
-        productCount: 3850,
-        avgPriceRating: 82,
-        reliabilityScore: 88,
-        availabilityPercentage: 91,
-        bestCategories: ["Gaming", "Audio"],
-      },
-      {
-        shopName: "DigitalWorld",
-        productCount: 3100,
-        avgPriceRating: 75,
-        reliabilityScore: 90,
-        availabilityPercentage: 89,
-        bestCategories: ["Tablets", "Accessories"],
-      },
-      {
-        shopName: "SmartBuy",
-        productCount: 2800,
-        avgPriceRating: 79,
-        reliabilityScore: 85,
-        availabilityPercentage: 92,
-        bestCategories: ["Smart Watches", "Audio"],
-      },
-      {
-        shopName: "GadgetZone",
-        productCount: 2450,
-        avgPriceRating: 71,
-        reliabilityScore: 82,
-        availabilityPercentage: 87,
-        bestCategories: ["Accessories", "Gaming"],
-      },
-    ];
-    setShopInsights(mockShops);
-  };
+  // Note: fetchCategoryInsights and fetchShopInsights are now imported from @/lib/analytics-api
 
   const fetchPriceAlerts = async () => {
     const mockAlerts: PriceAlert[] = [

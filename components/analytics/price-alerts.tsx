@@ -5,7 +5,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { AlertTriangle, Zap, BadgePercent, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { formatCurrency } from "@/lib/utils";
 
 export interface PriceAlert {
   id: string;
@@ -55,7 +54,7 @@ export function PriceAlerts({ alerts, loading, onViewAll }: PriceAlertsProps) {
   }
 
   const formatPrice = (price: number) => {
-    return formatCurrency(price);
+    return `$${price.toLocaleString()}`;
   };
 
   const formatDate = (dateStr: string) => {

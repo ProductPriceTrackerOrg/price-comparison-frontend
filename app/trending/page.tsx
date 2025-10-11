@@ -320,8 +320,6 @@ export default function TrendingPage() {
 
   return (
     <div className="bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50">
-      
-
       <div className="bg-gradient-to-br from-blue-50/30 via-white to-purple-50/30">
         <div className="container mx-auto px-4 py-8">
           {/* Page Header with Beautiful Blue Background */}

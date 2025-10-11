@@ -3,7 +3,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { formatCurrency } from "@/lib/utils";
 import {
   Activity,
   TrendingDown,
@@ -63,7 +62,7 @@ export function CategoryInsights({ insights, loading }: CategoryInsightsProps) {
   );
 
   const formatPrice = (price: number) => {
-    return formatCurrency(price);
+    return `$${price.toLocaleString()}`;
   };
 
   const formatPercentage = (value: number) => {
