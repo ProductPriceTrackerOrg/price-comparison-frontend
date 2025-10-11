@@ -34,6 +34,7 @@ import {
 } from "lucide-react";
 
 import { ProductCard } from "@/components/product/product-card";
+import { CustomPagination } from "@/components/ui/custom-pagination";
 import {
   PriceDropResponse,
   PriceDropFilters,
@@ -64,22 +65,37 @@ export default function PriceDropsPage() {
   const [stats, setStats] = useState<PriceDropStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [totalPages, setTotalPages] = useState<number>(1);
+  const [totalCount, setTotalCount] = useState<number>(0);
+  const ITEMS_PER_PAGE = 20;
   const [filters, setFilters] = useState<FilterState>({
     category: "all",
     retailer: "all",
     minDiscount: [0],
     sortBy: "percentage_desc",
-    timeRange: "7d",
+    timeRange: "30d",
   });
 
   useEffect(() => {
     fetchPriceDropsData();
     fetchFiltersData();
-  }, [filters.timeRange]);
+  }, [filters.timeRange, currentPage]);
 
   useEffect(() => {
     applyFilters();
   }, [priceDrops, filters]);
+
+  // Reset to first page when filters change (except for pagination)
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [
+    filters.category,
+    filters.retailer,
+    filters.minDiscount,
+    filters.sortBy,
+    filters.timeRange,
+  ]);
 
   const fetchFiltersData = async () => {
     try {
@@ -125,11 +141,12 @@ export default function PriceDropsPage() {
         category: filters.category !== "all" ? filters.category : undefined,
         retailer: filters.retailer !== "all" ? filters.retailer : undefined,
         minDiscount: filters.minDiscount[0],
-        page: 1,
-        limit: 50,
+        page: currentPage,
+        limit: ITEMS_PER_PAGE,
       };
 
-      const [priceDropsData, statsData] = await Promise.all([
+      // Use Promise.allSettled to handle potential partial failures
+      const [priceDropsResult, statsResult] = await Promise.allSettled([
         fetchPriceDrops(apiFilters),
         fetchPriceDropStats(
           filters.timeRange,
@@ -138,59 +155,91 @@ export default function PriceDropsPage() {
         ),
       ]);
 
-      // Transform backend data to frontend format
-      const transformedDrops: PriceDropResponse[] =
-        priceDropsData.price_drops.map(mapToPriceDropResponse);
+      let transformedDrops: PriceDropResponse[] = [];
 
-      setPriceDrops(transformedDrops);
+      // Process price drops data if available
+      if (priceDropsResult.status === "fulfilled") {
+        const priceDropsData = priceDropsResult.value;
+        // Transform backend data to frontend format
+        transformedDrops = priceDropsData.price_drops.map(
+          mapToPriceDropResponse
+        );
+        setPriceDrops(transformedDrops);
 
-      // Transform stats to frontend format
-      if (statsData.stats) {
-        const frontendStats = mapToFrontendStats(statsData.stats);
+        // Update pagination data
+        setTotalCount(priceDropsData.total_count);
+        setTotalPages(Math.ceil(priceDropsData.total_count / ITEMS_PER_PAGE));
+      } else {
+        console.error("Error fetching price drops:", priceDropsResult.reason);
+        setError("Failed to load price drops. Please try again.");
+      }
 
-        // If we have price drops data, let's enhance the stats with more accurate information
-        if (transformedDrops.length > 0) {
-          // Find the biggest drop from the actual data
-          const biggest = transformedDrops.reduce((biggest, current) =>
-            Math.abs(current.percentage_change) >
-            Math.abs(biggest.percentage_change)
-              ? current
-              : biggest
-          );
+      // Process stats data if available
+      if (statsResult.status === "fulfilled") {
+        const statsData = statsResult.value;
 
-          // Update the biggestDrop with real product information
-          frontendStats.biggestDrop = {
-            product_title: biggest.product_title,
-            percentage_change: biggest.percentage_change,
-            price_change: biggest.price_change,
-          };
+        // Transform stats to frontend format
+        if (statsData.stats) {
+          const frontendStats = mapToFrontendStats(statsData.stats);
 
-          // Calculate top category from the actual data
-          const categoryCounts = transformedDrops.reduce((acc, drop) => {
-            acc[drop.category_name] = (acc[drop.category_name] || 0) + 1;
-            return acc;
-          }, {} as Record<string, number>);
+          // If we have price drops data, let's enhance the stats with more accurate information
+          if (transformedDrops.length > 0) {
+            // Find the biggest drop from the actual data
+            const biggest = transformedDrops.reduce((biggest, current) =>
+              Math.abs(current.percentage_change) >
+              Math.abs(biggest.percentage_change)
+                ? current
+                : biggest
+            );
 
-          // Find the category with the most drops
-          let maxCount = 0;
-          let topCategory = "";
-          Object.entries(categoryCounts).forEach(([category, count]) => {
-            if (count > maxCount) {
-              maxCount = count;
-              topCategory = category;
-            }
-          });
+            // Update the biggestDrop with real product information
+            frontendStats.biggestDrop = {
+              product_title: biggest.product_title,
+              percentage_change: biggest.percentage_change,
+              price_change: biggest.price_change,
+            };
 
-          frontendStats.topCategory = topCategory;
+            // Calculate top category from the actual data
+            const categoryCounts = transformedDrops.reduce((acc, drop) => {
+              acc[drop.category_name] = (acc[drop.category_name] || 0) + 1;
+              return acc;
+            }, {} as Record<string, number>);
+
+            // Find the category with the most drops
+            let maxCount = 0;
+            let topCategory = "";
+            Object.entries(categoryCounts).forEach(([category, count]) => {
+              if (count > maxCount) {
+                maxCount = count;
+                topCategory = category;
+              }
+            });
+
+            frontendStats.topCategory = topCategory;
+          }
+
+          setStats(frontendStats);
         }
-
-        setStats(frontendStats);
+      } else {
+        console.error("Error fetching price drop stats:", statsResult.reason);
+        // We don't set an error here because we can still show the products
       }
     } catch (error) {
       console.error("Error fetching price drops:", error);
       setError("Failed to load price drops. Please try again.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handlePageChange = (page: number) => {
+    if (page !== currentPage) {
+      setCurrentPage(page);
+      // Scroll to top of results when changing pages
+      window.scrollTo({
+        top: document.getElementById("results-section")?.offsetTop || 0,
+        behavior: "smooth",
+      });
     }
   };
 
@@ -364,6 +413,11 @@ export default function PriceDropsPage() {
                     <p className="text-2xl font-bold">
                       {stats?.totalDrops || filteredDrops.length}
                     </p>
+                    {stats?.dropsLast24h !== undefined && (
+                      <p className="text-xs text-gray-500">
+                        {stats.dropsLast24h} in last 24h
+                      </p>
+                    )}
                   </div>
                 </div>
               </CardContent>
@@ -388,6 +442,11 @@ export default function PriceDropsPage() {
                         : 0}
                       %
                     </p>
+                    {stats?.totalSavings !== undefined && (
+                      <p className="text-xs text-gray-500">
+                        ₹{stats.totalSavings.toLocaleString()} total savings
+                      </p>
+                    )}
                   </div>
                 </div>
               </CardContent>
@@ -402,6 +461,15 @@ export default function PriceDropsPage() {
                       {stats?.retailerCount ||
                         new Set(filteredDrops.map((d) => d.shop_name)).size}
                     </p>
+                    {stats?.biggestDrop && (
+                      <p className="text-xs text-gray-500">
+                        Max{" "}
+                        {Math.abs(stats.biggestDrop.percentage_change).toFixed(
+                          1
+                        )}
+                        % drop
+                      </p>
+                    )}
                   </div>
                 </div>
               </CardContent>
@@ -416,6 +484,14 @@ export default function PriceDropsPage() {
                       {stats?.categoryCount ||
                         new Set(filteredDrops.map((d) => d.category_name)).size}
                     </p>
+                    {stats?.topCategory && (
+                      <p className="text-xs text-gray-500">
+                        Top:{" "}
+                        {stats.topCategory.length > 15
+                          ? stats.topCategory.substring(0, 15) + "..."
+                          : stats.topCategory}
+                      </p>
+                    )}
                   </div>
                 </div>
               </CardContent>
@@ -447,7 +523,7 @@ export default function PriceDropsPage() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="1d">Last 24 hours</SelectItem>
+                      <SelectItem value="24h">Last 24 hours</SelectItem>
                       <SelectItem value="7d">Last 7 days</SelectItem>
                       <SelectItem value="30d">Last 30 days</SelectItem>
                       <SelectItem value="90d">Last 3 months</SelectItem>
@@ -563,89 +639,102 @@ export default function PriceDropsPage() {
           </Card>
 
           {/* Results */}
-          {error && (
-            <Alert className="mb-6">
-              <AlertTriangle className="h-4 w-4" />
-              <AlertDescription className="flex items-center justify-between">
-                {error}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => fetchPriceDropsData()}
-                >
-                  <RefreshCw className="h-4 w-4 mr-2" />
-                  Retry
-                </Button>
-              </AlertDescription>
-            </Alert>
-          )}
+          <div id="results-section">
+            {error && (
+              <Alert className="mb-6">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertDescription className="flex items-center justify-between">
+                  {error}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => fetchPriceDropsData()}
+                  >
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    Retry
+                  </Button>
+                </AlertDescription>
+              </Alert>
+            )}
 
-          {loading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {[...Array(8)].map((_, i) => (
-                <div key={i} className="relative">
-                  <Card className="animate-pulse overflow-hidden">
-                    <CardContent className="p-0">
-                      <Skeleton className="w-full h-48" />
-                      <div className="p-4 space-y-3">
-                        <div className="flex justify-between">
-                          <Skeleton className="h-3 w-12" />
-                          <Skeleton className="h-3 w-16" />
-                        </div>
-                        <Skeleton className="h-5 w-full" />
-                        <Skeleton className="h-4 w-24" />
-                        <div className="space-y-2">
+            {loading ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {[...Array(8)].map((_, i) => (
+                  <div key={i} className="relative">
+                    <Card className="animate-pulse overflow-hidden">
+                      <CardContent className="p-0">
+                        <Skeleton className="w-full h-48" />
+                        <div className="p-4 space-y-3">
                           <div className="flex justify-between">
-                            <Skeleton className="h-6 w-20" />
-                            <Skeleton className="h-5 w-16" />
+                            <Skeleton className="h-3 w-12" />
+                            <Skeleton className="h-3 w-16" />
                           </div>
-                          <div className="flex justify-between">
-                            <Skeleton className="h-4 w-16" />
-                            <Skeleton className="h-4 w-20" />
+                          <Skeleton className="h-5 w-full" />
+                          <Skeleton className="h-4 w-24" />
+                          <div className="space-y-2">
+                            <div className="flex justify-between">
+                              <Skeleton className="h-6 w-20" />
+                              <Skeleton className="h-5 w-16" />
+                            </div>
+                            <div className="flex justify-between">
+                              <Skeleton className="h-4 w-16" />
+                              <Skeleton className="h-4 w-20" />
+                            </div>
+                          </div>
+                          <div className="flex gap-2">
+                            <Skeleton className="h-8 flex-1" />
+                            <Skeleton className="h-8 w-10" />
                           </div>
                         </div>
-                        <div className="flex gap-2">
-                          <Skeleton className="h-8 flex-1" />
-                          <Skeleton className="h-8 w-10" />
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                  <div className="absolute top-2 left-2">
-                    <Skeleton className="h-6 w-12 rounded-full" />
+                      </CardContent>
+                    </Card>
+                    <div className="absolute top-2 left-2">
+                      <Skeleton className="h-6 w-12 rounded-full" />
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {filteredDrops.map((drop) => (
-                <div key={drop.variant_id} className="relative">
-                  <ProductCard product={transformToProduct(drop)} />
-                  <div className="absolute top-2 left-2">
-                    <Badge className="bg-red-500 hover:bg-red-600 text-white font-semibold flex items-center gap-1">
-                      <TrendingDown className="h-3 w-3" />-
-                      {Math.abs(drop.percentage_change).toFixed(1)}%
-                    </Badge>
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {filteredDrops.map((drop) => (
+                  <div key={drop.variant_id} className="relative">
+                    <ProductCard product={transformToProduct(drop)} />
+                    <div className="absolute top-2 left-2">
+                      <Badge className="bg-red-500 hover:bg-red-600 text-white font-semibold flex items-center gap-1">
+                        <TrendingDown className="h-3 w-3" />-
+                        {Math.abs(drop.percentage_change).toFixed(1)}%
+                      </Badge>
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          )}
+                ))}
+              </div>
+            )}
 
-          {!loading && !error && filteredDrops.length === 0 && (
-            <Card className="text-center py-12">
-              <CardContent>
-                <TrendingDown className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  No price drops found
-                </h3>
-                <p className="text-gray-600">
-                  Try adjusting your filters to see more results.
-                </p>
-              </CardContent>
-            </Card>
-          )}
+            {/* Pagination */}
+            {!loading && !error && filteredDrops.length > 0 && (
+              <div className="mt-8 flex justify-center" id="pagination-section">
+                <CustomPagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={handlePageChange}
+                />
+              </div>
+            )}
+
+            {!loading && !error && filteredDrops.length === 0 && (
+              <Card className="text-center py-12">
+                <CardContent>
+                  <TrendingDown className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                    No price drops found
+                  </h3>
+                  <p className="text-gray-600">
+                    Try adjusting your filters to see more results.
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+          </div>
         </div>
       </main>
     </div>

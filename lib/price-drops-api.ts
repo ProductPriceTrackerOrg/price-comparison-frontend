@@ -196,8 +196,13 @@ export function mapToFrontendStats(
     biggestDrop: {
       product_title: "Top Price Drop", // This would be filled with real data in production
       percentage_change: backendStats.largest_drop_percentage,
-      price_change: 0, // Would be filled with real data
+      price_change:
+        backendStats.total_savings / (backendStats.total_drops || 1), // Estimated average price change
     },
     topCategory: "", // Would be filled with real data from backend
+    // Additional stats that can be exposed to the frontend
+    totalSavings: backendStats.total_savings,
+    dropsLast24h: backendStats.drops_last_24h,
+    dropsLast7d: backendStats.drops_last_7d,
   };
 }

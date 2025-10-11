@@ -46,7 +46,7 @@ export interface PriceAnomaly {
 
 // Filter options for the API
 export interface PriceDropFilters {
-  timeRange: "1d" | "7d" | "30d" | "90d";
+  timeRange: "24h" | "7d" | "30d" | "90d";
   category?: string;
   retailer?: string;
   minDiscount?: number;
@@ -105,4 +105,8 @@ export interface PriceDropStats {
     price_change: number;
   };
   topCategory: string;
+  // Additional stats from backend
+  totalSavings: number;
+  dropsLast24h: number;
+  dropsLast7d: number;
 }
