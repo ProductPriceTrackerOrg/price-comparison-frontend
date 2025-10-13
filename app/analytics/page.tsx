@@ -20,6 +20,7 @@ import {
   fetchMarketSummaryData,
   fetchCategoryInsights,
   fetchShopComparison,
+  fetchPriceAlerts,
   mapPriceHistoryResponse,
   mapMarketSummaryResponse,
   mapCategoryInsightsResponse,
@@ -118,15 +119,17 @@ export default function AnalyticsPage() {
         priceHistoryResponse,
         marketSummaryResponse,
         categoryInsightsResponse,
-        shopComparisonResponse,
+        shopComparisonResponse
       ] = await Promise.all([
         fetchPriceHistoryData(filters),
         fetchMarketSummaryData(filters),
         fetchCategoryInsights(filters),
-        fetchShopComparison(filters),
-        // We still use this mock function for data that doesn't have a real API yet
-        fetchPriceAlerts(),
+        fetchShopComparison(filters)
       ]);
+      
+      // Fetch price alerts separately to avoid naming conflicts
+      const priceAlertsData = await fetchPriceAlerts(5, 'drops');
+      setPriceAlerts(priceAlertsData);
 
       // Map API responses to component prop formats
       const { priceHistory: newPriceHistory, bestTimeToBuy: newBestTimeToBuy } =
@@ -204,61 +207,8 @@ export default function AnalyticsPage() {
     setPriceHistory(mockPriceHistory);
   };
 
-  // Note: fetchCategoryInsights and fetchShopInsights are now imported from @/lib/analytics-api
-
-  const fetchPriceAlerts = async () => {
-    const mockAlerts: PriceAlert[] = [
-      {
-        id: "alert-1",
-        productTitle: "Samsung Galaxy S26 Ultra - 512GB - Phantom Black",
-        imageUrl: "/placeholder.jpg",
-        originalPrice: 1299,
-        currentPrice: 1099,
-        percentageChange: -15.4,
-        shopName: "TechMart",
-        detectedDate: "2025-10-06",
-        productUrl: "/product/samsung-galaxy-s26-ultra",
-        type: "price_drop",
-      },
-      {
-        id: "alert-2",
-        productTitle: "MacBook Air M4 - 16GB RAM - 512GB SSD - Space Gray",
-        imageUrl: "/placeholder.jpg",
-        originalPrice: 1499,
-        currentPrice: 1349,
-        percentageChange: -10,
-        shopName: "ElectroHub",
-        detectedDate: "2025-10-05",
-        productUrl: "/product/macbook-air-m4",
-        type: "flash_sale",
-      },
-      {
-        id: "alert-3",
-        productTitle: "Sony WH-1100XM6 Noise Cancelling Headphones - Black",
-        imageUrl: "/placeholder.jpg",
-        originalPrice: 349,
-        currentPrice: 279,
-        percentageChange: -20.1,
-        shopName: "DigitalWorld",
-        detectedDate: "2025-10-04",
-        productUrl: "/product/sony-wh-1100xm6",
-        type: "price_drop",
-      },
-      {
-        id: "alert-4",
-        productTitle: "PlayStation 6 Digital Edition - 2TB",
-        imageUrl: "/placeholder.jpg",
-        originalPrice: 499,
-        currentPrice: 469,
-        percentageChange: -6,
-        shopName: "GadgetZone",
-        detectedDate: "2025-10-03",
-        productUrl: "/product/playstation-6-digital",
-        type: "unusual_discount",
-      },
-    ];
-    setPriceAlerts(mockAlerts);
-  };
+  // Note: All API functions are now imported from @/lib/analytics-api
+  // The mock fetchPriceAlerts function has been replaced with a real API implementation
 
   const fetchMarketSummary = async () => {
     const mockSummary: MarketSummaryType = {
@@ -316,9 +266,17 @@ export default function AnalyticsPage() {
     }
   };
 
-  const viewAllPriceAlerts = () => {
-    // In a real application, this would navigate to a dedicated alerts page
-    console.log("Navigate to all price alerts");
+  const viewAllPriceAlerts = async () => {
+    // Fetch more alerts when "View All" is clicked
+    try {
+      setLoading(true);
+      const moreAlerts = await fetchPriceAlerts(20, 'drops');
+      setPriceAlerts(moreAlerts);
+    } catch (error) {
+      console.error("Error fetching more price alerts:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const breadcrumbItems = [{ label: "Market Analytics", href: "/analytics" }];
@@ -390,68 +348,12 @@ export default function AnalyticsPage() {
                 </div>
 
                 <div>
-                  <Card>
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-lg flex items-center gap-2">
-                        <Tag className="h-4 w-4" />
-                        Top Price Alerts
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      {loading ? (
-                        <div className="space-y-3">
-                          {Array.from({ length: 3 }).map((_, i) => (
-                            <div key={i} className="flex gap-2">
-                              <Skeleton className="h-10 w-10 rounded-md" />
-                              <div className="space-y-1 flex-1">
-                                <Skeleton className="h-4 w-full" />
-                                <Skeleton className="h-3 w-3/4" />
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      ) : priceAlerts.length === 0 ? (
-                        <div className="text-center py-4">
-                          <div className="text-sm text-muted-foreground">
-                            No active alerts
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="space-y-3">
-                          {priceAlerts.slice(0, 3).map((alert, idx) => (
-                            <div key={idx} className="flex gap-2 items-center">
-                              <div className="shrink-0 h-10 w-10 border rounded-md overflow-hidden">
-                                <img
-                                  src={alert.imageUrl}
-                                  alt=""
-                                  className="h-full w-full object-contain"
-                                  onError={(e) => {
-                                    e.currentTarget.src = "/placeholder.jpg";
-                                  }}
-                                />
-                              </div>
-                              <div className="flex-1">
-                                <p className="text-xs line-clamp-1">
-                                  {alert.productTitle}
-                                </p>
-                                <div className="flex items-center gap-1 text-xs text-green-600 font-medium">
-                                  <TrendingDown className="h-3 w-3" />
-                                  {alert.percentageChange.toFixed(1)}%
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-
-                          <button
-                            onClick={viewAllPriceAlerts}
-                            className="text-xs text-blue-600 hover:underline w-full text-center pt-2"
-                          >
-                            View all alerts
-                          </button>
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
+                  {/* Use a compact version of the price alerts component in the overview tab */}
+                  <PriceAlerts 
+                    alerts={priceAlerts.slice(0, 3)} 
+                    loading={loading} 
+                    onViewAll={viewAllPriceAlerts} 
+                  />
                 </div>
               </div>
             </TabsContent>
@@ -551,6 +453,13 @@ export default function AnalyticsPage() {
             {/* Retailers Tab */}
             <TabsContent value="retailers" className="space-y-6">
               <ShopComparison insights={shopInsights} loading={loading} />
+              
+              {/* Use the PriceAlerts component properly */}
+              <PriceAlerts 
+                alerts={priceAlerts} 
+                loading={loading} 
+                onViewAll={viewAllPriceAlerts} 
+              />
 
               {/* Retailer-specific stats instead of duplicating alerts */}
               <Card>

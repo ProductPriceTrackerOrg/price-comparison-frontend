@@ -54,25 +54,25 @@ export function PriceAlerts({ alerts, loading, onViewAll }: PriceAlertsProps) {
   }
 
   const formatPrice = (price: number) => {
-    return `$${price.toLocaleString()}`;
+    return `Rs. ${price.toLocaleString()}`;
   };
 
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
     const now = new Date();
-    
+
     // If it's today
     if (date.toDateString() === now.toDateString()) {
       return "Today";
     }
-    
+
     // If it's yesterday
     const yesterday = new Date();
     yesterday.setDate(now.getDate() - 1);
     if (date.toDateString() === yesterday.toDateString()) {
       return "Yesterday";
     }
-    
+
     // Otherwise format as date
     return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
   };
@@ -125,7 +125,9 @@ export function PriceAlerts({ alerts, loading, onViewAll }: PriceAlertsProps) {
         <div className="space-y-5">
           {alerts.length === 0 ? (
             <div className="text-center py-6">
-              <div className="text-muted-foreground">No price alerts at this time</div>
+              <div className="text-muted-foreground">
+                No price alerts at this time
+              </div>
               <div className="text-sm text-muted-foreground mt-2">
                 We'll notify you when we detect significant price changes
               </div>
@@ -134,16 +136,16 @@ export function PriceAlerts({ alerts, loading, onViewAll }: PriceAlertsProps) {
             <>
               {alerts.slice(0, 5).map((alert, idx) => {
                 const alertInfo = getAlertTypeInfo(alert.type);
-                
+
                 return (
                   <div key={idx} className="flex gap-4 group">
                     <div className="shrink-0">
-                      <img 
-                        src={alert.imageUrl} 
-                        alt={alert.productTitle} 
+                      <img
+                        src={alert.imageUrl}
+                        alt={alert.productTitle}
                         className="h-16 w-16 object-contain rounded-md border"
                         onError={(e) => {
-                          e.currentTarget.src = '/placeholder.jpg';
+                          e.currentTarget.src = "/placeholder.jpg";
                         }}
                       />
                     </div>
@@ -164,9 +166,13 @@ export function PriceAlerts({ alerts, loading, onViewAll }: PriceAlertsProps) {
                         <div className="text-sm font-medium text-green-600">
                           {formatPrice(alert.currentPrice)}
                         </div>
-                        <Badge variant={alertInfo.variant} className="text-xs flex items-center gap-1">
+                        <Badge
+                          variant={alertInfo.variant}
+                          className="text-xs flex items-center gap-1"
+                        >
                           {alertInfo.icon}
-                          {Math.abs(alert.percentageChange).toFixed(0)}% {alert.percentageChange < 0 ? 'off' : 'up'}
+                          {Math.abs(alert.percentageChange).toFixed(0)}%{" "}
+                          {alert.percentageChange < 0 ? "off" : "up"}
                         </Badge>
                       </div>
                       <div className="flex justify-between items-center mt-1">
@@ -184,7 +190,12 @@ export function PriceAlerts({ alerts, loading, onViewAll }: PriceAlertsProps) {
 
               {alerts.length > 5 && (
                 <div className="pt-2">
-                  <Button variant="outline" size="sm" onClick={onViewAll} className="w-full">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={onViewAll}
+                    className="w-full"
+                  >
                     View all {alerts.length} alerts
                   </Button>
                 </div>

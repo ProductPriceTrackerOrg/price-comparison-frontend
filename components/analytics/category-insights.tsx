@@ -62,7 +62,7 @@ export function CategoryInsights({ insights, loading }: CategoryInsightsProps) {
   );
 
   const formatPrice = (price: number) => {
-    return `$${price.toLocaleString()}`;
+    return `Rs. ${price.toLocaleString()}`;
   };
 
   const formatPercentage = (value: number) => {
