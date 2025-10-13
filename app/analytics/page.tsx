@@ -119,16 +119,16 @@ export default function AnalyticsPage() {
         priceHistoryResponse,
         marketSummaryResponse,
         categoryInsightsResponse,
-        shopComparisonResponse
+        shopComparisonResponse,
       ] = await Promise.all([
         fetchPriceHistoryData(filters),
         fetchMarketSummaryData(filters),
         fetchCategoryInsights(filters),
-        fetchShopComparison(filters)
+        fetchShopComparison(filters),
       ]);
-      
+
       // Fetch price alerts separately to avoid naming conflicts
-      const priceAlertsData = await fetchPriceAlerts(5, 'drops');
+      const priceAlertsData = await fetchPriceAlerts(5, "drops");
       setPriceAlerts(priceAlertsData);
 
       // Map API responses to component prop formats
@@ -270,7 +270,7 @@ export default function AnalyticsPage() {
     // Fetch more alerts when "View All" is clicked
     try {
       setLoading(true);
-      const moreAlerts = await fetchPriceAlerts(20, 'drops');
+      const moreAlerts = await fetchPriceAlerts(20, "drops");
       setPriceAlerts(moreAlerts);
     } catch (error) {
       console.error("Error fetching more price alerts:", error);
@@ -349,10 +349,10 @@ export default function AnalyticsPage() {
 
                 <div>
                   {/* Use a compact version of the price alerts component in the overview tab */}
-                  <PriceAlerts 
-                    alerts={priceAlerts.slice(0, 3)} 
-                    loading={loading} 
-                    onViewAll={viewAllPriceAlerts} 
+                  <PriceAlerts
+                    alerts={priceAlerts.slice(0, 3)}
+                    loading={loading}
+                    onViewAll={viewAllPriceAlerts}
                   />
                 </div>
               </div>
@@ -453,12 +453,12 @@ export default function AnalyticsPage() {
             {/* Retailers Tab */}
             <TabsContent value="retailers" className="space-y-6">
               <ShopComparison insights={shopInsights} loading={loading} />
-              
+
               {/* Use the PriceAlerts component properly */}
-              <PriceAlerts 
-                alerts={priceAlerts} 
-                loading={loading} 
-                onViewAll={viewAllPriceAlerts} 
+              <PriceAlerts
+                alerts={priceAlerts}
+                loading={loading}
+                onViewAll={viewAllPriceAlerts}
               />
 
               {/* Retailer-specific stats instead of duplicating alerts */}
