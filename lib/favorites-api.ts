@@ -30,26 +30,26 @@ export interface FavoritesResponse {
 export async function getUserFavorites(): Promise<FavoritesResponse> {
   // Get the session
   const { data: sessionData } = await supabase.auth.getSession();
-  
+
   if (!sessionData.session) {
     throw new Error("User is not authenticated");
   }
-  
+
   const token = sessionData.session.access_token;
-  
+
   const response = await fetch(`${API_URL}/api/v1/favorites/`, {
     headers: {
-      'Authorization': `Bearer ${token}`,
-    }
+      Authorization: `Bearer ${token}`,
+    },
   });
-  
+
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
     throw new Error(
       errorData.message || `Failed to fetch favorites: ${response.status}`
     );
   }
-  
+
   return await response.json();
 }
 
@@ -58,22 +58,22 @@ export async function getUserFavorites(): Promise<FavoritesResponse> {
  */
 export async function addToFavorites(productId: number): Promise<void> {
   const { data: sessionData } = await supabase.auth.getSession();
-  
+
   if (!sessionData.session) {
     throw new Error("User is not authenticated");
   }
-  
+
   const token = sessionData.session.access_token;
-  
+
   const response = await fetch(`${API_URL}/api/v1/favorites/`, {
-    method: 'POST',
+    method: "POST",
     headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
     },
     body: JSON.stringify({ product_id: productId }),
   });
-  
+
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
     throw new Error(
@@ -87,20 +87,20 @@ export async function addToFavorites(productId: number): Promise<void> {
  */
 export async function removeFromFavorites(productId: number): Promise<void> {
   const { data: sessionData } = await supabase.auth.getSession();
-  
+
   if (!sessionData.session) {
     throw new Error("User is not authenticated");
   }
-  
+
   const token = sessionData.session.access_token;
-  
+
   const response = await fetch(`${API_URL}/api/v1/favorites/${productId}`, {
-    method: 'DELETE',
+    method: "DELETE",
     headers: {
-      'Authorization': `Bearer ${token}`,
+      Authorization: `Bearer ${token}`,
     },
   });
-  
+
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
     throw new Error(

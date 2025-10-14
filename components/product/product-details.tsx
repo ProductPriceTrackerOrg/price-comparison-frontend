@@ -21,8 +21,13 @@ import {
   isProductFavorited,
   getUserFavorites,
 } from "@/lib/favorites-service";
+import {
+  checkUserNotificationSettings,
+  createUserNotificationSettings,
+} from "@/lib/notification-service";
 import { useRouter } from "next/navigation";
 import { SignInDialog } from "@/components/auth/sign-in-dialog";
+import { NotificationConfirmDialog } from "@/components/product/notification-confirm-dialog";
 
 interface ProductDetailsProps {
   product: {
@@ -52,6 +57,7 @@ export function ProductDetails({ product }: ProductDetailsProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [isCheckingStatus, setIsCheckingStatus] = useState(true); // Loading state for initial favorite status check
   const [showAuthDialog, setShowAuthDialog] = useState(false);
+  const [showNotificationDialog, setShowNotificationDialog] = useState(false);
   const { toast } = useToast();
   const { user, isLoggedIn } = useAuth();
   const router = useRouter();
@@ -90,16 +96,35 @@ export function ProductDetails({ product }: ProductDetailsProps) {
     try {
       const result = await toggleProductFavorite(product.id, user.id);
 
-      setIsFavorited(result.isFavorited);
+      // If the product was added to favorites (not removed)
+      if (result.isFavorited) {
+        setIsFavorited(true);
 
-      toast({
-        title: result.isFavorited
-          ? "Added to tracking"
-          : "Removed from tracking",
-        description: result.isFavorited
-          ? `${product.name} added to your tracked products`
-          : `${product.name} removed from your tracked products`,
-      });
+        toast({
+          title: "Added to tracking",
+          description: `${product.name} added to your tracked products`,
+        });
+
+        // Check if user has notification settings
+        const hasNotificationSettings = await checkUserNotificationSettings(
+          user.id
+        );
+
+        if (!hasNotificationSettings) {
+          // Show notification settings dialog after a short delay to allow the first toast to be visible
+          setTimeout(() => {
+            setShowNotificationDialog(true);
+          }, 500);
+        }
+      } else {
+        // Product was removed from favorites
+        setIsFavorited(false);
+
+        toast({
+          title: "Removed from tracking",
+          description: `${product.name} removed from your tracked products`,
+        });
+      }
 
       if (result.error) {
         throw result.error;
@@ -114,6 +139,41 @@ export function ProductDetails({ product }: ProductDetailsProps) {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Handler for when user confirms notification settings
+  const handleNotificationConfirm = async () => {
+    if (!user) return;
+
+    try {
+      const result = await createUserNotificationSettings(user.id);
+
+      if (result.success) {
+        toast({
+          title: "Notifications enabled",
+          description:
+            "You'll now receive price drop alerts and weekly reports",
+        });
+      } else {
+        throw result.error;
+      }
+    } catch (error) {
+      console.error("Error setting up notifications:", error);
+      toast({
+        title: "Notification setup failed",
+        description:
+          "We couldn't set up notifications. You can try again in your settings.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Handler for when user cancels notification settings
+  const handleNotificationCancel = () => {
+    toast({
+      title: "Notifications skipped",
+      description: "You can enable notifications later in your settings",
+    });
   };
 
   const handleShare = () => {
@@ -328,6 +388,15 @@ export function ProductDetails({ product }: ProductDetailsProps) {
         setIsOpen={setShowAuthDialog}
         title="Sign in to track prices"
         message="You need to be signed in to track product prices and get notifications on price changes."
+      />
+
+      {/* Notification Confirmation Dialog */}
+      <NotificationConfirmDialog
+        isOpen={showNotificationDialog}
+        setIsOpen={setShowNotificationDialog}
+        onConfirm={handleNotificationConfirm}
+        onCancel={handleNotificationCancel}
+        productName={product.name}
       />
     </div>
   );

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Store, Star, Package, Shield, ArrowRight } from "lucide-react";
@@ -9,15 +10,15 @@ import { Spinner } from "@/components/ui/spinner";
 
 // Define interfaces for API responses
 interface ApiRetailer {
-  id: number;
+  shop_id: number;
   name: string;
   logo?: string;
-  website?: string;
-  rating?: number;
+  website_url?: string;
+  avg_rating?: number;
   product_count?: number;
-  description?: string;
-  verified?: boolean;
-  is_featured?: boolean;
+  specialty?: string;
+  contact_phone?: string;
+  contact_whatsapp?: string;
 }
 
 interface Retailer {
@@ -41,10 +42,8 @@ export function RetailersSection() {
       setError(null);
 
       try {
-        // Fetch the retailers data
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/v1/home/retailers?limit=6`
-        );
+        // Fetch the retailers data from our API route
+        const response = await fetch("/api/v1/home/retailers?limit=6");
 
         if (!response.ok) {
           throw new Error("Failed to fetch retailers");
@@ -53,12 +52,12 @@ export function RetailersSection() {
         const data = await response.json();
 
         // Map API response to our Retailer interface
-        const mappedRetailers: Retailer[] = data.retailers.map(
+        const mappedRetailers: Retailer[] = (data.retailers || []).map(
           (retailer: ApiRetailer) => ({
-            id: retailer.id,
+            id: retailer.shop_id,
             name: retailer.name,
             logo: retailer.logo || "/placeholder.svg?height=60&width=120",
-            rating: retailer.rating || 4.5,
+            rating: retailer.avg_rating || 4.5,
             products: retailer.product_count
               ? `${
                   retailer.product_count > 1000
@@ -66,8 +65,10 @@ export function RetailersSection() {
                     : retailer.product_count
                 }`
               : "50K+",
-            verified: retailer.verified || false,
-            description: retailer.description || "Quality products retailer",
+            verified: true, // Assuming all retailers from API are verified
+            description: retailer.specialty
+              ? `Specializes in ${retailer.specialty}`
+              : "Quality products retailer",
           })
         );
 
@@ -81,57 +82,48 @@ export function RetailersSection() {
         setRetailers([
           {
             id: 1,
-            name: "TechMart",
-            logo: "/placeholder.svg?height=60&width=120",
-            rating: 4.8,
-            products: "125K+",
+            name: "lifemobile.lk",
+            logo: "https://placekitten.com/200/200?retailer=1",
+            rating: 4.81,
+            products: "15K+",
             verified: true,
-            description: "Leading electronics retailer",
+            description: "Specializes in Electronics",
           },
           {
-            id: 2,
-            name: "ElectroHub",
-            logo: "/placeholder.svg?height=60&width=120",
-            rating: 4.6,
-            products: "98K+",
+            id: 0,
+            name: "appleme",
+            logo: "https://placekitten.com/200/200?retailer=0",
+            rating: 4.34,
+            products: "2K+",
             verified: true,
-            description: "Premium gadgets & accessories",
+            description: "Specializes in Electronics",
           },
           {
             id: 3,
-            name: "GadgetWorld",
-            logo: "/placeholder.svg?height=60&width=120",
-            rating: 4.7,
-            products: "156K+",
+            name: "simplytek",
+            logo: "https://placekitten.com/200/200?retailer=3",
+            rating: 4.95,
+            products: "2K+",
             verified: true,
-            description: "Latest tech innovations",
+            description: "Specializes in Electronics",
           },
           {
             id: 4,
-            name: "DigitalStore",
-            logo: "/placeholder.svg?height=60&width=120",
-            rating: 4.5,
-            products: "87K+",
+            name: "laptop.lk",
+            logo: "https://placekitten.com/200/200?retailer=4",
+            rating: 4.34,
+            products: "1K+",
             verified: true,
-            description: "Digital lifestyle products",
+            description: "Specializes in Electronics",
           },
           {
-            id: 5,
-            name: "TechZone",
-            logo: "/placeholder.svg?height=60&width=120",
-            rating: 4.9,
-            products: "203K+",
+            id: 2,
+            name: "onei.lk",
+            logo: "https://placekitten.com/200/200?retailer=2",
+            rating: 4.77,
+            products: "582",
             verified: true,
-            description: "Professional tech solutions",
-          },
-          {
-            id: 6,
-            name: "ElectroMax",
-            logo: "/placeholder.svg?height=60&width=120",
-            rating: 4.4,
-            products: "76K+",
-            verified: true,
-            description: "Consumer electronics",
+            description: "Specializes in Electronics",
           },
         ]);
         setLoading(false);
@@ -178,10 +170,10 @@ export function RetailersSection() {
             asChild
             className="hidden md:flex border-blue-300 hover:bg-blue-50/60 text-blue-700 px-6 py-5 rounded-xl"
           >
-            <a href="/retailers" className="font-medium text-base">
+            <Link href="/retailers" className="font-medium text-base">
               View All Partners
               <ArrowRight className="ml-2 h-5 w-5" />
-            </a>
+            </Link>
           </Button>
         </div>
         {loading ? (
@@ -272,9 +264,12 @@ export function RetailersSection() {
 
                     <Button
                       variant="outline"
+                      asChild
                       className="w-full bg-gradient-to-r from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100 text-blue-700 border-blue-200 font-medium py-5"
                     >
-                      Browse Products
+                      <Link href={`/retailers/${retailer.id}/products`}>
+                        Browse Products
+                      </Link>
                     </Button>
                   </div>
                 </CardContent>
@@ -288,10 +283,10 @@ export function RetailersSection() {
             asChild
             className="bg-gradient-to-r from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100 border-blue-300 text-blue-700 px-8 py-6 rounded-xl text-lg"
           >
-            <a href="/retailers">
+            <Link href="/retailers">
               View All Retailers
               <ArrowRight className="ml-2 h-5 w-5" />
-            </a>
+            </Link>
           </Button>
         </div>
         {/* Partner trust indicators */}

@@ -42,6 +42,7 @@ import {
   categoryNameToSlug,
 } from "@/lib/category-data";
 import { getCategoryProducts } from "@/lib/categories-api";
+import { CustomPagination } from "@/components/ui/custom-pagination";
 
 interface CategoryProduct {
   id: number;
@@ -135,7 +136,8 @@ export default function CategoryProductPage() {
   const [stats, setStats] = useState<CategoryStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [page, setPage] = useState(1);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [categoryName, setCategoryName] = useState("");
   const [totalItems, setTotalItems] = useState(0);
@@ -167,13 +169,14 @@ export default function CategoryProductPage() {
 
     // Reset state on category change
     setProducts([]);
-    setPage(1);
+    setCurrentPage(1);
     setHasMore(true);
 
     fetchCategoryProducts();
   }, [categorySlug, categoryId]);
 
   useEffect(() => {
+    // Apply client-side filters to products fetched from server
     applyFilters();
   }, [
     products,
@@ -197,7 +200,7 @@ export default function CategoryProductPage() {
 
       // Prepare options for the API call
       const options = {
-        page: page,
+        page: currentPage,
         limit: 20,
         sortBy: apiSortBy as "price_asc" | "price_desc" | "name_asc",
         brand: selectedBrand !== "all" ? selectedBrand : undefined,
@@ -208,15 +211,13 @@ export default function CategoryProductPage() {
       // Call our API client function
       const data = await getCategoryProducts(categoryId, options);
 
-      // Update state with API response
-      setProducts((prevProducts) => {
-        // If it's the first page, replace products, otherwise append
-        return page === 1 ? data.products : [...prevProducts, ...data.products];
-      });
+      // Update products list - we always replace products now instead of appending
+      setProducts(data.products);
 
       setCategoryName(data.category.name);
       setBrands(data.filters.brands || []);
       setTotalItems(data.pagination.total_items);
+      setTotalPages(data.pagination.total_pages);
 
       // Update stats
       const statsData: CategoryStats = {
@@ -255,9 +256,8 @@ export default function CategoryProductPage() {
     }
   };
 
-  const loadMoreProducts = () => {
-    const nextPage = page + 1;
-    setPage(nextPage);
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
     fetchCategoryProducts();
   };
 
@@ -312,7 +312,7 @@ export default function CategoryProductPage() {
   // Handle filter changes with API refresh
   const handleFilterChange = (type: string, value: any) => {
     // Reset to page 1 when filters change
-    setPage(1);
+    setCurrentPage(1);
 
     switch (type) {
       case "retailer":
@@ -733,25 +733,14 @@ export default function CategoryProductPage() {
                 </div>
               )}
 
-              {/* Load More */}
-              {hasMore && filteredProducts.length > 0 && (
+              {/* Pagination */}
+              {filteredProducts.length > 0 && (
                 <div className="flex justify-center mt-8">
-                  <Button
-                    onClick={loadMoreProducts}
-                    className="gap-2"
-                    disabled={loading}
-                  >
-                    {loading ? (
-                      <>
-                        <RefreshCw className="h-4 w-4 animate-spin" />
-                        Loading...
-                      </>
-                    ) : (
-                      <>
-                        Load More <ChevronDown className="h-4 w-4" />
-                      </>
-                    )}
-                  </Button>
+                  <CustomPagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={handlePageChange}
+                  />
                 </div>
               )}
             </>

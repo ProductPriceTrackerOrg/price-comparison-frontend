@@ -15,17 +15,57 @@ export function SimilarProducts({ productId }: SimilarProductsProps) {
   const [products, setProducts] = useState<Product[]>([]);
 
   useEffect(() => {
-    // In a real implementation, this would call an API endpoint
-    // const fetchSimilarProducts = async () => {
-    //   const response = await fetch(`/api/products/${productId}/similar`);
-    //   const data = await response.json();
-    //   setProducts(data.products);
-    // };
-    // fetchSimilarProducts();
+    const fetchSimilarProducts = async () => {
+      try {
+        const response = await fetch(
+          `/api/v1/products/${productId}/similar?limit=8`
+        );
 
-    // Using our centralized product data from lib/product-data.ts
-    // Limit to only 4 items by using slice
-    setProducts(smartphones.slice(0, 4));
+        if (!response.ok) {
+          throw new Error(
+            `API error: ${response.status} ${response.statusText}`
+          );
+        }
+
+        const data = await response.json();
+
+        if (data.similar_products && Array.isArray(data.similar_products)) {
+          // Transform the API response to match our Product type
+          const transformedProducts = data.similar_products.map(
+            (item: any) => ({
+              id: item.id || item.product_id || item.variant_id,
+              name: item.name || item.product_name || item.title,
+              brand: item.brand || "Unknown",
+              category: item.category || item.category_name || "General",
+              price: item.price || item.current_price,
+              originalPrice: item.original_price || item.previous_price,
+              retailer: item.retailer || item.shop_name,
+              inStock: item.in_stock !== false,
+              image: item.image || item.image_url || "/placeholder.svg",
+              discount:
+                item.discount_percentage ||
+                (item.original_price && item.price
+                  ? Math.round(
+                      ((item.original_price - item.price) /
+                        item.original_price) *
+                        100
+                    )
+                  : 0),
+            })
+          );
+
+          setProducts(transformedProducts);
+        }
+      } catch (error) {
+        console.error("Error fetching similar products:", error);
+        // Fallback to sample data in case of error
+        setProducts(smartphones.slice(0, 4));
+      }
+    };
+
+    if (productId) {
+      fetchSimilarProducts();
+    }
   }, [productId]);
 
   return (

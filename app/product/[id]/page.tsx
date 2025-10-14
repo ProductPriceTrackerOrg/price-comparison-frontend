@@ -14,12 +14,24 @@ import { ProductRecommendations } from "@/components/product/product-recommendat
 import { AnomalyDetection } from "@/components/product/anomaly-detection";
 import { ProductDetailsResponse } from "@/lib/types/product";
 
+import { useAuth } from "@/contexts/auth-context";
+
 export default function ProductPage() {
   const params = useParams();
   const productId = params.id as string;
   const [product, setProduct] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { isLoggedIn, user, session } = useAuth();
+
+  // Debug auth status
+  useEffect(() => {
+    console.log("ProductPage Auth Status:", {
+      isLoggedIn,
+      hasUser: !!user,
+      hasSession: !!session,
+    });
+  }, [isLoggedIn, user, session]);
 
   useEffect(() => {
     const fetchProductDetails = async () => {

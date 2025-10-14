@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { Session, User } from "@supabase/supabase-js";
 
@@ -27,6 +28,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isAdmin, setIsAdmin] = useState(false);
   const [redirectUrl, setRedirectUrl] = useState<string | null>(null);
 
+  const router = useRouter();
+
   useEffect(() => {
     // 1. Check for an existing session on component mount
     const getActiveSession = async () => {
@@ -47,6 +50,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         // Handle email confirmation
         if (event === "SIGNED_IN" && session?.user) {
+          // Store the auth event and timestamp for the admin redirect logic
+          localStorage.setItem('lastAuthEvent', 'SIGNED_IN');
+          localStorage.setItem('authEventTimestamp', new Date().getTime().toString());
+          
           if (
             session.user.email_confirmed_at &&
             !session.user.last_sign_in_at
@@ -56,6 +63,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           } else if (session.user.email_confirmed_at) {
             // Existing user signing in
             console.log("User signed in");
+            
+            // We'll check if they're an admin in the useEffect that runs when user changes
+            // and handle redirection there after roles are confirmed
           }
         }
 
@@ -73,12 +83,75 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // 4. Check for the 'Admin' role whenever the user object changes
   useEffect(() => {
-    if (user && user.app_metadata?.roles?.includes("Admin")) {
-      setIsAdmin(true);
-    } else {
-      setIsAdmin(false);
-    }
-  }, [user]);
+    const fetchUserRole = async () => {
+      if (!user) {
+        setIsAdmin(false);
+        return;
+      }
+
+      try {
+        // First, get user role mappings
+        const { data: roleMappings, error: mappingError } = await supabase
+          .from("userrolemapping")
+          .select("role_id")
+          .eq("user_id", user.id);
+
+        if (mappingError) {
+          console.error("Error fetching user role mappings:", mappingError);
+          setIsAdmin(false);
+          return;
+        }
+
+        if (!roleMappings || roleMappings.length === 0) {
+          console.log("User has no roles assigned");
+          setIsAdmin(false);
+          return;
+        }
+
+        // Get the role names for these role IDs
+        const roleIds = roleMappings.map((mapping) => mapping.role_id);
+        const { data: roleData, error: rolesError } = await supabase
+          .from("roles")
+          .select("role_name")
+          .in("role_id", roleIds);
+
+        if (rolesError) {
+          console.error("Error fetching roles:", rolesError);
+          setIsAdmin(false);
+          return;
+        }
+
+        // Check if the user has the Admin role
+        const hasAdminRole = roleData?.some(
+          (role) => role.role_name === "Admin"
+        );
+
+        console.log("User roles:", roleData, "Is admin:", hasAdminRole);
+        
+        // Store admin status
+        setIsAdmin(hasAdminRole || false);
+        
+        // If user is an admin and just logged in, redirect to admin dashboard
+        if (hasAdminRole) {
+          // Check if this is part of a sign-in flow
+          const lastAuthEvent = localStorage.getItem('lastAuthEvent');
+          const currentTime = new Date().getTime();
+          const eventTimestamp = parseInt(localStorage.getItem('authEventTimestamp') || '0');
+          
+          // If the last event was SIGNED_IN and occurred within the last 3 seconds, redirect
+          if (lastAuthEvent === 'SIGNED_IN' && (currentTime - eventTimestamp < 3000)) {
+            console.log("Admin user detected - redirecting to dashboard");
+            router.push('/admin/dashboard');
+          }
+        }
+      } catch (err) {
+        console.error("Error in role check:", err);
+        setIsAdmin(false);
+      }
+    };
+
+    fetchUserRole();
+  }, [user, router]);
 
   // 5. Define the context value, mapping our functions to Supabase's functions
   const value = {
@@ -88,8 +161,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     isAdmin,
     redirectUrl,
     setRedirectUrl,
-    login: (email: string, password: string) =>
-      supabase.auth.signInWithPassword({ email, password }),
+    login: async (email: string, password: string) => {
+      const result = await supabase.auth.signInWithPassword({ email, password });
+      
+      // Save the auth event for the admin redirection logic
+      if (!result.error) {
+        localStorage.setItem('lastAuthEvent', 'SIGNED_IN');
+        localStorage.setItem('authEventTimestamp', new Date().getTime().toString());
+      }
+      
+      return result;
+    },
     signup: (email: string, password: string, fullName: string) =>
       supabase.auth.signUp({
         email,
@@ -100,7 +182,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           emailRedirectTo: `${window.location.origin}/auth/callback`,
         },
       }),
-    logout: () => supabase.auth.signOut(),
+    logout: async () => {
+      // Clear the authentication event tracking
+      localStorage.removeItem('lastAuthEvent');
+      localStorage.removeItem('authEventTimestamp');
+      return await supabase.auth.signOut();
+    },
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

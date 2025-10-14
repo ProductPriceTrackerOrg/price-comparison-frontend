@@ -268,15 +268,19 @@ export default function FavoritesPage() {
                           Rs {product.price.toLocaleString()}
                         </span>
                         {product.original_price &&
-                          product.original_price > product.price && (
-                            <span className="text-sm text-gray-400 line-through">
-                              Rs {product.original_price.toLocaleString()}
-                            </span>
-                          )}
-                        {product.discount && product.discount > 0 && (
+                        product.original_price > product.price ? (
+                          <span className="text-sm text-gray-400 line-through">
+                            Rs {product.original_price.toLocaleString()}
+                          </span>
+                        ) : (
+                          ""
+                        )}
+                        {product.discount && product.discount > 0 ? (
                           <span className="text-xs font-medium text-green-600 bg-green-50 px-1.5 py-0.5 rounded">
                             Save {product.discount}%
                           </span>
+                        ) : (
+                          ""
                         )}
                       </div>
                       <p className="text-xs text-gray-600 mt-2 flex items-center">

@@ -201,7 +201,7 @@ export function TopPriceChangesSection() {
                 {/* Savings callout */}
                 <div className="absolute top-3 right-3 z-10">
                   <div className="bg-white/90 backdrop-blur-sm text-green-700 text-xs font-bold px-2 py-1 rounded-md shadow-sm border border-green-100">
-                    Save $
+                    Save Rs.
                     {(
                       (product.originalPrice || product.price) - product.price
                     ).toFixed(2)}

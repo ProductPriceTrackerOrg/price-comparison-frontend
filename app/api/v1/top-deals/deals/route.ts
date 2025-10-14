@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import api from "@/lib/api";
+import { handleApiError } from "@/lib/error-handling";
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -33,11 +34,7 @@ export async function GET(request: NextRequest) {
     // Return the backend response
     return NextResponse.json(response.data);
   } catch (error: any) {
-    console.error("Error fetching top deals:", error);
-
-    return NextResponse.json(
-      { error: "Failed to fetch top deals" },
-      { status: error.response?.status || 500 }
-    );
+    // Use our centralized error handler with context
+    return handleApiError(error, "Fetching top deals");
   }
 }

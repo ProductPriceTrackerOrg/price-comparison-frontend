@@ -181,6 +181,7 @@ export function AuthDialog({
           description: "You've successfully signed in to your account.",
         });
 
+        // Note: Admin redirection will be handled by the auth-context automatically
         onClose();
         setFormData({
           email: "",

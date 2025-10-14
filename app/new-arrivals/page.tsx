@@ -27,11 +27,10 @@ import {
   Calendar,
 } from "lucide-react";
 
-
-
 import { PageHeader } from "@/components/layout/page-header";
 import { ProductCard } from "@/components/product/product-card";
 import { NewArrivalFilters } from "@/components/new-arrivals/new-arrival-filters";
+import { CustomPagination } from "@/components/ui/custom-pagination";
 import {
   NewArrivalResponse,
   NewArrivalFilters as FilterType,
@@ -65,19 +64,40 @@ export default function NewArrivalsPage() {
   const [stats, setStats] = useState<NewArrivalsStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
   const [filters, setFilters] = useState<FilterState>({
     category: "all",
     retailer: "all",
-    priceRange: [0, 2000],
+    priceRange: [0, 2000000], // Assuming max price is 2,000,000
     sortBy: "newest",
     timeRange: "30d",
     inStockOnly: false,
   });
 
+  // Fetch filters data only once at component mount
+  useEffect(() => {
+    fetchFiltersData();
+  }, []);
+
+  // Fetch data when filters or page changes
   useEffect(() => {
     fetchNewArrivals();
-    fetchFiltersData();
-  }, [filters]);
+  }, [filters, currentPage]);
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [
+    filters.category,
+    filters.retailer,
+    filters.timeRange,
+    filters.inStockOnly,
+    filters.priceRange[0],
+    filters.priceRange[1],
+    filters.sortBy,
+  ]);
 
   // No need for a separate filter effect as we'll apply filters in the API
   // No applyFilters function needed as we'll use API for filtering
@@ -149,8 +169,9 @@ export default function NewArrivalsPage() {
       }
 
       // Set page and limit
-      queryParams.append("limit", "20");
-      queryParams.append("page", "1"); // Implement pagination in the future
+      const itemsPerPage = 20;
+      queryParams.append("limit", itemsPerPage.toString());
+      queryParams.append("page", currentPage.toString());
 
       // API call to fetch data using our Next.js API routes
       const apiUrl = `/api/v1/new-arrivals/new-arrivals?${queryParams}`;
@@ -164,11 +185,16 @@ export default function NewArrivalsPage() {
         throw new Error(`API error: ${response.status}`);
       }
 
-      const data = await response.json();
+      const data: NewArrivalsListResponse = await response.json();
 
       // Set new arrivals data
       setNewArrivals(data.items);
       setFilteredArrivals(data.items); // No need to filter locally
+
+      // Update pagination state
+      setTotalItems(data.total);
+      const calculatedTotalPages = Math.ceil(data.total / 1); // 1 item per page
+      setTotalPages(calculatedTotalPages > 0 ? calculatedTotalPages : 1);
 
       // Also fetch stats
       const statsUrl = `/api/v1/new-arrivals/new-arrivals/stats?${queryParams}`;
@@ -220,6 +246,13 @@ export default function NewArrivalsPage() {
     return sorted;
   };
 
+  // Handle page changes
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    // Scroll to the top when changing page
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   // Transform NewArrivalResponse to Product interface for ProductCard
   const transformToProduct = (arrival: NewArrivalResponse) => ({
     id: arrival.shop_product_id, // Use shop_product_id instead of variant_id
@@ -238,8 +271,6 @@ export default function NewArrivalsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      
-      
       <main className="bg-gradient-to-br from-blue-50/30 via-white to-purple-50/30">
         <div className="container mx-auto px-4 py-8">
           {/* Page Header with Beautiful Blue Background */}
@@ -418,9 +449,19 @@ export default function NewArrivalsPage() {
               </CardContent>
             </Card>
           )}
+
+          {/* Pagination */}
+          {!loading && filteredArrivals.length > 0 && (
+            <div className="flex justify-center mt-8">
+              <CustomPagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={handlePageChange}
+              />
+            </div>
+          )}
         </div>
       </main>
-      
     </div>
   );
 }

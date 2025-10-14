@@ -7,7 +7,7 @@ export async function GET(
 ) {
   const id = params.id;
   const { searchParams } = new URL(request.url);
-  const limit = searchParams.get("limit") || "5"; // Default to 5 similar products
+  const limit = searchParams.get("limit") || "8"; // Default to 8 similar products
 
   try {
     // Build query parameters

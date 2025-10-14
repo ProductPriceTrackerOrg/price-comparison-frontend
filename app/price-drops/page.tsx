@@ -33,9 +33,8 @@ import {
   Home,
 } from "lucide-react";
 
-
-
 import { ProductCard } from "@/components/product/product-card";
+import { CustomPagination } from "@/components/ui/custom-pagination";
 import {
   PriceDropResponse,
   PriceDropFilters,
@@ -43,6 +42,12 @@ import {
   Category,
   Retailer,
 } from "@/lib/types/price-drops";
+import {
+  fetchPriceDrops,
+  fetchPriceDropStats,
+  mapToPriceDropResponse,
+  mapToFrontendStats,
+} from "@/lib/price-drops-api";
 
 interface FilterState {
   category: string;
@@ -60,257 +65,181 @@ export default function PriceDropsPage() {
   const [stats, setStats] = useState<PriceDropStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [totalPages, setTotalPages] = useState<number>(1);
+  const [totalCount, setTotalCount] = useState<number>(0);
+  const ITEMS_PER_PAGE = 20;
   const [filters, setFilters] = useState<FilterState>({
     category: "all",
     retailer: "all",
     minDiscount: [0],
     sortBy: "percentage_desc",
-    timeRange: "7d",
+    timeRange: "30d",
   });
 
   useEffect(() => {
-    fetchPriceDrops();
+    fetchPriceDropsData();
     fetchFiltersData();
-  }, [filters.timeRange]);
+  }, [filters.timeRange, currentPage]);
 
   useEffect(() => {
     applyFilters();
   }, [priceDrops, filters]);
 
+  // Reset to first page when filters change (except for pagination)
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [
+    filters.category,
+    filters.retailer,
+    filters.minDiscount,
+    filters.sortBy,
+    filters.timeRange,
+  ]);
+
   const fetchFiltersData = async () => {
     try {
-      // In real implementation, these would be separate API calls:
-      // const [categoriesRes, retailersRes] = await Promise.all([
-      //   fetch('/api/categories'),
-      //   fetch('/api/retailers')
-      // ])
+      // In a complete implementation, you would fetch categories and retailers from API
+      // For now, we'll extract unique categories and retailers from the price drops data
 
-      // Mock data matching our new products
-      const mockCategories: Category[] = [
-        { category_id: 1, category_name: "Printers" },
-        { category_id: 2, category_name: "Tablets" },
-        { category_id: 3, category_name: "Audio" },
-        { category_id: 4, category_name: "Accessories" },
-      ];
+      // Fetch price drops if we don't have any yet
+      if (priceDrops.length === 0) {
+        return; // Skip for now, we'll get categories from price drops data
+      }
 
-      const mockRetailers: Retailer[] = [
-        { shop_id: 1, shop_name: "lifemobile.lk" },
-      ];
+      // Extract unique categories and retailers from price drops data
+      const uniqueCategories = Array.from(
+        new Set(priceDrops.map((drop) => drop.category_name))
+      ).map((name, index) => ({
+        category_id: index + 1,
+        category_name: name,
+      }));
 
-      setCategories(mockCategories);
-      setRetailers(mockRetailers);
+      const uniqueRetailers = Array.from(
+        new Set(priceDrops.map((drop) => drop.shop_name))
+      ).map((name, index) => ({
+        shop_id: index + 1,
+        shop_name: name,
+      }));
+
+      setCategories(uniqueCategories);
+      setRetailers(uniqueRetailers);
     } catch (error) {
       console.error("Error fetching filter data:", error);
     }
   };
 
-  const fetchPriceDrops = async () => {
+  const fetchPriceDropsData = async () => {
     setLoading(true);
     setError(null);
 
     try {
-      // In real implementation:
-      // const params = new URLSearchParams({
-      //   timeRange: filters.timeRange,
-      //   limit: '50'
-      // })
-      // const response = await fetch(`/api/price-drops?${params}`)
-      // if (!response.ok) throw new Error('Failed to fetch price drops')
-      // const data = await response.json()
-
-      // Use the provided real price changes data
-      const mockData: PriceDropResponse[] = [
-        {
-          variant_id: 3257986037,
-          canonical_product_id: 3257986037,
-          product_title: "UGREEN 90576 USB 3.2 Male to Male 3M Cable",
-          brand: "UGreen",
-          category_name: "Accessories",
-          variant_title: "UGREEN 90576 USB 3.2 Male to Male 3M Cable",
-          shop_name: "lifemobile.lk",
-          shop_id: 1,
-          current_price: 3028.57,
-          previous_price: 13142,
-          price_change: -10113.43,
-          percentage_change: -76.96,
-          drop_date: "2025-09-11",
-          image_url:
-            "https://lifemobile.lk/wp-content/uploads/2023/11/ugreen-1-600x600.jpg",
-          product_url: "https://lifemobile.lk/product/ugreen-90576",
-          is_available: true,
-          days_since_drop: 0,
-        },
-        {
-          variant_id: 1098782875,
-          canonical_product_id: 1098782875,
-          product_title: "HP Laser MFP 1188W (715A3A) Printer",
-          brand: "HP",
-          category_name: "Printers",
-          variant_title: "HP Laser MFP 1188W (715A3A) Printer",
-          shop_name: "lifemobile.lk",
-          shop_id: 1,
-          current_price: 41090.51,
-          previous_price: 70845.71,
-          price_change: -29755.2,
-          percentage_change: -42,
-          drop_date: "2025-09-11",
-          image_url:
-            "https://lifemobile.lk/wp-content/uploads/2024/10/hp-2.jpg",
-          product_url: "https://lifemobile.lk/product/hp-laser-mfp-1188w",
-          is_available: true,
-          days_since_drop: 0,
-        },
-        {
-          variant_id: 511466660,
-          canonical_product_id: 511466660,
-          product_title: "HP Laser MFP 135a Printer",
-          brand: "HP",
-          category_name: "Printers",
-          variant_title: "HP Laser MFP 135a Printer",
-          shop_name: "lifemobile.lk",
-          shop_id: 1,
-          current_price: 21685.62,
-          previous_price: 37389,
-          price_change: -15703.38,
-          percentage_change: -42,
-          drop_date: "2025-09-11",
-          image_url:
-            "https://lifemobile.lk/wp-content/uploads/2021/05/HP-Laser-MFP-135a-Printer-600x600.jpg",
-          product_url: "https://lifemobile.lk/product/hp-laser-mfp-135a",
-          is_available: true,
-          days_since_drop: 0,
-        },
-        {
-          variant_id: 3634275927,
-          canonical_product_id: 3634275927,
-          product_title: "HP Laser MFP 135w Printer",
-          brand: "HP",
-          category_name: "Printers",
-          variant_title: "HP Laser MFP 135w Printer",
-          shop_name: "lifemobile.lk",
-          shop_id: 1,
-          current_price: 30512.86,
-          previous_price: 52608.38,
-          price_change: -22095.52,
-          percentage_change: -42,
-          drop_date: "2025-09-11",
-          image_url:
-            "https://lifemobile.lk/wp-content/uploads/2021/05/HP-Laser-MFP-135w-Printer-1-600x600.jpg",
-          product_url: "https://lifemobile.lk/product/hp-laser-mfp-135w",
-          is_available: true,
-          days_since_drop: 0,
-        },
-        {
-          variant_id: 2056994278,
-          canonical_product_id: 2056994278,
-          product_title: "HP DeskJet Ink Advantage 4175 All-in-One Printer",
-          brand: "HP",
-          category_name: "Printers",
-          variant_title: "HP DeskJet Ink Advantage 4175 All-in-One Printer",
-          shop_name: "lifemobile.lk",
-          shop_id: 1,
-          current_price: 21680.01,
-          previous_price: 37379.32,
-          price_change: -15699.31,
-          percentage_change: -42,
-          drop_date: "2025-09-11",
-          image_url:
-            "https://lifemobile.lk/wp-content/uploads/2021/04/HP-DeskJet-Ink-Advantage-4175-All-in-One-Printer-100x100.jpg",
-          product_url:
-            "https://lifemobile.lk/product/hp-deskjet-ink-advantage-4175",
-          is_available: true,
-          days_since_drop: 0,
-        },
-        {
-          variant_id: 3525602173,
-          canonical_product_id: 3525602173,
-          product_title:
-            "Microsoft Surface Book 3 SKY-00001 13.5″ Core i7 16GB 256GB Platinum",
-          brand: "Microsoft",
-          category_name: "Tablets",
-          variant_title:
-            "Microsoft Surface Book 3 SKY-00001 13.5″ Core i7 16GB 256GB Platinum",
-          shop_name: "lifemobile.lk",
-          shop_id: 1,
-          current_price: 371351.1,
-          previous_price: 538190,
-          price_change: -166838.90000000002,
-          percentage_change: -31,
-          drop_date: "2025-09-11",
-          image_url:
-            "https://lifemobile.lk/wp-content/uploads/2020/09/Microsoft-Surface-Book-3-SKR-00001-13.5-Core-i5-8GB-256GB-Platinum-5-600x600.jpg",
-          product_url: "https://lifemobile.lk/product/microsoft-surface-pro-7",
-          is_available: true,
-          days_since_drop: 0,
-        },
-        {
-          variant_id: 3314937326,
-          canonical_product_id: 3314937326,
-          product_title: "Remax RPL-20 Avenger Series 10000mAh Power bank",
-          brand: "Remax",
-          category_name: "Accessories",
-          variant_title: "Remax RPL-20 Avenger Series 10000mAh Power bank",
-          shop_name: "lifemobile.lk",
-          shop_id: 1,
-          current_price: 2056.2,
-          previous_price: 2980,
-          price_change: -923.8,
-          percentage_change: -31,
-          drop_date: "2025-09-11",
-          image_url:
-            "https://lifemobile.lk/wp-content/uploads/2020/08/Remax-RPL-20-Avenger-Series-10000mAh-Power-bank-Batman-600x600.jpg",
-          product_url: "https://lifemobile.lk/product/remax-rpl-20-power-bank",
-          is_available: true,
-          days_since_drop: 0,
-        },
-        {
-          variant_id: 3269743901,
-          canonical_product_id: 3269743901,
-          product_title: "Remax WK Design Y18 In-Ear Earphones",
-          brand: "WK",
-          category_name: "Audio",
-          variant_title: "Remax WK Design Y18 In-Ear Earphones",
-          shop_name: "lifemobile.lk",
-          shop_id: 1,
-          current_price: 1317.9,
-          previous_price: 1910,
-          price_change: -592.1,
-          percentage_change: -31,
-          drop_date: "2025-09-11",
-          image_url:
-            "https://lifemobile.lk/wp-content/uploads/2021/09/Remax-WK-Design-Y18-In-Ear-Earphones-600x600.jpg",
-          product_url: "https://lifemobile.lk/product/remax-wk-y18-earphones",
-          is_available: true,
-          days_since_drop: 0,
-        },
-      ];
-
-      setPriceDrops(mockData);
-
-      // Calculate stats
-      const mockStats: PriceDropStats = {
-        totalDrops: mockData.length,
-        avgDiscount:
-          mockData.reduce(
-            (sum, drop) => sum + Math.abs(drop.percentage_change),
-            0
-          ) / mockData.length,
-        retailerCount: new Set(mockData.map((d) => d.shop_name)).size,
-        categoryCount: new Set(mockData.map((d) => d.category_name)).size,
-        biggestDrop: mockData.reduce((biggest, current) =>
-          Math.abs(current.percentage_change) >
-          Math.abs(biggest.percentage_change)
-            ? current
-            : biggest
-        ),
-        topCategory: "Smartphones",
+      // Fetch price drops from backend API
+      const apiFilters = {
+        timeRange: filters.timeRange,
+        sortBy: filters.sortBy,
+        category: filters.category !== "all" ? filters.category : undefined,
+        retailer: filters.retailer !== "all" ? filters.retailer : undefined,
+        minDiscount: filters.minDiscount[0],
+        page: currentPage,
+        limit: ITEMS_PER_PAGE,
       };
-      setStats(mockStats);
+
+      // Use Promise.allSettled to handle potential partial failures
+      const [priceDropsResult, statsResult] = await Promise.allSettled([
+        fetchPriceDrops(apiFilters),
+        fetchPriceDropStats(
+          filters.timeRange,
+          apiFilters.category,
+          apiFilters.retailer
+        ),
+      ]);
+
+      let transformedDrops: PriceDropResponse[] = [];
+
+      // Process price drops data if available
+      if (priceDropsResult.status === "fulfilled") {
+        const priceDropsData = priceDropsResult.value;
+        // Transform backend data to frontend format
+        transformedDrops = priceDropsData.price_drops.map(
+          mapToPriceDropResponse
+        );
+        setPriceDrops(transformedDrops);
+
+        // Update pagination data
+        setTotalCount(priceDropsData.total_count);
+        setTotalPages(Math.ceil(priceDropsData.total_count / ITEMS_PER_PAGE));
+      } else {
+        console.error("Error fetching price drops:", priceDropsResult.reason);
+        setError("Failed to load price drops. Please try again.");
+      }
+
+      // Process stats data if available
+      if (statsResult.status === "fulfilled") {
+        const statsData = statsResult.value;
+
+        // Transform stats to frontend format
+        if (statsData.stats) {
+          const frontendStats = mapToFrontendStats(statsData.stats);
+
+          // If we have price drops data, let's enhance the stats with more accurate information
+          if (transformedDrops.length > 0) {
+            // Find the biggest drop from the actual data
+            const biggest = transformedDrops.reduce((biggest, current) =>
+              Math.abs(current.percentage_change) >
+              Math.abs(biggest.percentage_change)
+                ? current
+                : biggest
+            );
+
+            // Update the biggestDrop with real product information
+            frontendStats.biggestDrop = {
+              product_title: biggest.product_title,
+              percentage_change: biggest.percentage_change,
+              price_change: biggest.price_change,
+            };
+
+            // Calculate top category from the actual data
+            const categoryCounts = transformedDrops.reduce((acc, drop) => {
+              acc[drop.category_name] = (acc[drop.category_name] || 0) + 1;
+              return acc;
+            }, {} as Record<string, number>);
+
+            // Find the category with the most drops
+            let maxCount = 0;
+            let topCategory = "";
+            Object.entries(categoryCounts).forEach(([category, count]) => {
+              if (count > maxCount) {
+                maxCount = count;
+                topCategory = category;
+              }
+            });
+
+            frontendStats.topCategory = topCategory;
+          }
+
+          setStats(frontendStats);
+        }
+      } else {
+        console.error("Error fetching price drop stats:", statsResult.reason);
+        // We don't set an error here because we can still show the products
+      }
     } catch (error) {
       console.error("Error fetching price drops:", error);
       setError("Failed to load price drops. Please try again.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handlePageChange = (page: number) => {
+    if (page !== currentPage) {
+      setCurrentPage(page);
+      // Scroll to top of results when changing pages
+      window.scrollTo({
+        top: document.getElementById("results-section")?.offsetTop || 0,
+        behavior: "smooth",
+      });
     }
   };
 
@@ -383,8 +312,6 @@ export default function PriceDropsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      
-      
       <main className="bg-gradient-to-br from-blue-50/30 via-white to-purple-50/30">
         <div className="container mx-auto px-4 py-8">
           {/* Breadcrumb */}
@@ -486,6 +413,11 @@ export default function PriceDropsPage() {
                     <p className="text-2xl font-bold">
                       {stats?.totalDrops || filteredDrops.length}
                     </p>
+                    {stats?.dropsLast24h !== undefined && (
+                      <p className="text-xs text-gray-500">
+                        {stats.dropsLast24h} in last 24h
+                      </p>
+                    )}
                   </div>
                 </div>
               </CardContent>
@@ -510,6 +442,11 @@ export default function PriceDropsPage() {
                         : 0}
                       %
                     </p>
+                    {stats?.totalSavings !== undefined && (
+                      <p className="text-xs text-gray-500">
+                        ₹{stats.totalSavings.toLocaleString()} total savings
+                      </p>
+                    )}
                   </div>
                 </div>
               </CardContent>
@@ -524,6 +461,15 @@ export default function PriceDropsPage() {
                       {stats?.retailerCount ||
                         new Set(filteredDrops.map((d) => d.shop_name)).size}
                     </p>
+                    {stats?.biggestDrop && (
+                      <p className="text-xs text-gray-500">
+                        Max{" "}
+                        {Math.abs(stats.biggestDrop.percentage_change).toFixed(
+                          1
+                        )}
+                        % drop
+                      </p>
+                    )}
                   </div>
                 </div>
               </CardContent>
@@ -538,6 +484,14 @@ export default function PriceDropsPage() {
                       {stats?.categoryCount ||
                         new Set(filteredDrops.map((d) => d.category_name)).size}
                     </p>
+                    {stats?.topCategory && (
+                      <p className="text-xs text-gray-500">
+                        Top:{" "}
+                        {stats.topCategory.length > 15
+                          ? stats.topCategory.substring(0, 15) + "..."
+                          : stats.topCategory}
+                      </p>
+                    )}
                   </div>
                 </div>
               </CardContent>
@@ -569,7 +523,7 @@ export default function PriceDropsPage() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="1d">Last 24 hours</SelectItem>
+                      <SelectItem value="24h">Last 24 hours</SelectItem>
                       <SelectItem value="7d">Last 7 days</SelectItem>
                       <SelectItem value="30d">Last 30 days</SelectItem>
                       <SelectItem value="90d">Last 3 months</SelectItem>
@@ -685,88 +639,104 @@ export default function PriceDropsPage() {
           </Card>
 
           {/* Results */}
-          {error && (
-            <Alert className="mb-6">
-              <AlertTriangle className="h-4 w-4" />
-              <AlertDescription className="flex items-center justify-between">
-                {error}
-                <Button variant="outline" size="sm" onClick={fetchPriceDrops}>
-                  <RefreshCw className="h-4 w-4 mr-2" />
-                  Retry
-                </Button>
-              </AlertDescription>
-            </Alert>
-          )}
+          <div id="results-section">
+            {error && (
+              <Alert className="mb-6">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertDescription className="flex items-center justify-between">
+                  {error}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => fetchPriceDropsData()}
+                  >
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    Retry
+                  </Button>
+                </AlertDescription>
+              </Alert>
+            )}
 
-          {loading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {[...Array(8)].map((_, i) => (
-                <div key={i} className="relative">
-                  <Card className="animate-pulse overflow-hidden">
-                    <CardContent className="p-0">
-                      <Skeleton className="w-full h-48" />
-                      <div className="p-4 space-y-3">
-                        <div className="flex justify-between">
-                          <Skeleton className="h-3 w-12" />
-                          <Skeleton className="h-3 w-16" />
-                        </div>
-                        <Skeleton className="h-5 w-full" />
-                        <Skeleton className="h-4 w-24" />
-                        <div className="space-y-2">
+            {loading ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {[...Array(8)].map((_, i) => (
+                  <div key={i} className="relative">
+                    <Card className="animate-pulse overflow-hidden">
+                      <CardContent className="p-0">
+                        <Skeleton className="w-full h-48" />
+                        <div className="p-4 space-y-3">
                           <div className="flex justify-between">
-                            <Skeleton className="h-6 w-20" />
-                            <Skeleton className="h-5 w-16" />
+                            <Skeleton className="h-3 w-12" />
+                            <Skeleton className="h-3 w-16" />
                           </div>
-                          <div className="flex justify-between">
-                            <Skeleton className="h-4 w-16" />
-                            <Skeleton className="h-4 w-20" />
+                          <Skeleton className="h-5 w-full" />
+                          <Skeleton className="h-4 w-24" />
+                          <div className="space-y-2">
+                            <div className="flex justify-between">
+                              <Skeleton className="h-6 w-20" />
+                              <Skeleton className="h-5 w-16" />
+                            </div>
+                            <div className="flex justify-between">
+                              <Skeleton className="h-4 w-16" />
+                              <Skeleton className="h-4 w-20" />
+                            </div>
+                          </div>
+                          <div className="flex gap-2">
+                            <Skeleton className="h-8 flex-1" />
+                            <Skeleton className="h-8 w-10" />
                           </div>
                         </div>
-                        <div className="flex gap-2">
-                          <Skeleton className="h-8 flex-1" />
-                          <Skeleton className="h-8 w-10" />
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                  <div className="absolute top-2 left-2">
-                    <Skeleton className="h-6 w-12 rounded-full" />
+                      </CardContent>
+                    </Card>
+                    <div className="absolute top-2 left-2">
+                      <Skeleton className="h-6 w-12 rounded-full" />
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {filteredDrops.map((drop) => (
-                <div key={drop.variant_id} className="relative">
-                  <ProductCard product={transformToProduct(drop)} />
-                  <div className="absolute top-2 left-2">
-                    <Badge className="bg-red-500 hover:bg-red-600 text-white font-semibold flex items-center gap-1">
-                      <TrendingDown className="h-3 w-3" />-
-                      {Math.abs(drop.percentage_change).toFixed(1)}%
-                    </Badge>
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {filteredDrops.map((drop) => (
+                  <div key={drop.variant_id} className="relative">
+                    <ProductCard product={transformToProduct(drop)} />
+                    <div className="absolute top-2 left-2">
+                      <Badge className="bg-red-500 hover:bg-red-600 text-white font-semibold flex items-center gap-1">
+                        <TrendingDown className="h-3 w-3" />-
+                        {Math.abs(drop.percentage_change).toFixed(1)}%
+                      </Badge>
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          )}
+                ))}
+              </div>
+            )}
 
-          {!loading && !error && filteredDrops.length === 0 && (
-            <Card className="text-center py-12">
-              <CardContent>
-                <TrendingDown className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  No price drops found
-                </h3>
-                <p className="text-gray-600">
-                  Try adjusting your filters to see more results.
-                </p>
-              </CardContent>
-            </Card>
-          )}
+            {/* Pagination */}
+            {!loading && !error && filteredDrops.length > 0 && (
+              <div className="mt-8 flex justify-center" id="pagination-section">
+                <CustomPagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={handlePageChange}
+                />
+              </div>
+            )}
+
+            {!loading && !error && filteredDrops.length === 0 && (
+              <Card className="text-center py-12">
+                <CardContent>
+                  <TrendingDown className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                    No price drops found
+                  </h3>
+                  <p className="text-gray-600">
+                    Try adjusting your filters to see more results.
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+          </div>
         </div>
       </main>
-      
     </div>
   );
 }

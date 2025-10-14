@@ -1,20 +1,29 @@
-import { NextResponse } from "next/server";
-import { findCategoryById } from "@/lib/category-data";
+import { NextRequest, NextResponse } from "next/server";
+import api from "@/lib/api";
 
 export async function GET(
-  request: Request,
+  request: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const categoryId = parseInt(params.id, 10);
+  const id = params.id;
 
-  // Get the category from our data
-  const category = findCategoryById(categoryId);
+  try {
+    // Forward the request to our backend API
+    const apiUrl = `/api/v1/categories/${id}`;
+    const response = await api.get(apiUrl);
 
-  if (!category) {
-    return NextResponse.json({ error: "Category not found" }, { status: 404 });
+    // Return the backend response
+    return NextResponse.json(response.data);
+  } catch (error: any) {
+    console.error("Error fetching category:", error);
+    
+    if (error.response?.status === 404) {
+      return NextResponse.json({ error: "Category not found" }, { status: 404 });
+    }
+
+    return NextResponse.json(
+      { error: "Failed to fetch category" },
+      { status: error.response?.status || 500 }
+    );
   }
-
-  return NextResponse.json({
-    category: category,
-  });
 }

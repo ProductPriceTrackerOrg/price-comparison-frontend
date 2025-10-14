@@ -98,9 +98,13 @@ export function TrendingSection() {
       setError(null);
 
       try {
-        // Fetch the trending products
+        // Fetch the trending products with AbortController for timeout
+        const trendingController = new AbortController();
+        const trendingTimeout = setTimeout(() => trendingController.abort(), 15000);
+        
         const trendingResponse = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/v1/home/trending?type=trends&limit=4`
+          `${process.env.NEXT_PUBLIC_API_URL}/api/v1/home/trending?type=trends&limit=4`,
+          { signal: trendingController.signal }
         );
 
         if (!trendingResponse.ok) {
@@ -130,9 +134,15 @@ export function TrendingSection() {
 
         setTrendingProducts(mappedTrending);
 
-        // Fetch the new launches
+        clearTimeout(trendingTimeout);
+        
+        // Fetch the new launches with AbortController for timeout
+        const launchesController = new AbortController();
+        const launchesTimeout = setTimeout(() => launchesController.abort(), 15000);
+        
         const launchesResponse = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/v1/home/trending?type=launches&limit=4`
+          `${process.env.NEXT_PUBLIC_API_URL}/api/v1/home/trending?type=launches&limit=4`,
+          { signal: launchesController.signal }
         );
 
         if (!launchesResponse.ok) {
@@ -159,11 +169,19 @@ export function TrendingSection() {
           })
         );
 
+        clearTimeout(launchesTimeout);
         setNewLaunches(mappedLaunches);
         setLoading(false);
-      } catch (error) {
+      } catch (error: any) {
         console.error("Error fetching products:", error);
-        setError("Failed to load products");
+        
+        // Check if it's an abort error (timeout)
+        if (error.name === 'AbortError') {
+          console.error("Request timed out");
+          setError("Request timed out. Please try again later.");
+        } else {
+          setError("Failed to load products");
+        }
 
         // Use fallback data
         setTrendingProducts([
