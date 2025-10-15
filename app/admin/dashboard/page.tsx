@@ -51,57 +51,28 @@ export default function AdminDashboardPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Simulate API call
     const fetchDashboardData = async () => {
       try {
-        // In a real implementation, this would be an API call
-        // const response = await fetch("/api/admin/stats")
-        // const data = await response.json()
+        // Fetch stats and activity data in parallel for efficiency
+        const [statsResponse, activityResponse] = await Promise.all([
+          fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/admin/dashboard-stats`),
+          fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/admin/recent-activity`)
+        ]);
 
-        // For now, use mock data
-        const mockData: DashboardData = {
-          stats: {
-            totalProducts: 12530,
-            totalRetailers: 15,
-            totalUsers: 2850,
-            totalCategories: 45,
-          },
-          recentActivity: [
-            {
-              id: 1,
-              admin: "admin@example.com",
-              action: "Changed status of user 'test@user.com' to inactive.",
-              timestamp: "2025-09-27T10:30:00Z",
-            },
-            {
-              id: 2,
-              admin: "admin@example.com",
-              action: "Confirmed anomaly #123 as 'Flash Sale'.",
-              timestamp: "2025-09-27T09:15:00Z",
-            },
-            {
-              id: 3,
-              admin: "moderator@example.com",
-              action: "Updated retailer information for 'TechStore'.",
-              timestamp: "2025-09-26T16:45:00Z",
-            },
-            {
-              id: 4,
-              admin: "admin@example.com",
-              action: "Marked anomaly #456 as 'Data Error'.",
-              timestamp: "2025-09-26T14:20:00Z",
-            },
-            {
-              id: 5,
-              admin: "admin@example.com",
-              action: "Added new category 'Smart Home'.",
-              timestamp: "2025-09-25T11:10:00Z",
-            },
-          ],
-        };
+        if (!statsResponse.ok || !activityResponse.ok) {
+          throw new Error('Failed to fetch dashboard data from the API');
+        }
 
-        setDashboardData(mockData);
-      } catch (error) {
+        const statsData: Stats = await statsResponse.json();
+        const activityData: Activity[] = await activityResponse.json();
+
+        // Combine the data from both API calls into a single state object
+        setDashboardData({
+          stats: statsData,
+          recentActivity: activityData,
+        });
+
+      } catch (error: any) {
         console.error("Failed to fetch dashboard data:", error);
       } finally {
         setLoading(false);
@@ -109,7 +80,8 @@ export default function AdminDashboardPage() {
     };
 
     fetchDashboardData();
-  }, []);
+    
+  }, []); 
 
   // Format timestamp to readable format
   const formatTimestamp = (timestamp: string) => {
