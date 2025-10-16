@@ -39,9 +39,6 @@ const SidebarLink = ({ href, icon, label, isActive, isCollapsed }: SidebarLinkPr
       <div
         className={cn(
           "flex items-center px-4 py-3 rounded-md transition-colors text-gray-300",
-          // --- THIS IS THE FIX ---
-          // The conditional justify-center class has been removed to prevent the icon from "popping".
-          // The icon will now remain aligned to the left for a smooth transition.
           isActive
             ? "bg-gray-700 text-white"
             : "hover:bg-gray-700 hover:text-white"
@@ -80,7 +77,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const renderSidebarContent = () => (
     <div className="flex flex-col h-full bg-[#202630] text-white overflow-hidden">
       <div className="p-4 border-b border-gray-700">
-        <div className={cn("flex items-center gap-3 transition-all duration-300", isCollapsed ? "justify-center" : "")}>
+        <div className={cn("flex items-center gap-3 transition-all duration-300")}>
           <div className="relative bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg p-1.5 shadow-lg flex-shrink-0">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6 text-white">
               <path d="M3 3v16a2 2 0 0 0 2 2h16"></path><path d="M18 17V9"></path><path d="M13 17V5"></path><path d="M8 17v-3"></path>
@@ -90,7 +87,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             "text-xl font-bold text-white transition-all duration-200 whitespace-nowrap",
             isCollapsed ? "opacity-0 w-0 overflow-hidden" : "opacity-100 w-auto"
           )}>
-            Admin Panel
+            Price Pulse
           </h1>
         </div>
       </div>
@@ -109,19 +106,20 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       </div>
 
       <div className="p-4 border-t border-gray-700 mt-auto">
-        <Link href="/settings" className={cn("flex items-center p-2 text-sm text-gray-400 hover:text-white", isCollapsed ? "justify-center" : "")} title={isCollapsed ? "Settings" : undefined}>
+        <Link href="/settings" className={cn("flex items-center p-2 text-sm text-gray-400 hover:text-white")} title={isCollapsed ? "Settings" : undefined}>
           <Settings size={18} className={cn("transition-all", isCollapsed ? "" : "mr-2")} />
           <span className={cn("transition-all duration-200 whitespace-nowrap", isCollapsed ? "opacity-0 w-0 overflow-hidden" : "opacity-100 w-auto")}>Settings</span>
         </Link>
-        <Button
-          variant="ghost"
-          className={cn("flex w-full items-center p-2 text-sm text-gray-400 hover:text-white", isCollapsed ? "justify-center" : "justify-start")}
+        {/* --- THIS IS THE MODIFIED PART --- */}
+        {/* Changed from <Button> to a standard <button> to get the same hover effect as the Settings link. */}
+        <button
+          className={cn("flex w-full items-center p-2 text-sm text-gray-400 hover:text-white text-left")}
           onClick={() => console.log("Logout clicked")}
           title={isCollapsed ? "Logout" : undefined}
         >
           <LogOut size={18} className={cn("transition-all", isCollapsed ? "" : "mr-2")} />
           <span className={cn("transition-all duration-200 whitespace-nowrap", isCollapsed ? "opacity-0 w-0 overflow-hidden" : "opacity-100 w-auto")}>Logout</span>
-        </Button>
+        </button>
       </div>
     </div>
   );

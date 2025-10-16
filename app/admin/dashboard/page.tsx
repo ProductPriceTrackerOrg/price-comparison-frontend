@@ -6,6 +6,7 @@ import { ProtectedRoute } from "@/components/auth/protected-route";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { cn } from "@/lib/utils";
 
 // Define types to match our API responses
 interface Stats {
@@ -71,12 +72,12 @@ export default function AdminDashboardPage() {
     }).format(date);
   };
 
-  // Data for the "Quick Actions" shortcut links
+  // Data for the "Quick Actions" shortcut links, with dynamic hover colors
   const shortcuts = [
-    { title: "Pipeline Monitoring", description: "Monitor data pipeline status", icon: <Database className="h-8 w-8 mb-2" />, href: "/admin/pipeline" },
-    { title: "User Management", description: "Manage platform users", icon: <Users className="h-8 w-8 mb-2" />, href: "/admin/users" },
-    { title: "Anomaly Review", description: "Review price anomalies", icon: <AlertTriangle className="h-8 w-8 mb-2" />, href: "/admin/anomalies" },
-    { title: "Website Analytics", description: "View platform analytics", icon: <BarChart3 className="h-8 w-8 mb-2" />, href: "/admin/analytics" },
+    { title: "Pipeline Monitoring", description: "Monitor data pipeline status", icon: <Database className="h-8 w-8 mb-2 text-gray-600 group-hover:text-white transition-colors" />, href: "/admin/pipeline" },
+    { title: "User Management", description: "Manage platform users", icon: <Users className="h-8 w-8 mb-2 text-gray-600 group-hover:text-white transition-colors" />, href: "/admin/users" },
+    { title: "Anomaly Review", description: "Review price anomalies", icon: <AlertTriangle className="h-8 w-8 mb-2 text-gray-600 group-hover:text-white transition-colors" />, href: "/admin/anomalies" },
+    { title: "Website Analytics", description: "View platform analytics", icon: <BarChart3 className="h-8 w-8 mb-2 text-gray-600 group-hover:text-white transition-colors" />, href: "/admin/analytics" },
   ];
 
   if (loading) {
@@ -92,7 +93,6 @@ export default function AdminDashboardPage() {
       <div className="space-y-6 p-4 md:p-8">
         <h1 className="text-3xl font-bold tracking-tight">Admin Dashboard</h1>
 
-        {/* --- THIS IS THE NEW, STYLED CARD SECTION --- */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <Card className="border-0 bg-gradient-to-br from-indigo-500 to-purple-600 text-white">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -132,18 +132,22 @@ export default function AdminDashboardPage() {
           </Card>
         </div>
 
-        {/* Shortcuts Section */}
         <div className="mt-8">
           <h2 className="text-xl font-semibold mb-4">Quick Actions</h2>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             {shortcuts.map((shortcut, index) => (
-              <Link href={shortcut.href} key={index}>
-                <Card className="hover:bg-muted transition-colors cursor-pointer h-full">
-                  <CardContent className="pt-6 text-center">
+              <Link href={shortcut.href} key={index} className="group">
+                <Card className={cn(
+                  "h-full rounded-xl transition-all duration-300",
+                  "bg-white/60 backdrop-blur-md border border-gray-200/50", // Glassmorphism base
+                  "hover:bg-gradient-to-r from-purple-500 to-blue-500 hover:shadow-lg hover:shadow-blue-500/30", // Hover fill and glow
+                  "hover:-translate-y-1" // Smooth lift effect
+                )}>
+                   <CardContent className="pt-6 text-center">
                     <div className="flex flex-col items-center">
                       {shortcut.icon}
-                      <h3 className="font-semibold">{shortcut.title}</h3>
-                      <p className="text-sm text-muted-foreground mt-1">{shortcut.description}</p>
+                      <h3 className="font-semibold text-gray-700 group-hover:text-white transition-colors">{shortcut.title}</h3>
+                      <p className="text-sm text-gray-500 group-hover:text-white/80 transition-colors mt-1">{shortcut.description}</p>
                     </div>
                   </CardContent>
                 </Card>
@@ -152,25 +156,28 @@ export default function AdminDashboardPage() {
           </div>
         </div>
 
-        {/* Admin Activity History Table */}
+        {/* --- THIS IS THE MODIFIED PART --- */}
         <div className="mt-8">
           <h2 className="text-xl font-semibold mb-4">Recent Admin Activity</h2>
-          <Card>
-            <CardContent className="pt-6">
+          {/* The card now has rounded corners and a subtle shadow */}
+          <Card className="rounded-xl shadow-md">
+            <CardContent className="p-0">
               <Table>
                 <TableHeader>
-                  <TableRow>
-                    <TableHead>Admin</TableHead>
-                    <TableHead>Action</TableHead>
-                    <TableHead>Timestamp</TableHead>
+                  {/* The header row now has a light gray background */}
+                  <TableRow className="bg-gray-50 hover:bg-gray-50">
+                    <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Admin</TableHead>
+                    <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</TableHead>
+                    <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Timestamp</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {dashboardData?.recentActivity.map((activity, index) => (
-                    <TableRow key={index}>
-                      <TableCell className="font-medium">{activity.admin}</TableCell>
-                      <TableCell>{activity.action}</TableCell>
-                      <TableCell>{formatTimestamp(activity.timestamp)}</TableCell>
+                    // Each row now only has a bottom border, creating clean separating lines
+                    <TableRow key={index} className="border-b border-gray-200 last:border-b-0">
+                      <TableCell className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{activity.admin}</TableCell>
+                      <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{activity.action}</TableCell>
+                      <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatTimestamp(activity.timestamp)}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>

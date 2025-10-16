@@ -119,11 +119,6 @@ export function PriceHistoryModal({ isOpen, onClose, productName, priceHistory }
         {/* Chart Content */}
         <div className="p-6 relative">
           <div className="absolute inset-0 bg-gradient-to-br from-cyan-50/50 via-transparent to-purple-50/50 dark:from-cyan-950/20 dark:via-transparent dark:to-purple-950/20" />
-          <div className="relative mb-2 text-center">
-            <p className="text-xs text-gray-600 dark:text-gray-400">
-              {isZoomed ? "Click any point to zoom out" : "Click any point to zoom in"}
-            </p>
-          </div>
           <div className="relative">
             <ResponsiveContainer width="100%" height={400}>
               <LineChart
