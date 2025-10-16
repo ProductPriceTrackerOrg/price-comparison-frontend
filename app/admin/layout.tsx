@@ -132,7 +132,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   );
 
   return (
-    <ProtectedRoute requireAdmin={true}>
+    <ProtectedRoute requireAdmin={false}>
       <div className="flex min-h-screen bg-background">
         {/* Desktop Sidebar */}
         <aside className="hidden md:block w-64 border-r bg-card">
