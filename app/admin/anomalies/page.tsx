@@ -1,6 +1,6 @@
-"use client";
+"use client"
 
-import { useState, useEffect } from "react";
+import { useState, useEffect } from "react"
 import {
   AlertTriangle,
   ExternalLink,
@@ -8,314 +8,297 @@ import {
   XCircle,
   Eye,
   ArrowUpDown,
-} from "lucide-react";
-import { ProtectedRoute } from "@/components/auth/protected-route";
-import Link from "next/link";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+  ChevronLeft,
+  ChevronRight,
+  Loader2,
+} from "lucide-react"
+import { ProtectedRoute } from "@/components/auth/protected-route"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { Select, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+// Import our new modal component
+import { PriceHistoryModal } from "@/components/admin/PriceHistoryModal"
 
-// Define types
+// Define types to match the backend API response
 interface Anomaly {
-  id: number;
-  productName: string;
-  anomalousPrice: number;
-  originalPrice: number;
-  suggestedType: string;
-  productPageUrl: string;
-  vendorUrl: string;
+  anomaly_id: string
+  productName: string
+  anomalousPrice: number
+  oldPrice: number | null
+  productUrl: string
+  vendorUrl: string
+  anomaly_type?: string
+}
+
+interface PriceHistoryData {
+  date: string
+  price: number
 }
 
 export default function AnomalyReviewPage() {
-  const [anomalies, setAnomalies] = useState<Anomaly[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<string>("all");
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+  const [anomalies, setAnomalies] = useState<Anomaly[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
+  // State for pagination
+  const [currentPage, setCurrentPage] = useState(1)
+  const [hasMore, setHasMore] = useState(true)
+  const perPage = 20
+
+  // State management for the Price History Modal
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [selectedAnomaly, setSelectedAnomaly] = useState<Anomaly | null>(null)
+  const [priceHistory, setPriceHistory] = useState<PriceHistoryData[]>([])
+  const [historyLoading, setHistoryLoading] = useState(false)
+
+  // Fetches the main list of anomalies from the backend API
   useEffect(() => {
-    // Simulate API call
     const fetchAnomalies = async () => {
+      setLoading(true)
+      setError(null)
       try {
-        // In a real implementation, this would be an API call
-        // const response = await fetch("/api/admin/anomalies")
-        // const data = await response.json()
+        const apiUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/v1/admin/anomalies?page=${currentPage}&per_page=${perPage}`
 
-        // For now, use mock data
-        const mockData: Anomaly[] = [
-          {
-            id: 123,
-            productName: "ASUS Zenbook Duo (2025)",
-            anomalousPrice: 25000.0,
-            originalPrice: 250000.0,
-            suggestedType: "POTENTIAL_DATA_ERROR",
-            productPageUrl: "/product/456",
-            vendorUrl: "http://example.com/product/456",
-          },
-          {
-            id: 124,
-            productName: "SuperGamer X Pro Mouse",
-            anomalousPrice: 3500.0,
-            originalPrice: 7000.0,
-            suggestedType: "POTENTIAL_FLASH_SALE",
-            productPageUrl: "/product/789",
-            vendorUrl: "http://example.com/product/789",
-          },
-          {
-            id: 125,
-            productName: "Ultra HD 4K Monitor",
-            anomalousPrice: 15000.0,
-            originalPrice: 45000.0,
-            suggestedType: "POTENTIAL_CLEARANCE",
-            productPageUrl: "/product/101",
-            vendorUrl: "http://example.com/product/101",
-          },
-          {
-            id: 126,
-            productName: "Mechanical Gaming Keyboard",
-            anomalousPrice: 1200.0,
-            originalPrice: 8000.0,
-            suggestedType: "POTENTIAL_DATA_ERROR",
-            productPageUrl: "/product/202",
-            vendorUrl: "http://example.com/product/202",
-          },
-          {
-            id: 127,
-            productName: "Wireless Noise-Cancelling Headphones",
-            anomalousPrice: 12000.0,
-            originalPrice: 24000.0,
-            suggestedType: "POTENTIAL_FLASH_SALE",
-            productPageUrl: "/product/303",
-            vendorUrl: "http://example.com/product/303",
-          },
-        ];
+        const response = await fetch(apiUrl, {
+          // headers: { 'Authorization': `Bearer ${your_jwt_token}` } // Add real auth here in the future
+        })
 
-        setAnomalies(mockData);
-      } catch (error) {
-        console.error("Failed to fetch anomalies:", error);
+        if (!response.ok) {
+          throw new Error("Failed to fetch anomalies from the API")
+        }
+
+        const data: Anomaly[] = await response.json()
+        setAnomalies(data)
+
+        // If the API returns fewer items than we asked for, we know there are no more pages.
+        setHasMore(data.length === perPage)
+      } catch (err: any) {
+        console.error("Failed to fetch anomalies:", err)
+        setError(err.message)
       } finally {
-        setLoading(false);
+        setLoading(false)
       }
-    };
+    }
 
-    fetchAnomalies();
-  }, []);
+    fetchAnomalies()
+  }, [currentPage]) // Re-fetch data whenever the page changes
 
-  // Calculate price difference percentage
-  const calculatePriceDifference = (original: number, anomalous: number) => {
-    const difference = ((anomalous - original) / original) * 100;
-    return difference.toFixed(2);
-  };
+  // Function to handle opening the modal and fetching price history data
+  const handleViewHistory = async (anomaly: Anomaly) => {
+    setSelectedAnomaly(anomaly)
+    setIsModalOpen(true)
+    setHistoryLoading(true)
+    try {
+      const apiUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/v1/admin/anomalies/${anomaly.anomaly_id}/price-history`
+      const response = await fetch(apiUrl)
+      if (!response.ok) throw new Error("Failed to fetch price history")
+      const data: PriceHistoryData[] = await response.json()
+      setPriceHistory(data)
+    } catch (err) {
+      console.error("Failed to fetch price history:", err)
+      // You could set a specific error state for the modal here if needed
+    } finally {
+      setHistoryLoading(false)
+    }
+  }
 
-  // Handle anomaly actions
-  const handleConfirmSale = (anomalyId: number) => {
-    setAnomalies(anomalies.filter((anomaly) => anomaly.id !== anomalyId));
-    // In a real application, you would call an API to update the anomaly status
-    console.log(`Confirmed anomaly #${anomalyId} as a sale`);
-  };
+  // Function to resolve an anomaly by calling the backend API
+  const handleResolveAnomaly = async (anomalyId: string, resolution: "CONFIRMED_SALE" | "DATA_ERROR") => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/admin/anomalies/${anomalyId}/resolve`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          // 'Authorization': `Bearer ${your_jwt_token}` // Add real auth here
+        },
+        body: JSON.stringify({ resolution }),
+      })
 
-  const handleMarkDataError = (anomalyId: number) => {
-    setAnomalies(anomalies.filter((anomaly) => anomaly.id !== anomalyId));
-    // In a real application, you would call an API to update the anomaly status
-    console.log(`Marked anomaly #${anomalyId} as data error`);
-  };
+      if (!response.ok) {
+        throw new Error("Failed to resolve anomaly")
+      }
 
-  // Filter and sort anomalies
-  const filteredAnomalies = anomalies
-    .filter((anomaly) => {
-      if (filter === "all") return true;
-      return anomaly.suggestedType === `POTENTIAL_${filter.toUpperCase()}`;
-    })
-    .sort((a, b) => {
-      const percentA = Math.abs(
-        ((a.anomalousPrice - a.originalPrice) / a.originalPrice) * 100
-      );
-      const percentB = Math.abs(
-        ((b.anomalousPrice - b.originalPrice) / b.originalPrice) * 100
-      );
+      // If successful, remove the anomaly from the list in the UI for a smooth experience.
+      setAnomalies((prevAnomalies) => prevAnomalies.filter((anomaly) => anomaly.anomaly_id !== anomalyId))
+    } catch (error: any) {
+      console.error(`Error resolving anomaly #${anomalyId}:`, error)
+      // In a real app, you would show an error message to the user here (e.g., a toast notification).
+    }
+  }
 
-      return sortOrder === "desc" ? percentB - percentA : percentA - percentB;
-    });
+  // Helper function to calculate the price difference percentage
+  const calculatePriceDifference = (original: number | null, anomalous: number) => {
+    if (original === null || original === 0) return "N/A"
+    const difference = ((anomalous - original) / original) * 100
+    return `${difference.toFixed(2)}%`
+  }
 
+  // Render loading state
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        Loading anomalies...
+        <Loader2 className="h-8 w-8 animate-spin text-gray-500" />
+        <span className="ml-2">Loading anomalies for review...</span>
       </div>
-    );
+    )
+  }
+
+  // Render error state
+  if (error) {
+    return (
+      <Alert variant="destructive">
+        <AlertTitle>Error</AlertTitle>
+        <AlertDescription>{error}</AlertDescription>
+      </Alert>
+    )
   }
 
   return (
     <ProtectedRoute requireAdmin={true}>
-      <div className="space-y-6">
+      <div className="space-y-6 p-4 md:p-8">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <h1 className="text-3xl font-bold tracking-tight">Anomaly Review</h1>
-
+          {/* Filtering and sorting UI is kept but disabled for now as the backend doesn't support it yet */}
           <div className="flex flex-col sm:flex-row gap-2">
-            <Select value={filter} onValueChange={setFilter}>
+            <Select defaultValue="all" disabled>
               <SelectTrigger className="w-full sm:w-[180px]">
                 <SelectValue placeholder="Filter by type" />
               </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Types</SelectItem>
-                <SelectItem value="data_error">Data Errors</SelectItem>
-                <SelectItem value="flash_sale">Flash Sales</SelectItem>
-                <SelectItem value="clearance">Clearance</SelectItem>
-              </SelectContent>
             </Select>
-
-            <Button
-              variant="outline"
-              onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
-              className="flex items-center gap-2"
-            >
-              <ArrowUpDown className="h-4 w-4" />
-              Sort by {sortOrder === "asc" ? "Lowest" : "Highest"} Difference
+            <Button variant="outline" disabled>
+              <ArrowUpDown className="h-4 w-4 mr-2" />
+              Sort by Highest Difference
             </Button>
           </div>
         </div>
 
-        {filteredAnomalies.length === 0 ? (
+        {anomalies.length === 0 ? (
           <Alert>
             <AlertTitle>No anomalies to review</AlertTitle>
-            <AlertDescription>
-              All price anomalies have been reviewed or there are none matching
-              your filter criteria.
-            </AlertDescription>
+            <AlertDescription>All price anomalies have been reviewed. Good job!</AlertDescription>
           </Alert>
         ) : (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {filteredAnomalies.map((anomaly) => {
-              const priceDifference = calculatePriceDifference(
-                anomaly.originalPrice,
-                anomaly.anomalousPrice
-              );
-              const isDataError =
-                anomaly.suggestedType === "POTENTIAL_DATA_ERROR";
+            {anomalies.map((anomaly) => {
+              const priceDifference = calculatePriceDifference(anomaly.oldPrice, anomaly.anomalousPrice)
+              const isPriceDrop = anomaly.oldPrice ? anomaly.anomalousPrice < anomaly.oldPrice : false
 
               return (
-                <Card key={anomaly.id} className="overflow-hidden">
+                <Card
+                  key={anomaly.anomaly_id}
+                  className="overflow-hidden flex flex-col transition-all duration-300 hover:-translate-y-2 hover:shadow-xl"
+                >
                   <CardHeader className="pb-2">
                     <div className="flex items-start justify-between">
                       <div>
-                        <CardTitle className="line-clamp-1">
-                          {anomaly.productName}
-                        </CardTitle>
-                        <CardDescription>Anomaly #{anomaly.id}</CardDescription>
+                        <CardTitle className="line-clamp-2">{anomaly.productName}</CardTitle>
+                        <CardDescription>Anomaly #{anomaly.anomaly_id}</CardDescription>
                       </div>
-                      <Badge
-                        className={
-                          isDataError
-                            ? "bg-red-100 text-red-800"
-                            : "bg-amber-100 text-amber-800"
-                        }
-                      >
+                      <Badge variant={isPriceDrop ? "destructive" : "default"}>
                         <AlertTriangle className="mr-1 h-3 w-3" />
-                        {anomaly.suggestedType
-                          .replace("POTENTIAL_", "")
-                          .replace("_", " ")}
+                        {anomaly.anomaly_type?.replace("_", " ")}
                       </Badge>
                     </div>
                   </CardHeader>
-                  <CardContent>
+                  <CardContent className="flex-grow">
                     <div className="space-y-3">
+                      {anomaly.oldPrice !== null && (
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm font-medium">Old Price:</span>
+                          <span className="font-mono line-through text-gray-500">
+                            LKR {anomaly.oldPrice.toLocaleString()}
+                          </span>
+                        </div>
+                      )}
                       <div className="flex justify-between items-center">
-                        <span className="text-sm font-medium">
-                          Original Price:
-                        </span>
-                        <span className="font-mono">
-                          ₹{anomaly.originalPrice.toLocaleString()}
-                        </span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm font-medium">
-                          Anomalous Price:
-                        </span>
+                        <span className="text-sm font-medium">Anomalous Price:</span>
                         <span className="font-mono font-bold text-lg">
-                          ₹{anomaly.anomalousPrice.toLocaleString()}
+                          LKR {anomaly.anomalousPrice.toLocaleString()}
                         </span>
                       </div>
                       <div className="flex justify-between items-center">
                         <span className="text-sm font-medium">Difference:</span>
                         <span
-                          className={`font-medium ${
-                            Number(priceDifference) < 0
-                              ? "text-red-500"
-                              : "text-green-500"
-                          }`}
+                          className={`font-medium ${isPriceDrop ? "bg-gradient-to-r from-green-500 to-green-700 bg-clip-text text-transparent" : "bg-gradient-to-r from-red-500 to-red-700 bg-clip-text text-transparent"}`}
                         >
-                          {priceDifference}%
+                          {priceDifference}
                         </span>
                       </div>
-
                       <div className="flex items-center gap-2 mt-4">
                         <Button
                           variant="outline"
                           size="sm"
-                          asChild
-                          className="flex-1"
+                          className="flex-1 bg-transparent"
+                          onClick={() => handleViewHistory(anomaly)}
                         >
-                          <Link href={anomaly.productPageUrl}>
-                            <Eye className="h-4 w-4 mr-1" />
-                            View
-                          </Link>
+                          <Eye className="h-4 w-4 mr-1" /> View Price History
                         </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="flex-1"
-                          asChild
-                        >
-                          <a
-                            href={anomaly.vendorUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            <ExternalLink className="h-4 w-4 mr-1" />
-                            Vendor
+                        <Button variant="outline" size="sm" className="flex-1 bg-transparent" asChild>
+                          <a href={anomaly.productUrl} target="_blank" rel="noopener noreferrer">
+                            <ExternalLink className="h-4 w-4 mr-1" /> Go to
                           </a>
                         </Button>
                       </div>
                     </div>
                   </CardContent>
-                  <CardFooter className="flex gap-2 bg-muted/50 pt-2">
+                  <CardFooter className="flex gap-2 bg-gray-50/50 p-2">
                     <Button
-                      variant={isDataError ? "outline" : "default"}
-                      className="flex-1"
-                      onClick={() => handleConfirmSale(anomaly.id)}
+                      className="flex-1 bg-gradient-to-r from-green-500 to-green-700 hover:from-green-600 hover:to-green-800 text-white"
+                      onClick={() => handleResolveAnomaly(anomaly.anomaly_id, "CONFIRMED_SALE")}
                     >
-                      <CheckCircle className="h-4 w-4 mr-1" />
-                      Confirm Sale
+                      <CheckCircle className="h-4 w-4 mr-1" /> Confirm Sale
                     </Button>
                     <Button
-                      variant={isDataError ? "destructive" : "outline"}
-                      className="flex-1"
-                      onClick={() => handleMarkDataError(anomaly.id)}
+                      variant="destructive"
+                      className="flex-1 bg-gradient-to-r from-red-500 to-red-700 hover:from-red-600 hover:to-red-800"
+                      onClick={() => handleResolveAnomaly(anomaly.anomaly_id, "DATA_ERROR")}
                     >
-                      <XCircle className="h-4 w-4 mr-1" />
-                      Data Error
+                      <XCircle className="h-4 w-4 mr-1" /> Data Error
                     </Button>
                   </CardFooter>
                 </Card>
-              );
+              )
             })}
           </div>
         )}
+
+        {/* Pagination Controls */}
+        <div className="flex items-center justify-end space-x-2 pt-4">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+            disabled={currentPage === 1 || loading}
+          >
+            <ChevronLeft className="h-4 w-4 mr-1" /> Previous
+          </Button>
+          <span className="text-sm">Page {currentPage}</span>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setCurrentPage((p) => p + 1)}
+            disabled={!hasMore || loading}
+          >
+            Next <ChevronRight className="h-4 w-4 ml-1" />
+          </Button>
+        </div>
       </div>
+
+      {/* Render the Modal Component */}
+      <PriceHistoryModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        productName={selectedAnomaly?.productName || ""}
+        priceHistory={priceHistory}
+      />
+      {/* Show a loading spinner inside the modal while fetching history */}
+      {historyLoading && isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <Loader2 className="h-8 w-8 animate-spin text-white" />
+        </div>
+      )}
     </ProtectedRoute>
-  );
+  )
 }
