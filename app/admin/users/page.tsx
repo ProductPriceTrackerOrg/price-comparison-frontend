@@ -3,9 +3,9 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/auth-context";
 import { redirect } from "next/navigation";
-import { Users, Search, ChevronLeft, ChevronRight } from "lucide-react";
+import { Users, Search, ChevronLeft, ChevronRight, Shield } from "lucide-react";
 
-// Import UI components - now including Table and Switch
+// Import UI components
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,13 +21,13 @@ import {
   TableRow 
 } from "@/components/ui/table";
 
-// Define the shape of a single user object from our API
+// The User interface now includes the 'role' field
 interface User {
   user_id: string;
   email: string;
   full_name: string;
   is_active: boolean;
-  role?: string;
+  role: string;
 }
 
 export default function UserManagementPage() {
@@ -127,9 +127,6 @@ export default function UserManagementPage() {
     return null;
   }
 
-  // --- THIS IS THE UPDATED PART ---
-  // The JSX below has been modified to render a Table instead of cards,
-  // matching your desired UI.
   return (
     <div className="space-y-6 p-4 md:p-8">
       <div className="flex items-center space-x-3">
@@ -174,23 +171,38 @@ export default function UserManagementPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[100px]">User ID</TableHead>
+                  <TableHead className="w-[300px]">User ID</TableHead>
                   <TableHead>Full Name</TableHead>
                   <TableHead>Email</TableHead>
+                  <TableHead>User Role</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {users.map((user, index) => (
+                {users.map((user) => (
                   <TableRow key={user.user_id}>
-                    <TableCell className="font-medium">{(currentPage - 1) * perPage + index + 1}</TableCell>
+                    <TableCell className="font-medium text-xs text-gray-500">{user.user_id}</TableCell>
                     <TableCell>{user.full_name || 'N/A'}</TableCell>
                     <TableCell>{user.email}</TableCell>
                     <TableCell>
-                      <Badge variant={user.is_active ? "default" : "secondary"}>
-                        {user.is_active ? "Active" : "Inactive"}
-                      </Badge>
+                      {user.role === 'Admin' ? (
+                        <Badge variant="outline" className="text-orange-600 border-orange-600">
+                          <Shield className="h-3 w-3 mr-1" />
+                          Administrator
+                        </Badge>
+                      ) : (
+                        <span className="text-gray-600">General User</span>
+                      )}
+                    </TableCell>
+                    {/* --- THIS IS THE MODIFIED PART --- */}
+                    <TableCell>
+                      <div className="flex items-center">
+                        <div className={`h-2 w-2 rounded-full mr-2 ${user.is_active ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                        <span className={user.is_active ? 'text-gray-800' : 'text-gray-500'}>
+                          {user.is_active ? "Active" : "Inactive"}
+                        </span>
+                      </div>
                     </TableCell>
                     <TableCell className="text-right">
                       <Switch
