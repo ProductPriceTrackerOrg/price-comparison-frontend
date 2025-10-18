@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/auth-context";
+import { resolveProductImageUrl } from "@/lib/utils";
 
 interface Product {
   id: number;
@@ -52,6 +53,7 @@ export function ProductCard({ product }: ProductCardProps) {
   const [isHovered, setIsHovered] = useState(false);
   const { toast } = useToast();
   const { isLoggedIn } = useAuth();
+  const resolvedImage = resolveProductImageUrl(product.image);
 
   const handleFavorite = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -109,7 +111,7 @@ export function ProductCard({ product }: ProductCardProps) {
           >
             <img
               src={
-                product.image ||
+                resolvedImage ??
                 "/placeholder.svg?height=240&width=240&text=Product"
               }
               alt={product.name}
