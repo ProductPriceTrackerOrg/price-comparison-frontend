@@ -48,7 +48,9 @@ export function PriceForecasting({
   days = 7,
 }: PriceForecastingProps) {
   const [forecastData, setForecastData] = useState<ForecastDataPoint[]>([]);
-  const [modelInfo, setModelInfo] = useState<PriceForecastModelInfo | null>(null);
+  const [modelInfo, setModelInfo] = useState<PriceForecastModelInfo | null>(
+    null
+  );
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -92,7 +94,9 @@ export function PriceForecasting({
           return;
         }
         console.error("Error loading price forecast", err);
-        setError("Unable to load price forecast right now. Please try again later.");
+        setError(
+          "Unable to load price forecast right now. Please try again later."
+        );
         setForecastData([]);
         setModelInfo(null);
       } finally {
@@ -112,7 +116,9 @@ export function PriceForecasting({
   const averageConfidence = useMemo(() => {
     const confidences = forecastData
       .map((point) => point.confidence)
-      .filter((value): value is number => value !== null && value !== undefined);
+      .filter(
+        (value): value is number => value !== null && value !== undefined
+      );
 
     if (confidences.length === 0) {
       return null;
@@ -136,7 +142,8 @@ export function PriceForecasting({
     ? forecastData[forecastData.length - 1].predicted
     : computedCurrentPrice ?? 0;
 
-  const priceChange = computedCurrentPrice !== null ? predictedPrice - computedCurrentPrice : 0;
+  const priceChange =
+    computedCurrentPrice !== null ? predictedPrice - computedCurrentPrice : 0;
   const priceChangePercentage = computedCurrentPrice
     ? (priceChange / computedCurrentPrice) * 100
     : 0;
@@ -158,7 +165,10 @@ export function PriceForecasting({
 
     const values = forecastData
       .flatMap((point) => [point.lower, point.upper, point.predicted])
-      .filter((value): value is number => typeof value === "number" && !Number.isNaN(value));
+      .filter(
+        (value): value is number =>
+          typeof value === "number" && !Number.isNaN(value)
+      );
 
     if (values.length === 0) {
       return undefined;
@@ -169,14 +179,20 @@ export function PriceForecasting({
     const spread = maxValue - minValue;
     const buffer = Math.max(spread * 0.05, 5);
 
-    return [Math.max(0, minValue - buffer), maxValue + buffer] as [number, number];
+    return [Math.max(0, minValue - buffer), maxValue + buffer] as [
+      number,
+      number
+    ];
   }, [forecastData]);
 
   const formatCurrency = (value: number | null) => {
     if (value === null || Number.isNaN(value)) {
       return "N/A";
     }
-    return `Rs ${value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    return `Rs ${value.toLocaleString("en-US", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })}`;
   };
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
@@ -296,13 +312,33 @@ export function PriceForecasting({
                   margin={{ top: 24, right: 30, left: 24, bottom: 24 }}
                 >
                   <defs>
-                    <linearGradient id="upperGradient" x1="0" y1="0" x2="0" y2="1">
+                    <linearGradient
+                      id="upperGradient"
+                      x1="0"
+                      y1="0"
+                      x2="0"
+                      y2="1"
+                    >
                       <stop offset="0%" stopColor="#8B5CF6" stopOpacity={0.2} />
-                      <stop offset="100%" stopColor="#8B5CF6" stopOpacity={0.05} />
+                      <stop
+                        offset="100%"
+                        stopColor="#8B5CF6"
+                        stopOpacity={0.05}
+                      />
                     </linearGradient>
-                    <linearGradient id="lowerGradient" x1="0" y1="0" x2="0" y2="1">
+                    <linearGradient
+                      id="lowerGradient"
+                      x1="0"
+                      y1="0"
+                      x2="0"
+                      y2="1"
+                    >
                       <stop offset="0%" stopColor="#EC4899" stopOpacity={0.1} />
-                      <stop offset="100%" stopColor="#EC4899" stopOpacity={0.02} />
+                      <stop
+                        offset="100%"
+                        stopColor="#EC4899"
+                        stopOpacity={0.02}
+                      />
                     </linearGradient>
                   </defs>
                   <CartesianGrid
@@ -412,8 +448,13 @@ export function PriceForecasting({
                         : "Price Increase Expected"}
                     </p>
                     <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">
-                      Our AI model predicts a {priceChange < 0 ? "gradual price decrease" : "gradual price increase"}{" "}
-                      over the next {days} days, with potential {priceChange < 0 ? "savings" : "cost increase"} of up to {formatCurrency(Math.abs(priceChange))}.
+                      Our AI model predicts a{" "}
+                      {priceChange < 0
+                        ? "gradual price decrease"
+                        : "gradual price increase"}{" "}
+                      over the next {days} days, with potential{" "}
+                      {priceChange < 0 ? "savings" : "cost increase"} of up to{" "}
+                      {formatCurrency(Math.abs(priceChange))}.
                     </p>
                   </div>
                 </div>
@@ -440,12 +481,17 @@ export function PriceForecasting({
                     </p>
                     <p className="text-sm text-purple-700 dark:text-purple-300 mt-1">
                       {modelInfo
-                        ? `Forecast generated by ${modelInfo.model_name}${modelInfo.model_version ? ` · v${modelInfo.model_version}` : ""}.`
+                        ? `Forecast generated by ${modelInfo.model_name}${
+                            modelInfo.model_version
+                              ? ` · v${modelInfo.model_version}`
+                              : ""
+                          }.`
                         : "Forecast generated by our latest machine learning model."}
                     </p>
                     {modelInfo?.last_trained ? (
                       <p className="text-xs text-purple-600 dark:text-purple-300 mt-1">
-                        Last trained on {new Date(modelInfo.last_trained).toLocaleDateString()}
+                        Last trained on{" "}
+                        {new Date(modelInfo.last_trained).toLocaleDateString()}
                       </p>
                     ) : null}
                   </div>
@@ -458,7 +504,9 @@ export function PriceForecasting({
                       Price Volatility
                     </p>
                     <p className="text-sm text-amber-700 dark:text-amber-300 mt-1">
-                      Confidence bands indicate potential fluctuations of {formatCurrency(Math.abs(maxVolatility))} around the predicted trend.
+                      Confidence bands indicate potential fluctuations of{" "}
+                      {formatCurrency(Math.abs(maxVolatility))} around the
+                      predicted trend.
                     </p>
                   </div>
                 </div>

@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,10 +13,7 @@ import {
   Flame,
   Activity,
 } from "lucide-react";
-import {
-  ProductAnomaly,
-  ProductAnomalyResponse,
-} from "@/lib/types/product";
+import { ProductAnomaly, ProductAnomalyResponse } from "@/lib/types/product";
 
 interface AnomalyDetectionProps {
   productId: string;
@@ -53,7 +50,9 @@ export function AnomalyDetection({ productId }: AnomalyDetectionProps) {
           return;
         }
         console.error("Error loading anomalies", err);
-        setError("Unable to load anomaly data right now. Please try again later.");
+        setError(
+          "Unable to load anomaly data right now. Please try again later."
+        );
         setAnomalies([]);
       } finally {
         setLoading(false);
@@ -173,7 +172,9 @@ export function AnomalyDetection({ productId }: AnomalyDetectionProps) {
               className="border-l-4 border-l-primary"
             >
               <div className="flex items-start space-x-3">
-                <div className="flex-shrink-0 mt-1">{getAnomalyIcon(anomaly.anomaly_type)}</div>
+                <div className="flex-shrink-0 mt-1">
+                  {getAnomalyIcon(anomaly.anomaly_type)}
+                </div>
                 <div className="flex-1 space-y-2">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
@@ -187,7 +188,9 @@ export function AnomalyDetection({ productId }: AnomalyDetectionProps) {
                     <div className="flex items-center space-x-2">
                       <div
                         className={`flex items-center space-x-1 ${
-                          priceChangePositive ? "text-red-600" : "text-green-600"
+                          priceChangePositive
+                            ? "text-red-600"
+                            : "text-green-600"
                         }`}
                       >
                         {priceChangePositive ? (
@@ -203,25 +206,37 @@ export function AnomalyDetection({ productId }: AnomalyDetectionProps) {
                     </div>
                   </div>
                   <AlertDescription className="text-sm space-y-1">
-                    {anomaly.previous_price !== null && anomaly.price !== null ? (
+                    {anomaly.previous_price !== null &&
+                    anomaly.price !== null ? (
                       <p>
-                        Price moved from <strong>Rs {anomaly.previous_price.toLocaleString()}</strong> to
+                        Price moved from{" "}
+                        <strong>
+                          Rs {anomaly.previous_price.toLocaleString()}
+                        </strong>{" "}
+                        to
                         <strong> Rs {anomaly.price.toLocaleString()}</strong>.
                       </p>
                     ) : (
-                      <p>Significant price movement detected for this product.</p>
+                      <p>
+                        Significant price movement detected for this product.
+                      </p>
                     )}
                     {anomaly.model_name ? (
                       <p className="text-xs text-muted-foreground">
                         Model: {anomaly.model_name}
-                        {anomaly.model_version ? ` · v${anomaly.model_version}` : ""}
+                        {anomaly.model_version
+                          ? ` · v${anomaly.model_version}`
+                          : ""}
                       </p>
                     ) : null}
                   </AlertDescription>
                   <div className="flex items-center justify-between text-xs text-muted-foreground">
                     <span>Score: {score.toFixed(0)}%</span>
                     {anomaly.last_trained ? (
-                      <span>Model updated: {new Date(anomaly.last_trained).toLocaleDateString()}</span>
+                      <span>
+                        Model updated:{" "}
+                        {new Date(anomaly.last_trained).toLocaleDateString()}
+                      </span>
                     ) : null}
                   </div>
                 </div>

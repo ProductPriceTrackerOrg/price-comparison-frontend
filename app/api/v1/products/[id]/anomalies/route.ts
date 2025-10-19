@@ -8,7 +8,8 @@ export async function GET(
   const id = params.id;
   const { searchParams } = new URL(request.url);
   const days = searchParams.get("days") || "30";
-  const minScore = searchParams.get("minScore") || searchParams.get("min_score");
+  const minScore =
+    searchParams.get("minScore") || searchParams.get("min_score");
   const retailerId =
     searchParams.get("retailerId") || searchParams.get("retailer_id");
 
