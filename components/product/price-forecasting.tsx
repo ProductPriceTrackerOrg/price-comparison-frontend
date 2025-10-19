@@ -151,6 +151,27 @@ export function PriceForecasting({
     }, 0);
   }, [forecastData]);
 
+  const yAxisDomain = useMemo(() => {
+    if (forecastData.length === 0) {
+      return undefined;
+    }
+
+    const values = forecastData
+      .flatMap((point) => [point.lower, point.upper, point.predicted])
+      .filter((value): value is number => typeof value === "number" && !Number.isNaN(value));
+
+    if (values.length === 0) {
+      return undefined;
+    }
+
+    const minValue = Math.min(...values);
+    const maxValue = Math.max(...values);
+    const spread = maxValue - minValue;
+    const buffer = Math.max(spread * 0.05, 5);
+
+    return [Math.max(0, minValue - buffer), maxValue + buffer] as [number, number];
+  }, [forecastData]);
+
   const formatCurrency = (value: number | null) => {
     if (value === null || Number.isNaN(value)) {
       return "N/A";
@@ -272,7 +293,7 @@ export function PriceForecasting({
               <ResponsiveContainer width="100%" height="100%">
                 <ComposedChart
                   data={forecastData}
-                  margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+                  margin={{ top: 24, right: 30, left: 24, bottom: 24 }}
                 >
                   <defs>
                     <linearGradient id="upperGradient" x1="0" y1="0" x2="0" y2="1">
@@ -300,7 +321,8 @@ export function PriceForecasting({
                     tickFormatter={(value) => `Rs ${value.toLocaleString()}`}
                     axisLine={false}
                     tickLine={false}
-                    domain={["dataMin - 20", "dataMax + 20"]}
+                    domain={yAxisDomain ?? ["dataMin - 20", "dataMax + 20"]}
+                    padding={{ top: 16, bottom: 16 }}
                   />
                   <Tooltip
                     contentStyle={{
