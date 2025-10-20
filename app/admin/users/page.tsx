@@ -3,7 +3,8 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/auth-context";
 import { redirect } from "next/navigation";
-import { Users, Search, ChevronLeft, ChevronRight, Shield } from "lucide-react";
+import { Users, Search, ChevronLeft, ChevronRight, Shield, Loader2 } from "lucide-react";
+import { ConfirmationModal } from "@/components/ui/ConfirmationModal";
 
 // Import UI components
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -31,7 +32,8 @@ interface User {
 }
 
 export default function UserManagementPage() {
-  const { isLoggedIn, isAdmin } = useAuth();
+  // --- MODIFICATION: Get the session to access the JWT for API calls ---
+  const { isLoggedIn, isAdmin, session } = useAuth();
   
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
@@ -44,6 +46,11 @@ export default function UserManagementPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [totalUsers, setTotalUsers] = useState(0);
   const perPage = 20;
+  
+  // State for admin promotion confirmation modal
+  const [isPromoteModalOpen, setIsPromoteModalOpen] = useState(false);
+  const [userToPromote, setUserToPromote] = useState<{ id: string; name: string } | null>(null);
+  const [isPromoting, setIsPromoting] = useState(false);
 
   useEffect(() => {
     if (!isLoggedIn || !isAdmin) {
@@ -54,6 +61,9 @@ export default function UserManagementPage() {
   // Fetches users from the backend whenever pagination, search, or filter changes.
   useEffect(() => {
     const fetchUsers = async () => {
+      // Don't fetch if the session is not ready yet
+      if (!session) return;
+
       setLoading(true);
       setError(null);
       try {
@@ -70,8 +80,9 @@ export default function UserManagementPage() {
 
         const apiUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/v1/admin/users?${params.toString()}`;
 
+        // --- MODIFICATION: Add Authorization header to the fetch request ---
         const response = await fetch(apiUrl, {
-          // headers: { 'Authorization': `Bearer ${your_jwt_token}` }
+          headers: { 'Authorization': `Bearer ${session.access_token}` }
         });
 
         if (!response.ok) {
@@ -92,7 +103,7 @@ export default function UserManagementPage() {
     };
 
     fetchUsers();
-  }, [currentPage, searchQuery, statusFilter]);
+  }, [currentPage, searchQuery, statusFilter, session]);
 
   // Handles the API call to toggle a user's active status.
   const handleToggleUserStatus = async (userId: string, currentStatus: boolean) => {
@@ -102,7 +113,8 @@ export default function UserManagementPage() {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          // 'Authorization': `Bearer ${your_jwt_token}`
+          // --- MODIFICATION: Add Authorization header ---
+          'Authorization': `Bearer ${session?.access_token}`
         },
         body: JSON.stringify({ is_active: newStatus }),
       });
@@ -120,6 +132,61 @@ export default function UserManagementPage() {
 
     } catch (error: any) {
       console.error('Error toggling user status:', error);
+      // TODO: Add a user-facing error toast notification
+    }
+  };
+
+  // Open the confirmation modal for promoting a user
+  const openPromoteModal = (userId: string, userName: string) => {
+    setUserToPromote({ id: userId, name: userName });
+    setIsPromoteModalOpen(true);
+  };
+
+  // --- UPDATED: Handler to promote a user to an admin using a modal ---
+  const handleMakeAdmin = async () => {
+    if (!userToPromote) return;
+    
+    setIsPromoting(true);
+    const userId = userToPromote.id;
+    const userName = userToPromote.name;
+    
+    // Close the modal immediately for better perceived performance
+    setIsPromoteModalOpen(false);
+    
+    // Optimistically update the UI right away
+    setUsers(prevUsers =>
+      prevUsers.map(user =>
+        user.user_id === userId ? { ...user, role: 'Admin' } : user
+      )
+    );
+    
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/admin/users/${userId}/make-admin`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${session?.access_token}`
+        }
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Failed to promote user');
+      }
+      
+      // Success was already shown in the UI
+      // TODO: Add a success toast notification
+    } catch (error: any) {
+      console.error('Error promoting user:', error);
+      // Revert the optimistic update if there was an error
+      setUsers(prevUsers =>
+        prevUsers.map(user =>
+          user.user_id === userId ? { ...user, role: 'General' } : user
+        )
+      );
+      // TODO: Add an error toast notification
+    } finally {
+      setIsPromoting(false);
+      setUserToPromote(null);
     }
   };
 
@@ -195,7 +262,6 @@ export default function UserManagementPage() {
                         <span className="text-gray-600">General User</span>
                       )}
                     </TableCell>
-                    {/* --- THIS IS THE MODIFIED PART --- */}
                     <TableCell>
                       <div className="flex items-center">
                         <div className={`h-2 w-2 rounded-full mr-2 ${user.is_active ? 'bg-green-500' : 'bg-red-500'}`}></div>
@@ -204,7 +270,19 @@ export default function UserManagementPage() {
                         </span>
                       </div>
                     </TableCell>
-                    <TableCell className="text-right">
+                    {/* --- THIS IS THE MODIFIED PART --- */}
+                    <TableCell className="text-right flex items-center justify-end space-x-2">
+                      {/* Show the "Make Admin" button only if the user is not already an admin */}
+                      {user.role !== 'Admin' && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => openPromoteModal(user.user_id, user.full_name)}
+                          title="Promote to Administrator"
+                        >
+                          <Shield className="h-4 w-4 text-gray-500 hover:text-orange-600" />
+                        </Button>
+                      )}
                       <Switch
                         checked={user.is_active}
                         onCheckedChange={() => handleToggleUserStatus(user.user_id, user.is_active)}
@@ -230,7 +308,16 @@ export default function UserManagementPage() {
           </Button>
         </div>
       </Card>
+      
+      {/* Confirmation Modal for Admin Promotion */}
+      <ConfirmationModal
+        isOpen={isPromoteModalOpen}
+        onClose={() => setIsPromoteModalOpen(false)}
+        onConfirm={handleMakeAdmin}
+        title="Confirm Administrator Promotion"
+        message={`Are you sure you want to promote ${userToPromote?.name || ''} to an administrator? This will give them full access to all admin features.`}
+        isLoading={isPromoting}
+      />
     </div>
   );
 }
-

@@ -20,6 +20,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { ProtectedRoute } from "@/components/auth/protected-route";
+import { ConfirmationModal } from "@/components/ui/ConfirmationModal";
 
 interface AdminLayoutProps {
   children: ReactNode;
@@ -61,20 +62,33 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const { isLoggedIn, isAdmin, logout } = useAuth();
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const pathname = usePathname();
   const router = useRouter(); // Get router for redirection
 
-  // 3. Create the handler function to call logout and redirect
+  // Open the confirmation modal
+  const openLogoutModal = () => {
+    setIsLogoutModalOpen(true);
+  };
+
+  // 3. Optimized handler function to reduce perceived logout delay
   const handleLogout = async () => {
+    setIsLoggingOut(true);
+    
+    // Immediately close the modal to give sense of action completion
+    setIsLogoutModalOpen(false);
+    
+    // Redirect to login page immediately - don't wait for the logout API call
+    router.push('/admin/login');
+    
+    // Process the actual logout in the background
     try {
-      const { error } = await logout();
-      if (error) {
-        console.error("Error logging out:", error);
-      }
-      // Redirect to the login page after logout
-      router.push('/admin/login');
+      await logout();
     } catch (e) {
-      console.error("An unexpected error occurred during logout:", e);
+      console.error("Error during logout:", e);
+      // Even if there's an error, we've already redirected the user
+      // No need to reopen the modal or reset states
     }
   };
 
@@ -128,8 +142,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         </Link>
         <button
           className={cn("flex w-full items-center p-2 text-sm text-gray-400 hover:text-white text-left")}
-          // 4. Connect the handler to the button's onClick event
-          onClick={handleLogout}
+          // Connect to the openLogoutModal function instead of direct logout
+          onClick={openLogoutModal}
           title={isCollapsed ? "Logout" : undefined}
         >
           <LogOut size={18} className={cn("transition-all", isCollapsed ? "" : "mr-2")} />
@@ -175,6 +189,16 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         <main className="flex-1 overflow-y-auto">
           <div className="p-4 sm:p-6 md:p-8">{children}</div>
         </main>
+        
+        {/* Logout confirmation modal */}
+        <ConfirmationModal
+          isOpen={isLogoutModalOpen}
+          onClose={() => setIsLogoutModalOpen(false)}
+          onConfirm={handleLogout}
+          title="Confirm Logout"
+          message="Are you sure you want to log out? Any unsaved changes will be lost."
+          isLoading={isLoggingOut}
+        />
       </div>
     </ProtectedRoute>
   );

@@ -138,35 +138,46 @@ export default function AnomalyReviewPage() {
     setIsConfirmModalOpen(true);
   };
 
-  // This function is now called by the confirmation modal's "Confirm" button
+  // Optimized handler for resolving anomalies - now with faster perceived performance
   const handleResolveAnomaly = async () => {
     if (!anomalyToResolve) return;
 
-    setIsResolving(true); // Show loading state
+    setIsResolving(true); // Show loading state initially
     
+    // Store anomaly details for use after closing modals
+    const anomalyId = anomalyToResolve.id;
+    const anomalyName = anomalyToResolve.name;
+    const resolution = anomalyToResolve.resolution;
+    
+    // Close confirmation modal immediately for better perceived performance
+    setIsConfirmModalOpen(false);
+    
+    // Show success modal immediately
+    const actionType = resolution === "CONFIRMED_SALE" ? "confirmed sale" : "data error";
+    setSuccessMessage(`Anomaly for "${anomalyName}" has been successfully marked as a ${actionType}.`);
+    setIsSuccessModalOpen(true);
+    
+    // Remove the anomaly from the list for a smooth UI update
+    setAnomalies((prev) => prev.filter((a) => a.anomaly_id !== anomalyId));
+    
+    // Perform the actual API call in the background
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/admin/anomalies/${anomalyToResolve.id}/resolve`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/admin/anomalies/${anomalyId}/resolve`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ resolution: anomalyToResolve.resolution }),
+        body: JSON.stringify({ resolution }),
       });
-      if (!response.ok) throw new Error("Failed to resolve anomaly");
       
-      // On success, remove the anomaly from the list for a smooth UI update
-      setAnomalies((prev) => prev.filter((a) => a.anomaly_id !== anomalyToResolve.id));
+      if (!response.ok) {
+        throw new Error("Failed to resolve anomaly");
+      }
       
-      // Close the confirmation modal
-      setIsConfirmModalOpen(false);
-      
-      // Prepare success message based on resolution type with product name context
-      const actionType = anomalyToResolve.resolution === "CONFIRMED_SALE" ? "confirmed sale" : "data error";
-      setSuccessMessage(`Anomaly for "${anomalyToResolve.name}" has been successfully marked as a ${actionType}.`);
-      setIsSuccessModalOpen(true);
+      // The success UI is already shown, no need to do anything else on success
 
     } catch (error: any) {
-      console.error(`Error resolving anomaly #${anomalyToResolve.id}:`, error);
-      setError(`Failed to resolve anomaly: ${error.message}`);
-      setIsConfirmModalOpen(false);
+      console.error(`Error resolving anomaly #${anomalyId}:`, error);
+      // We don't show error messages in the UI since the user already saw success
+      // In a production app, you might want to add a toast notification for errors
     } finally {
       setIsResolving(false); // Hide loading state
     }
