@@ -2,7 +2,7 @@
 
 import { ReactNode, useEffect, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation"; // 1. Import useRouter
 import {
   LayoutDashboard,
   Database,
@@ -57,10 +57,26 @@ const SidebarLink = ({ href, icon, label, isActive, isCollapsed }: SidebarLinkPr
 };
 
 export default function AdminLayout({ children }: AdminLayoutProps) {
-  const { isLoggedIn, isAdmin } = useAuth();
+  // 2. Get the 'logout' function from useAuth
+  const { isLoggedIn, isAdmin, logout } = useAuth();
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const pathname = usePathname();
+  const router = useRouter(); // Get router for redirection
+
+  // 3. Create the handler function to call logout and redirect
+  const handleLogout = async () => {
+    try {
+      const { error } = await logout();
+      if (error) {
+        console.error("Error logging out:", error);
+      }
+      // Redirect to the login page after logout
+      router.push('/admin/login');
+    } catch (e) {
+      console.error("An unexpected error occurred during logout:", e);
+    }
+  };
 
   useEffect(() => {
     // Your existing auth checks
@@ -110,11 +126,10 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           <Settings size={18} className={cn("transition-all", isCollapsed ? "" : "mr-2")} />
           <span className={cn("transition-all duration-200 whitespace-nowrap", isCollapsed ? "opacity-0 w-0 overflow-hidden" : "opacity-100 w-auto")}>Settings</span>
         </Link>
-        {/* --- THIS IS THE MODIFIED PART --- */}
-        {/* Changed from <Button> to a standard <button> to get the same hover effect as the Settings link. */}
         <button
           className={cn("flex w-full items-center p-2 text-sm text-gray-400 hover:text-white text-left")}
-          onClick={() => console.log("Logout clicked")}
+          // 4. Connect the handler to the button's onClick event
+          onClick={handleLogout}
           title={isCollapsed ? "Logout" : undefined}
         >
           <LogOut size={18} className={cn("transition-all", isCollapsed ? "" : "mr-2")} />
