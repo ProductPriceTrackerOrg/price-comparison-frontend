@@ -94,7 +94,9 @@ export default function AdminDashboardPage() {
         <h1 className="text-3xl font-bold tracking-tight">Admin Dashboard</h1>
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <Card className="border-0 bg-gradient-to-br from-indigo-500 to-purple-600 text-white">
+          {/* --- MODIFIED CARDS --- */}
+          {/* I've added transition-transform, duration-300, and hover:-translate-y-2 to each card for the lift-up effect */}
+          <Card className="border-0 bg-gradient-to-br from-indigo-500 to-purple-600 text-white transition-transform duration-300 hover:-translate-y-2">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-white/90">Total Products</CardTitle>
               <Package2 className="h-4 w-4 text-white/80" />
@@ -103,7 +105,7 @@ export default function AdminDashboardPage() {
               <div className="text-3xl font-bold">{dashboardData?.stats.totalProducts.toLocaleString()}</div>
             </CardContent>
           </Card>
-          <Card className="border-0 bg-gradient-to-br from-cyan-400 to-blue-500 text-white">
+          <Card className="border-0 bg-gradient-to-br from-cyan-400 to-blue-500 text-white transition-transform duration-300 hover:-translate-y-2">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-white/90">Total Retailers</CardTitle>
               <Store className="h-4 w-4 text-white/80" />
@@ -112,7 +114,7 @@ export default function AdminDashboardPage() {
               <div className="text-3xl font-bold">{dashboardData?.stats.totalRetailers.toLocaleString()}</div>
             </CardContent>
           </Card>
-          <Card className="border-0 bg-gradient-to-br from-amber-400 to-orange-500 text-white">
+          <Card className="border-0 bg-gradient-to-br from-amber-400 to-orange-500 text-white transition-transform duration-300 hover:-translate-y-2">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-white/90">Total Users</CardTitle>
               <Users className="h-4 w-4 text-white/80" />
@@ -121,7 +123,7 @@ export default function AdminDashboardPage() {
               <div className="text-3xl font-bold">{dashboardData?.stats.totalUsers.toLocaleString()}</div>
             </CardContent>
           </Card>
-          <Card className="border-0 bg-gradient-to-br from-rose-400 to-pink-500 text-white">
+          <Card className="border-0 bg-gradient-to-br from-rose-400 to-pink-500 text-white transition-transform duration-300 hover:-translate-y-2">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-white/90">Total Categories</CardTitle>
               <FolderTree className="h-4 w-4 text-white/80" />
@@ -143,7 +145,7 @@ export default function AdminDashboardPage() {
                   "hover:bg-gradient-to-r from-purple-500 to-blue-500 hover:shadow-lg hover:shadow-blue-500/30", // Hover fill and glow
                   "hover:-translate-y-1" // Smooth lift effect
                 )}>
-                   <CardContent className="pt-6 text-center">
+                    <CardContent className="pt-6 text-center">
                     <div className="flex flex-col items-center">
                       {shortcut.icon}
                       <h3 className="font-semibold text-gray-700 group-hover:text-white transition-colors">{shortcut.title}</h3>
@@ -156,7 +158,6 @@ export default function AdminDashboardPage() {
           </div>
         </div>
 
-        {/* --- THIS IS THE MODIFIED PART --- */}
         <div className="mt-8">
           <h2 className="text-xl font-semibold mb-4">Recent Admin Activity</h2>
           {/* The card now has rounded corners and a subtle shadow */}
@@ -189,4 +190,3 @@ export default function AdminDashboardPage() {
     </ProtectedRoute>
   );
 }
-

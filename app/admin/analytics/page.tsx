@@ -6,9 +6,6 @@ import {
   Line,
   BarChart,
   Bar,
-  PieChart,
-  Pie,
-  Cell,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -37,7 +34,7 @@ import {
 import { format, subDays, subYears } from "date-fns";
 import { DateRange } from "react-day-picker";
 
-// --- UPDATED TYPES to match API response ---
+// --- Data Types ---
 interface UserSignup {
   date: string;
   signups: number;
@@ -58,6 +55,26 @@ interface AnalyticsData {
   topTrackedProducts: TrackedProduct[];
   categoryDistribution: CategoryDistribution[];
 }
+
+// --- Custom Tooltip for the Bar Chart ---
+const CustomTooltip = ({ active, payload, label }: any) => {
+  if (active && payload && payload.length) {
+    return (
+      <div 
+        className="p-4 bg-slate-900/80 flex flex-col gap-2 rounded-md"
+        style={{ backdropFilter: 'blur(5px)', border: '1px solid rgba(255, 255, 255, 0.1)' }}
+      >
+        <p className="text-lg font-medium text-white">{label}</p>
+        <p className="text-sm text-blue-400">
+          Product Count:
+          <span className="ml-2 font-bold">{payload[0].value}</span>
+        </p>
+      </div>
+    );
+  }
+  return null;
+};
+
 
 export default function WebsiteAnalyticsPage() {
   const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null);
@@ -97,7 +114,8 @@ export default function WebsiteAnalyticsPage() {
 
         const userSignups: UserSignup[] = await signupsResponse.json();
         const topTrackedProducts: TrackedProduct[] = await trackedProductsResponse.json();
-        const categoryDistribution: CategoryDistribution[] = await categoriesResponse.json();
+        // Sort categories by value in descending order for a cleaner chart
+        const categoryDistribution: CategoryDistribution[] = (await categoriesResponse.json()).sort((a: CategoryDistribution, b: CategoryDistribution) => b.value - a.value);
 
         setAnalyticsData({
           userSignups,
@@ -130,7 +148,6 @@ export default function WebsiteAnalyticsPage() {
   };
   
   const formatDate = (dateStr: string) => format(new Date(dateStr), "MMM d");
-  const COLORS = ["#8884d8", "#82ca9d", "#ffc658", "#ff8042", "#0088FE", "#00C49F", "#FFBB28"];
 
   return (
     <ProtectedRoute requireAdmin={true}>
@@ -139,7 +156,7 @@ export default function WebsiteAnalyticsPage() {
           <h1 className="text-3xl font-bold tracking-tight">Website Analytics</h1>
           <div className="flex flex-col sm:flex-row items-center gap-2">
             <Select value={timePeriod} onValueChange={handleTimePeriodChange}>
-              <SelectTrigger className="w-full sm:w-[180px]">
+              <SelectTrigger className="w-full sm:w-[180px] text-black">
                 <SelectValue placeholder="Select time period" />
               </SelectTrigger>
               <SelectContent>
@@ -151,8 +168,7 @@ export default function WebsiteAnalyticsPage() {
             </Select>
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="outline" className="w-full sm:w-[280px] justify-start text-left font-normal">
-                  <CalendarIcon className="mr-2 h-4 w-4" />
+                <Button variant="outline" className="w-full sm:w-[280px] justify-start text-left font-normal text-black">
                   {date?.from ? (date.to ? (
                     <>{format(date.from, "LLL dd, y")} - {format(date.to, "LLL dd, y")}</>
                   ) : format(date.from, "LLL dd, y")) : <span>Pick a date range</span>}
@@ -224,31 +240,46 @@ export default function WebsiteAnalyticsPage() {
                 </Card>
               </TabsContent>
 
+              {/* === MODIFIED SECTION: CATEGORY DISTRIBUTION === */}
               <TabsContent value="categories">
                 <Card>
                   <CardHeader><CardTitle>Product Distribution by Category</CardTitle></CardHeader>
                   <CardContent>
-                    <div className="h-[400px]">
+                    {/* Increased height and adjusted margin for better label visibility */}
+                    <div className="h-[500px]">
                       <ResponsiveContainer width="100%" height="100%">
-                        <PieChart>
-                          {/* --- THIS IS THE CORRECTED PART --- */}
-                          <Pie 
-                            data={analyticsData?.categoryDistribution} 
+                        <BarChart 
+                          data={analyticsData?.categoryDistribution} 
+                          margin={{ top: 20, right: 30, left: 20, bottom: 95 }}
+                        >
+                          {/* Defines a gradient for the bars */}
+                          <defs>
+                            <linearGradient id="categoryGradient" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor="#8884d8" stopOpacity={0.8}/>
+                              <stop offset="95%" stopColor="#8884d8" stopOpacity={0.2}/>
+                            </linearGradient>
+                          </defs>
+                          <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                           {/* Angled labels to prevent overlap */}
+                          <XAxis 
+                            dataKey="name" 
+                            angle={-45} 
+                            textAnchor="end" 
+                            interval={0} 
+                            tick={{ fontSize: 10 }}
+                          />
+                          <YAxis />
+                          <Tooltip 
+                            content={<CustomTooltip />}
+                            cursor={{fill: 'rgba(206, 206, 206, 0.2)'}} // Glassy hover effect
+                          />
+                          <Bar 
                             dataKey="value" 
-                            nameKey="name" 
-                            cx="50%" 
-                            cy="50%" 
-                            outerRadius={150} 
-                            labelLine={false} 
-                            label={({ name, percent = 0 }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                          >
-                            {analyticsData?.categoryDistribution.map((entry, index) => (
-                              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                            ))}
-                          </Pie>
-                          <Tooltip />
-                          <Legend />
-                        </PieChart>
+                            name="Product Count" 
+                            fill="url(#categoryGradient)" 
+                            radius={[10, 10, 0, 0]} // Rounded top corners
+                          />
+                        </BarChart>
                       </ResponsiveContainer>
                     </div>
                   </CardContent>
@@ -261,4 +292,3 @@ export default function WebsiteAnalyticsPage() {
     </ProtectedRoute>
   );
 }
-

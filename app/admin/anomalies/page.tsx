@@ -20,6 +20,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { PriceHistoryModal } from "@/components/admin/PriceHistoryModal";
 import { cn } from "@/lib/utils";
+// --- NEW: Import the modal components ---
+import { ConfirmationModal } from "@/components/ui/ConfirmationModal";
+import { SuccessModal } from "@/components/ui/SuccessModal";
 
 // Define types to match the backend API response
 interface Anomaly {
@@ -37,6 +40,8 @@ interface PriceHistoryData {
   price: number;
 }
 
+type ResolutionType = "CONFIRMED_SALE" | "DATA_ERROR";
+
 export default function AnomalyReviewPage() {
   const [anomalies, setAnomalies] = useState<Anomaly[]>([]);
   const [loading, setLoading] = useState(true);
@@ -52,10 +57,21 @@ export default function AnomalyReviewPage() {
   const [sortOrder, setSortOrder] = useState<"desc" | "asc">("desc");
 
   // State management for the Price History Modal
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
   const [selectedAnomaly, setSelectedAnomaly] = useState<Anomaly | null>(null);
   const [priceHistory, setPriceHistory] = useState<PriceHistoryData[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
+  
+  // --- UPDATED: State for confirmation and success modals ---
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
+  const [anomalyToResolve, setAnomalyToResolve] = useState<{ 
+    id: string; 
+    resolution: ResolutionType; 
+    name: string;
+  } | null>(null);
+  const [successMessage, setSuccessMessage] = useState("");
+  const [isResolving, setIsResolving] = useState(false);
 
   // Fetches the main list of anomalies from the backend API
   useEffect(() => {
@@ -99,10 +115,9 @@ export default function AnomalyReviewPage() {
   }, [anomalies, filter, sortOrder]);
 
 
-  // --- RESTORED LOGIC ---
   const handleViewHistory = async (anomaly: Anomaly) => {
     setSelectedAnomaly(anomaly);
-    setIsModalOpen(true);
+    setIsHistoryModalOpen(true);
     setHistoryLoading(true);
     try {
       const apiUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/v1/admin/anomalies/${anomaly.anomaly_id}/price-history`;
@@ -117,21 +132,53 @@ export default function AnomalyReviewPage() {
     }
   };
 
-  // --- RESTORED LOGIC ---
-  const handleResolveAnomaly = async (anomalyId: string, resolution: "CONFIRMED_SALE" | "DATA_ERROR") => {
+  // --- UPDATED: This function now stores product name too for better context ---
+  const openConfirmationModal = (anomalyId: string, resolution: ResolutionType, productName: string) => {
+    setAnomalyToResolve({ id: anomalyId, resolution, name: productName });
+    setIsConfirmModalOpen(true);
+  };
+
+  // This function is now called by the confirmation modal's "Confirm" button
+  const handleResolveAnomaly = async () => {
+    if (!anomalyToResolve) return;
+
+    setIsResolving(true); // Show loading state
+    
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/admin/anomalies/${anomalyId}/resolve`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/admin/anomalies/${anomalyToResolve.id}/resolve`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ resolution }),
+        body: JSON.stringify({ resolution: anomalyToResolve.resolution }),
       });
       if (!response.ok) throw new Error("Failed to resolve anomaly");
-      setAnomalies((prev) => prev.filter((a) => a.anomaly_id !== anomalyId));
+      
+      // On success, remove the anomaly from the list for a smooth UI update
+      setAnomalies((prev) => prev.filter((a) => a.anomaly_id !== anomalyToResolve.id));
+      
+      // Close the confirmation modal
+      setIsConfirmModalOpen(false);
+      
+      // Prepare success message based on resolution type with product name context
+      const actionType = anomalyToResolve.resolution === "CONFIRMED_SALE" ? "confirmed sale" : "data error";
+      setSuccessMessage(`Anomaly for "${anomalyToResolve.name}" has been successfully marked as a ${actionType}.`);
+      setIsSuccessModalOpen(true);
+
     } catch (error: any) {
-      console.error(`Error resolving anomaly #${anomalyId}:`, error);
+      console.error(`Error resolving anomaly #${anomalyToResolve.id}:`, error);
+      setError(`Failed to resolve anomaly: ${error.message}`);
+      setIsConfirmModalOpen(false);
+    } finally {
+      setIsResolving(false); // Hide loading state
     }
   };
 
+  // Add a proper handler for closing the success modal
+  const handleCloseSuccessModal = () => {
+    setIsSuccessModalOpen(false);
+    setSuccessMessage(""); // Clear message to prevent reappearing
+    setAnomalyToResolve(null); // Clear the state completely
+  };
+  
   const calculatePriceDifference = (original: number | null, anomalous: number) => {
     if (original === null || original === 0) return "N/A";
     const difference = ((anomalous - original) / original) * 100;
@@ -173,7 +220,7 @@ export default function AnomalyReviewPage() {
               onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
               className="flex items-center gap-2"
             >
-              <ArrowUpDown className="h-4 w-4" />
+              <ArrowUpDown className="h-4 w-4 mr-2" />
               Sort by {sortOrder === "asc" ? "Lowest" : "Highest"} Difference
             </Button>
           </div>
@@ -233,7 +280,7 @@ export default function AnomalyReviewPage() {
                           <Eye className="h-4 w-4 mr-1" /> View Price History
                         </Button>
                         <Button variant="outline" size="sm" className="flex-1" asChild>
-                          <a href={anomaly.vendorUrl} target="_blank" rel="noopener noreferrer">
+                          <a href={anomaly.productUrl} target="_blank" rel="noopener noreferrer">
                             <ExternalLink className="h-4 w-4 mr-1" /> Vendor
                           </a>
                         </Button>
@@ -248,7 +295,7 @@ export default function AnomalyReviewPage() {
                         "hover:shadow-lg hover:shadow-green-500/20 hover:text-green-700 hover:border-green-600",
                         "active:bg-green-500 active:text-white"
                       )}
-                      onClick={() => handleResolveAnomaly(anomaly.anomaly_id, "CONFIRMED_SALE")}
+                      onClick={() => openConfirmationModal(anomaly.anomaly_id, "CONFIRMED_SALE", anomaly.productName)}
                     >
                       <CheckCircle className="h-4 w-4 mr-1" /> Confirm Sale
                     </Button>
@@ -259,7 +306,7 @@ export default function AnomalyReviewPage() {
                         "hover:shadow-lg hover:shadow-red-500/20 hover:text-red-700 hover:border-red-600",
                         "active:bg-red-500 active:text-white"
                       )}
-                      onClick={() => handleResolveAnomaly(anomaly.anomaly_id, "DATA_ERROR")}
+                      onClick={() => openConfirmationModal(anomaly.anomaly_id, "DATA_ERROR", anomaly.productName)}
                     >
                       <XCircle className="h-4 w-4 mr-1" /> Data Error
                     </Button>
@@ -282,16 +329,34 @@ export default function AnomalyReviewPage() {
       </div>
       
       <PriceHistoryModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        isOpen={isHistoryModalOpen}
+        onClose={() => setIsHistoryModalOpen(false)}
         productName={selectedAnomaly?.productName || ""}
         priceHistory={priceHistory}
       />
-      {historyLoading && isModalOpen && (
+      {historyLoading && isHistoryModalOpen && (
          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
             <Loader2 className="h-8 w-8 animate-spin text-white" />
          </div>
       )}
+      
+      {/* --- UPDATED: RENDER IMPROVED MODALS --- */}
+      <ConfirmationModal
+        isOpen={isConfirmModalOpen}
+        onClose={() => setIsConfirmModalOpen(false)}
+        onConfirm={handleResolveAnomaly}
+        title={anomalyToResolve?.resolution === "CONFIRMED_SALE" ? "Confirm Sale" : "Mark as Data Error"}
+        message={`Are you sure you want to mark "${anomalyToResolve?.name || 'this anomaly'}" as a ${
+          anomalyToResolve?.resolution === "CONFIRMED_SALE" ? "confirmed sale" : "data error"
+        }?`}
+        isLoading={isResolving}
+      />
+      <SuccessModal
+        isOpen={isSuccessModalOpen}
+        onClose={handleCloseSuccessModal}
+        title="Success!"
+        message={successMessage}
+      />
     </ProtectedRoute>
   );
 }
