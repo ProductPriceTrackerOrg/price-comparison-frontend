@@ -5,7 +5,7 @@ import { supabase } from "@/lib/supabase";
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export interface FavoriteProduct {
-  id: number;
+  id: number | string;
   name: string;
   brand?: string;
   category?: string;
@@ -17,7 +17,8 @@ export interface FavoriteProduct {
   retailer_whatsapp?: string;
   discount?: number;
   is_available: boolean;
-  variant_id: number;
+  variant_id?: number | string;
+  favorite_id?: number | string;
 }
 
 export interface FavoritesResponse {
@@ -94,12 +95,15 @@ export async function removeFromFavorites(productId: number): Promise<void> {
 
   const token = sessionData.session.access_token;
 
-  const response = await fetch(`${API_URL}/api/v1/favorites/${productId}`, {
-    method: "DELETE",
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
+  const response = await fetch(
+    `${API_URL}/api/v1/favorites/${productId}/favorite`,
+    {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
