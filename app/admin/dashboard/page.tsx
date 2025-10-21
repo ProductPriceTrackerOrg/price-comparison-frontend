@@ -1,30 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import {
-  LayoutDashboard,
-  Database,
-  Users,
-  AlertTriangle,
-  BarChart3,
-  Package2,
-  Store,
-  FolderTree,
-} from "lucide-react";
+import { Database, Users, AlertTriangle, BarChart3, Package2, Store, FolderTree } from "lucide-react";
 import { ProtectedRoute } from "@/components/auth/protected-route";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { cn } from "@/lib/utils";
 
-// Define types
+// Define types to match our API responses
 interface Stats {
   totalProducts: number;
   totalRetailers: number;
@@ -33,7 +17,6 @@ interface Stats {
 }
 
 interface Activity {
-  id: number;
   admin: string;
   action: string;
   timestamp: string;
@@ -45,64 +28,33 @@ interface DashboardData {
 }
 
 export default function AdminDashboardPage() {
-  const [dashboardData, setDashboardData] = useState<DashboardData | null>(
-    null
-  );
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
+  // This useEffect hook fetches all necessary data from our backend when the page loads.
   useEffect(() => {
-    // Simulate API call
     const fetchDashboardData = async () => {
       try {
-        // In a real implementation, this would be an API call
-        // const response = await fetch("/api/admin/stats")
-        // const data = await response.json()
+        const [statsResponse, activityResponse] = await Promise.all([
+          fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/admin/dashboard-stats`),
+          fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/admin/recent-activity`),
+        ]);
 
-        // For now, use mock data
-        const mockData: DashboardData = {
-          stats: {
-            totalProducts: 12530,
-            totalRetailers: 15,
-            totalUsers: 2850,
-            totalCategories: 45,
-          },
-          recentActivity: [
-            {
-              id: 1,
-              admin: "admin@example.com",
-              action: "Changed status of user 'test@user.com' to inactive.",
-              timestamp: "2025-09-27T10:30:00Z",
-            },
-            {
-              id: 2,
-              admin: "admin@example.com",
-              action: "Confirmed anomaly #123 as 'Flash Sale'.",
-              timestamp: "2025-09-27T09:15:00Z",
-            },
-            {
-              id: 3,
-              admin: "moderator@example.com",
-              action: "Updated retailer information for 'TechStore'.",
-              timestamp: "2025-09-26T16:45:00Z",
-            },
-            {
-              id: 4,
-              admin: "admin@example.com",
-              action: "Marked anomaly #456 as 'Data Error'.",
-              timestamp: "2025-09-26T14:20:00Z",
-            },
-            {
-              id: 5,
-              admin: "admin@example.com",
-              action: "Added new category 'Smart Home'.",
-              timestamp: "2025-09-25T11:10:00Z",
-            },
-          ],
-        };
+        if (!statsResponse.ok || !activityResponse.ok) {
+          throw new Error("Failed to fetch dashboard data from the API");
+        }
 
-        setDashboardData(mockData);
-      } catch (error) {
+        const statsData: Stats = await statsResponse.json();
+        const activityData: Activity[] = await activityResponse.json();
+
+        setDashboardData({
+          stats: statsData,
+          recentActivity: activityData,
+        });
+      } catch (error: any) {
         console.error("Failed to fetch dashboard data:", error);
+        setError(error.message);
       } finally {
         setLoading(false);
       }
@@ -111,7 +63,7 @@ export default function AdminDashboardPage() {
     fetchDashboardData();
   }, []);
 
-  // Format timestamp to readable format
+  // Helper function to format timestamps for the activity log
   const formatTimestamp = (timestamp: string) => {
     const date = new Date(timestamp);
     return new Intl.DateTimeFormat("en-US", {
@@ -120,155 +72,121 @@ export default function AdminDashboardPage() {
     }).format(date);
   };
 
-  // Shortcut links for quick navigation
+  // Data for the "Quick Actions" shortcut links, with dynamic hover colors
   const shortcuts = [
-    {
-      title: "Pipeline Monitoring",
-      description: "Monitor data pipeline status",
-      icon: <Database className="h-8 w-8 mb-2" />,
-      href: "/admin/pipeline",
-    },
-    {
-      title: "User Management",
-      description: "Manage platform users",
-      icon: <Users className="h-8 w-8 mb-2" />,
-      href: "/admin/users",
-    },
-    {
-      title: "Anomaly Review",
-      description: "Review price anomalies",
-      icon: <AlertTriangle className="h-8 w-8 mb-2" />,
-      href: "/admin/anomalies",
-    },
-    {
-      title: "Website Analytics",
-      description: "View platform analytics",
-      icon: <BarChart3 className="h-8 w-8 mb-2" />,
-      href: "/admin/analytics",
-    },
+    { title: "Pipeline Monitoring", description: "Monitor data pipeline status", icon: <Database className="h-8 w-8 mb-2 text-gray-600 group-hover:text-white transition-colors" />, href: "/admin/pipeline" },
+    { title: "User Management", description: "Manage platform users", icon: <Users className="h-8 w-8 mb-2 text-gray-600 group-hover:text-white transition-colors" />, href: "/admin/users" },
+    { title: "Anomaly Review", description: "Review price anomalies", icon: <AlertTriangle className="h-8 w-8 mb-2 text-gray-600 group-hover:text-white transition-colors" />, href: "/admin/anomalies" },
+    { title: "Website Analytics", description: "View platform analytics", icon: <BarChart3 className="h-8 w-8 mb-2 text-gray-600 group-hover:text-white transition-colors" />, href: "/admin/analytics" },
   ];
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        Loading dashboard data...
-      </div>
-    );
+    return <div className="flex items-center justify-center h-64">Loading dashboard data...</div>;
+  }
+  
+  if (error) {
+    return <div className="text-red-500 p-4">Error: {error}</div>;
   }
 
   return (
     <ProtectedRoute requireAdmin={true}>
-      <div className="space-y-6">
+      <div className="space-y-6 p-4 md:p-8">
         <h1 className="text-3xl font-bold tracking-tight">Admin Dashboard</h1>
 
-      {/* Stat Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Total Products
-            </CardTitle>
-            <Package2 className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {dashboardData?.stats.totalProducts.toLocaleString()}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Total Retailers
-            </CardTitle>
-            <Store className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {dashboardData?.stats.totalRetailers.toLocaleString()}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Users</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {dashboardData?.stats.totalUsers.toLocaleString()}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Total Categories
-            </CardTitle>
-            <FolderTree className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {dashboardData?.stats.totalCategories.toLocaleString()}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Shortcuts */}
-      <div className="mt-8">
-        <h2 className="text-xl font-semibold mb-4">Quick Actions</h2>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          {shortcuts.map((shortcut, index) => (
-            <Link href={shortcut.href} key={index}>
-              <Card className="hover:bg-muted transition-colors cursor-pointer h-full">
-                <CardContent className="pt-6 text-center">
-                  <div className="flex flex-col items-center">
-                    {shortcut.icon}
-                    <h3 className="font-semibold">{shortcut.title}</h3>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      {shortcut.description}
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
-          ))}
+          {/* --- MODIFIED CARDS --- */}
+          {/* I've added transition-transform, duration-300, and hover:-translate-y-2 to each card for the lift-up effect */}
+          <Card className="border-0 bg-gradient-to-br from-indigo-500 to-purple-600 text-white transition-transform duration-300 hover:-translate-y-2">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-white/90">Total Products</CardTitle>
+              <Package2 className="h-4 w-4 text-white/80" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold">{dashboardData?.stats.totalProducts.toLocaleString()}</div>
+            </CardContent>
+          </Card>
+          <Card className="border-0 bg-gradient-to-br from-cyan-400 to-blue-500 text-white transition-transform duration-300 hover:-translate-y-2">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-white/90">Total Retailers</CardTitle>
+              <Store className="h-4 w-4 text-white/80" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold">{dashboardData?.stats.totalRetailers.toLocaleString()}</div>
+            </CardContent>
+          </Card>
+          <Card className="border-0 bg-gradient-to-br from-amber-400 to-orange-500 text-white transition-transform duration-300 hover:-translate-y-2">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-white/90">Total Users</CardTitle>
+              <Users className="h-4 w-4 text-white/80" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold">{dashboardData?.stats.totalUsers.toLocaleString()}</div>
+            </CardContent>
+          </Card>
+          <Card className="border-0 bg-gradient-to-br from-rose-400 to-pink-500 text-white transition-transform duration-300 hover:-translate-y-2">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-white/90">Total Categories</CardTitle>
+              <FolderTree className="h-4 w-4 text-white/80" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold">{dashboardData?.stats.totalCategories.toLocaleString()}</div>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="mt-8">
+          <h2 className="text-xl font-semibold mb-4">Quick Actions</h2>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            {shortcuts.map((shortcut, index) => (
+              <Link href={shortcut.href} key={index} className="group">
+                <Card className={cn(
+                  "h-full rounded-xl transition-all duration-300",
+                  "bg-white/60 backdrop-blur-md border border-gray-200/50", // Glassmorphism base
+                  "hover:bg-gradient-to-r from-purple-500 to-blue-500 hover:shadow-lg hover:shadow-blue-500/30", // Hover fill and glow
+                  "hover:-translate-y-1" // Smooth lift effect
+                )}>
+                    <CardContent className="pt-6 text-center">
+                    <div className="flex flex-col items-center">
+                      {shortcut.icon}
+                      <h3 className="font-semibold text-gray-700 group-hover:text-white transition-colors">{shortcut.title}</h3>
+                      <p className="text-sm text-gray-500 group-hover:text-white/80 transition-colors mt-1">{shortcut.description}</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
+            ))}
+          </div>
+        </div>
+
+        <div className="mt-8">
+          <h2 className="text-xl font-semibold mb-4">Recent Admin Activity</h2>
+          {/* The card now has rounded corners and a subtle shadow */}
+          <Card className="rounded-xl shadow-md">
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader>
+                  {/* The header row now has a light gray background */}
+                  <TableRow className="bg-gray-50 hover:bg-gray-50">
+                    <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Admin</TableHead>
+                    <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</TableHead>
+                    <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Timestamp</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {dashboardData?.recentActivity.map((activity, index) => (
+                    // Each row now only has a bottom border, creating clean separating lines
+                    <TableRow key={index} className="border-b border-gray-200 last:border-b-0">
+                      <TableCell className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{activity.admin}</TableCell>
+                      <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{activity.action}</TableCell>
+                      <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatTimestamp(activity.timestamp)}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
         </div>
       </div>
-
-      {/* Admin Activity History */}
-      <div className="mt-8">
-        <h2 className="text-xl font-semibold mb-4">Recent Admin Activity</h2>
-        <Card>
-          <CardContent className="pt-6">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Admin</TableHead>
-                  <TableHead>Action</TableHead>
-                  <TableHead>Timestamp</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {dashboardData?.recentActivity.map((activity) => (
-                  <TableRow key={activity.id}>
-                    <TableCell className="font-medium">
-                      {activity.admin}
-                    </TableCell>
-                    <TableCell>{activity.action}</TableCell>
-                    <TableCell>{formatTimestamp(activity.timestamp)}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-      </div>
-    </div>
     </ProtectedRoute>
   );
 }
