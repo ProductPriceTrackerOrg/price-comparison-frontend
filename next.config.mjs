@@ -41,11 +41,6 @@ const nextConfig = {
   experimental: {
     missingSuspenseWithCSRBailout: false,
   },
-  // Suppress client-side rendering warnings during build
-  onDemandEntries: {
-    // Silent mode
-    quiet: true,
-  },
 };
 
 export default nextConfig;
