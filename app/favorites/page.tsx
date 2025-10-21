@@ -66,23 +66,74 @@ export default function FavoritesPage() {
   };
 
   // Handle removing a favorite
-  const handleRemoveFavorite = async (productId: number) => {
+  const getFavoriteIdentifier = (favorite: FavoriteProduct) => {
+    const candidate =
+      favorite.variant_id ?? favorite.favorite_id ?? favorite.id;
+
+    if (candidate === undefined || candidate === null) {
+      return null;
+    }
+
+    if (typeof candidate === "string") {
+      const parsed = Number(candidate);
+      return Number.isNaN(parsed) ? null : parsed;
+    }
+
+    return candidate;
+  };
+
+  const handleRemoveFavorite = async (favorite: FavoriteProduct) => {
     if (!isLoggedIn || !user) return;
 
-    setIsRemoving(productId);
+    const removalKey = getFavoriteIdentifier(favorite);
+
+    if (removalKey === null) {
+      console.error("Favorite item missing identifier", favorite);
+      toast({
+        title: "Removal unavailable",
+        description:
+          "We couldn't determine which product to remove. Please refresh and try again.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const productId =
+      typeof favorite.id === "string" ? Number(favorite.id) : favorite.id;
+
+    if (
+      productId === undefined ||
+      productId === null ||
+      Number.isNaN(productId)
+    ) {
+      console.error("Favorite item missing product id", favorite);
+      toast({
+        title: "Removal unavailable",
+        description:
+          "We couldn't determine which product to remove. Please refresh and try again.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsRemoving(removalKey);
     setError(null);
 
     try {
       // Get product name before removing it
-      const productToRemove = favorites.find((p) => p.id === productId);
+      const productToRemove = favorites.find(
+        (p) => getFavoriteIdentifier(p) === removalKey
+      );
       const productName = productToRemove?.name || "Product";
 
       // Remove from favorites using our API
-      await removeFromFavorites(productId);
+  await removeFromFavorites(productId);
 
       // Update the favorites list
       setFavorites((prevFavorites) =>
-        prevFavorites.filter((favorite) => favorite.id !== productId)
+        prevFavorites.filter(
+          (favoriteItem) => getFavoriteIdentifier(favoriteItem) !== removalKey
+        )
       );
 
       // Show success toast
@@ -329,11 +380,11 @@ export default function FavoritesPage() {
                     </Link>
                     <div className="w-px bg-rose-100"></div>
                     <button
-                      onClick={() => handleRemoveFavorite(product.id)}
-                      disabled={isRemoving === product.id}
+                      onClick={() => handleRemoveFavorite(product)}
+                      disabled={isRemoving === getFavoriteIdentifier(product)}
                       className="flex-1 py-3 px-2 text-rose-600 hover:bg-rose-50 font-medium text-sm transition-all duration-200 flex items-center justify-center gap-2 group"
                     >
-                      {isRemoving === product.id ? (
+                      {isRemoving === getFavoriteIdentifier(product) ? (
                         <span className="flex items-center">
                           <svg
                             className="animate-spin -ml-1 mr-1 h-4 w-4"

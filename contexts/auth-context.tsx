@@ -48,26 +48,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setSession(session);
         setUser(session?.user ?? null);
 
-        // Handle email confirmation
-        if (event === "SIGNED_IN" && session?.user) {
-          // Store the auth event and timestamp for the admin redirect logic
-          localStorage.setItem('lastAuthEvent', 'SIGNED_IN');
-          localStorage.setItem('authEventTimestamp', new Date().getTime().toString());
-          
-          if (
-            session.user.email_confirmed_at &&
-            !session.user.last_sign_in_at
-          ) {
-            // This is likely a new user who just confirmed their email
-            console.log("New user confirmed email and is now signed in");
-          } else if (session.user.email_confirmed_at) {
-            // Existing user signing in
-            console.log("User signed in");
-            
-            // We'll check if they're an admin in the useEffect that runs when user changes
-            // and handle redirection there after roles are confirmed
-          }
-        }
+        // NOTE: The problematic localStorage logic that caused unwanted redirects
+        // on window refocus has been removed from this section.
+        // The redirect is now handled more specifically.
 
         if (event === "TOKEN_REFRESHED") {
           console.log("Token refreshed");
@@ -133,15 +116,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         
         // If user is an admin and just logged in, redirect to admin dashboard
         if (hasAdminRole) {
-          // Check if this is part of a sign-in flow
-          const lastAuthEvent = localStorage.getItem('lastAuthEvent');
-          const currentTime = new Date().getTime();
-          const eventTimestamp = parseInt(localStorage.getItem('authEventTimestamp') || '0');
-          
-          // If the last event was SIGNED_IN and occurred within the last 3 seconds, redirect
-          if (lastAuthEvent === 'SIGNED_IN' && (currentTime - eventTimestamp < 3000)) {
-            console.log("Admin user detected - redirecting to dashboard");
+          // ** THE FIX **
+          // Check sessionStorage for our specific flag set ONLY during a manual login.
+          const isRedirectable = sessionStorage.getItem('isLoginRedirectable');
+
+          // If the flag is present, it means a manual login just occurred.
+          if (isRedirectable === 'true') {
+            console.log("Admin user detected after manual login - redirecting to dashboard");
             router.push('/admin/dashboard');
+            // IMPORTANT: Remove the flag immediately after using it to prevent future redirects.
+            sessionStorage.removeItem('isLoginRedirectable');
           }
         }
       } catch (err) {
@@ -164,10 +148,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     login: async (email: string, password: string) => {
       const result = await supabase.auth.signInWithPassword({ email, password });
       
-      // Save the auth event for the admin redirection logic
+      // ** THE FIX **
+      // If login is successful, set our specific flag in sessionStorage.
+      // This will be detected by the useEffect hook.
       if (!result.error) {
-        localStorage.setItem('lastAuthEvent', 'SIGNED_IN');
-        localStorage.setItem('authEventTimestamp', new Date().getTime().toString());
+        sessionStorage.setItem('isLoginRedirectable', 'true');
       }
       
       return result;
@@ -183,9 +168,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         },
       }),
     logout: async () => {
-      // Clear the authentication event tracking
-      localStorage.removeItem('lastAuthEvent');
-      localStorage.removeItem('authEventTimestamp');
+      // ** THE FIX **
+      // Clear any leftover redirect flags on logout for good measure.
+      sessionStorage.removeItem('isLoginRedirectable');
       return await supabase.auth.signOut();
     },
   };

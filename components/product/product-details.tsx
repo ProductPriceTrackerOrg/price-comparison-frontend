@@ -28,6 +28,7 @@ import {
 import { useRouter } from "next/navigation";
 import { SignInDialog } from "@/components/auth/sign-in-dialog";
 import { NotificationConfirmDialog } from "@/components/product/notification-confirm-dialog";
+import { resolveProductImageUrl } from "@/lib/utils";
 
 interface ProductDetailsProps {
   product: {
@@ -61,6 +62,7 @@ export function ProductDetails({ product }: ProductDetailsProps) {
   const { toast } = useToast();
   const { user, isLoggedIn } = useAuth();
   const router = useRouter();
+  const resolvedImage = resolveProductImageUrl(product.image);
 
   // Check if the product is already favorited when component loads
   useEffect(() => {
@@ -190,7 +192,7 @@ export function ProductDetails({ product }: ProductDetailsProps) {
       <div className="space-y-6">
         <div className="relative">
           <img
-            src={product.image || "/placeholder.svg"}
+            src={resolvedImage || "/placeholder.svg"}
             alt={product.name}
             className="w-full h-96 object-cover rounded-lg"
           />

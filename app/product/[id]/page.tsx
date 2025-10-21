@@ -172,7 +172,7 @@ export default function ProductPage() {
 
         <ProductDetails product={product} />
         <PriceHistory productId={productId} />
-        <PriceForecasting productId={productId} />
+        <PriceForecasting productId={productId} currentPrice={product.price} />
         <AnomalyDetection productId={productId} />
         <SimilarProducts productId={productId} />
         <ProductRecommendations productId={productId} />
